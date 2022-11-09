@@ -1,6 +1,6 @@
 import numpy as np
 
-from testcode.termcolors import TermColor as tc
+from termcolors import TermColor as tc
 
 
 def find_closest(array, target, limit=True, verbose=True):

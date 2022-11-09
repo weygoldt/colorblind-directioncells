@@ -1,28 +1,29 @@
-import numpy as np 
-import matplotlib.pyplot as plt
-from  IPython import embed
 import h5py as h5
+import matplotlib.pyplot as plt
+import numpy as np
+from IPython import embed
 from vxtools.summarize.structure import SummaryFile
 
 f = SummaryFile('data/Summary.hdf5')
-# get all rois 
+# get all rois
 rois = f.rois()
 
 rois_0 = rois[0]
 
 for i, roi in enumerate(f.rois()[:20]):
     dff = roi.dff
-    plt.plot(i + (dff - dff.min()) / (dff.max() - dff.min()), color='black', linewidth='1.')
+    plt.plot(i + (dff - dff.min()) / (dff.max() - dff.min()),
+             color='black', linewidth='1.')
 plt.show()
 
-# get one recording 
+# get one recording
 one_rec = []
 for r in rois:
     if r.rec_id == 1:
         one_rec.append(r)
 time = one_rec[0].times
 
-roi = 550 
+roi = 550
 start_time = []
 end_time = []
 angul_vel = []
@@ -42,7 +43,6 @@ for indx, grp in enumerate(one_rec[roi].rec.h5group['display_data']['phases'].va
         rgb_2.append(grp.attrs['rgb02'])
     except:
         embed()
-
 
 
 plt.plot(time, one_rec[0].zscore)

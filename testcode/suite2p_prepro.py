@@ -52,9 +52,6 @@ for  grp in one_rec[roi].rec.h5group['display_data']['phases'].values():
 start_time = np.sort(start_time)
 end_time = np.sort(end_time)
 
-start_indx = fc(time, start_time[3])
-print(start_indx)
-
 # time index for the first snippet 
 bline=[]
 dt = time[1]-time[0]
@@ -70,11 +67,7 @@ for st, end in zip(start_time[1:], end_time[1:]):
     end_inx = fc(time, end)
     time_snippets.append(np.arange(start_inx, end_inx))    
 
-
-
-
-
-    baseline = start_time[0]
+one_rec[0].dff
 
 plt.plot(time, one_rec[0].zscore)
 plt.scatter(np.sort(start_time), np.ones_like(start_time), c='r')

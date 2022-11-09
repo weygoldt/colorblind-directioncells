@@ -3,7 +3,7 @@ import numpy as np
 from termcolors import TermColor as tc
 
 
-def find_closest(array, target, limit=True, verbose=True):
+def find_closest_new(array, target, limit=True, verbose=True):
     """Takes an array and a target and returns an index for a value of the array that matches the target most closely.
 
     Could also work with multiple targets and may not work for unsorted arrays, i.e. where a value occurs multiple times. Primarily used for time vectors. If limit is enabled, the difference between the target and a value on the array can not be smaller than half
@@ -52,5 +52,31 @@ def find_closest(array, target, limit=True, verbose=True):
                 print(
                     f"{tc.warn('[WARNING]')} [functions.find_closest] The data point (target) is not on the array!")
 
+    return idx
+
+
+
+def find_closest(array, target):
+    """Takes an array and a target and returns an index for a value of the array that matches the target most closely.
+
+    Could also work with multiple targets and may not work for unsorted arrays, i.e. where a value occurs multiple times. Primarily used for time vectors.
+
+    Parameters
+    ----------
+    array : array, required
+        The array to search in.
+    target : float, required
+        The number that needs to be found in the array.
+
+    Returns
+    ----------
+    idx : array,
+        Index for the array where the closes value to target is.
+    """
+    idx = array.searchsorted(target)
+    idx = np.clip(idx, 1, len(array) - 1)
+    left = array[idx - 1]
+    right = array[idx]
+    idx -= target - left < right - target
     return idx
 

@@ -9,6 +9,8 @@ f = SummaryFile('data/Summary.hdf5')
 # get all rois
 rois = f.rois()
 # get one recording
+
+
 def data_one_rec_id(summaryfile, rec_id):
     """Get all rois of one recording 
 
@@ -24,6 +26,7 @@ def data_one_rec_id(summaryfile, rec_id):
     list of hdf5
         list of all the rois within one recording
     """
+    rois = summaryfile.rois()
     roi_one_rec = []
     for r in rois:
         if r.rec_id == rec_id:
@@ -68,7 +71,8 @@ def get_attributes(one_recording):
     for grp in one_recording[roi].rec.h5group['display_data']['phases'].values():
         start_time.append(grp.attrs['start_time'])
         end_time.append(grp.attrs['end_time'])
-        if (grp == one_recording[roi].rec.h5group['display_data']['phases']['0']) or (grp == one_recording[roi].rec.h5group['display_data']['phases'][f'{len_phases}']):
+        if (grp == one_recording[roi].rec.h5group['display_data']['phases']['0']) or \
+                (grp == one_recording[roi].rec.h5group['display_data']['phases'][f'{len_phases}']):
             angul_vel.append(np.nan)
             angul_pre.append(np.nan)
             rgb_1.append(np.nan)
@@ -78,36 +82,47 @@ def get_attributes(one_recording):
         angul_pre.append(grp.attrs['angular_period'])
         rgb_1.append(grp.attrs['rgb01'])
         rgb_2.append(grp.attrs['rgb02'])
-    
+
     return np.sort(start_time), np.sort(end_time), angul_vel, angul_pre, rgb_1, rgb_2
 
-one_rec = data_one_rec_id(SummaryFile, 1)
+
+def mean_zscore_roi(one_recording, roi):
+    """Calculates the mean zscore between the start and end point of the stimulus of one single ROI
+
+    Parameters
+    ----------
+    one_recording : vxtools.summarize.structure.Roi 
+        hdf5 SummaryFile with all rois of the same recording id 
+
+    Returns
+    -------
+    list
+       mean zscore for evry start and stop time 
+    """
+
+    start_time, end_time, angul_vel, angul_pre, rgb_1, rgb_2 = get_attributes(
+        one_recording)
+
+    time_snippets = []
+    for st, end in zip(start_time, end_time):
+        start_inx = fc(time, st)
+        end_inx = fc(time, end)
+        time_snippets.append(np.arange(start_inx, end_inx))
+
+    mean_zscore = []
+    for snip in time_snippets:
+        zscores_snip = one_recording[roi].zscore[snip]
+        mean_zscore.append(np.mean(zscores_snip))
+
+    return mean_zscore
+
+
+one_rec = data_one_rec_id(f, 1)
 time = one_rec[0].times
-start_time, end_time, angul_vel, angul_pre, rgb_1, rgb_2 = get_attributes(one_rec)
+start_time, end_time, angul_vel, angul_pre, rgb_1, rgb_2 = get_attributes(
+    one_rec)
 
-start_time = np.sort(start_time)
-end_time = np.sort(end_time)
-
-# time index for the first snippet
-bline = []
-dt = time[1]-time[0]
-# first time indx snippet
-b_start = fc(time, start_time[0])
-b_end = fc(time, end_time[0])
-bline.append(np.arange(b_start, b_end))
-time_snippets = []
-
-for st, end in zip(start_time[1:-1], end_time[1:-1]):
-    #print(st, end)
-    start_inx = fc(time, st)
-    end_inx = fc(time, end)
-    time_snippets.append(np.arange(start_inx, end_inx))
-
-mean_zscore = []
-for snip in time_snippets:
-    zscores_snip = one_rec[0].zscore[snip]
-    mean_zscore.append(np.mean(zscores_snip))
-
+mean_zscore = mean_zscore_roi(one_rec, 10)
 
 embed()
 exit()

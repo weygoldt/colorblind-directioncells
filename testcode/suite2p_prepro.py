@@ -1,54 +1,126 @@
-import h5py as h5
-import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.pyplot as plt
 from IPython import embed
+import h5py as h5
 from vxtools.summarize.structure import SummaryFile
+from functions import find_closest as fc
 
 f = SummaryFile('data/Summary.hdf5')
 # get all rois
 rois = f.rois()
-
-rois_0 = rois[0]
-
-for i, roi in enumerate(f.rois()[:20]):
-    dff = roi.dff
-    plt.plot(i + (dff - dff.min()) / (dff.max() - dff.min()),
-             color='black', linewidth='1.')
-plt.show()
-
 # get one recording
-one_rec = []
-for r in rois:
-    if r.rec_id == 1:
-        one_rec.append(r)
-time = one_rec[0].times
+def data_one_rec_id(summaryfile, rec_id):
+    """Get all rois of one recording 
 
-roi = 550
-start_time = []
-end_time = []
-angul_vel = []
-angul_pre = []
-rgb_1 = []
-rgb_2 = []
-for indx, grp in enumerate(one_rec[roi].rec.h5group['display_data']['phases'].values()):
-    if indx == 0 or indx == len(one_rec[roi].rec.h5group['display_data']['phases'])-1:
-        continue
-    print(indx)
-    try:
+    Parameters
+    ----------
+    summaryfile : hdf5
+        summaryfile with all recordings 
+    rec_id : int
+        chooses wich recording one wants 
+
+    Returns
+    -------
+    list of hdf5
+        list of all the rois within one recording
+    """
+    roi_one_rec = []
+    for r in rois:
+        if r.rec_id == rec_id:
+            roi_one_rec.append(r)
+    return roi_one_rec
+
+
+def get_attributes(one_recording):
+    """get attributes of one recording. 
+
+    Parameters
+    ----------
+    one_recording : vxtools.summarize.structure.Roi 
+        hdf5 SummaryFile with all rois of the same recording id 
+
+    Returns
+    -------
+    start_time np.array()
+        sorted start_times of the stimulus 
+    stop_time np.array()
+        sorted stop_times of the stimulus 
+    angul_vel list()
+        angular velocitiy used in the stimulus 
+    angul_pre list()
+        angular period used for the stimulus 
+    rgb1 np.array of arrays with 3 colors 
+        colors used for the first stripe 
+    rgb2 np.array of arrays with 3 colors 
+        colors used for the second stripe 
+    """
+
+    roi = 1
+    start_time = []
+    end_time = []
+    angul_vel = []
+    angul_pre = []
+    rgb_1 = []
+    rgb_2 = []
+    len_phases = len(
+        one_recording[roi].rec.h5group['display_data']['phases']) - 1
+
+    for grp in one_recording[roi].rec.h5group['display_data']['phases'].values():
         start_time.append(grp.attrs['start_time'])
         end_time.append(grp.attrs['end_time'])
+        if (grp == one_recording[roi].rec.h5group['display_data']['phases']['0']) or (grp == one_recording[roi].rec.h5group['display_data']['phases'][f'{len_phases}']):
+            angul_vel.append(np.nan)
+            angul_pre.append(np.nan)
+            rgb_1.append(np.nan)
+            rgb_2.append(np.nan)
+            continue
         angul_vel.append(grp.attrs['angular_velocity'])
         angul_pre.append(grp.attrs['angular_period'])
         rgb_1.append(grp.attrs['rgb01'])
         rgb_2.append(grp.attrs['rgb02'])
-    except:
-        embed()
+    
+    return np.sort(start_time), np.sort(end_time), angul_vel, angul_pre, rgb_1, rgb_2
 
+one_rec = data_one_rec_id(SummaryFile, 1)
+time = one_rec[0].times
+start_time, end_time, angul_vel, angul_pre, rgb_1, rgb_2 = get_attributes(one_rec)
+
+start_time = np.sort(start_time)
+end_time = np.sort(end_time)
+
+# time index for the first snippet
+bline = []
+dt = time[1]-time[0]
+# first time indx snippet
+b_start = fc(time, start_time[0])
+b_end = fc(time, end_time[0])
+bline.append(np.arange(b_start, b_end))
+time_snippets = []
+
+for st, end in zip(start_time[1:-1], end_time[1:-1]):
+    #print(st, end)
+    start_inx = fc(time, st)
+    end_inx = fc(time, end)
+    time_snippets.append(np.arange(start_inx, end_inx))
+
+mean_zscore = []
+for snip in time_snippets:
+    zscores_snip = one_rec[0].zscore[snip]
+    mean_zscore.append(np.mean(zscores_snip))
+
+
+embed()
+exit()
+
+one_rec[0].dff
 
 plt.plot(time, one_rec[0].zscore)
 plt.scatter(np.sort(start_time), np.ones_like(start_time), c='r')
 plt.scatter(np.sort(end_time), np.ones_like(end_time))
 plt.show()
 
-embed()
-exit()
+for i, roi in enumerate(one_rec[:20]):
+    dff = roi.dff
+    plt.plot(i + (dff - dff.min()) / (dff.max() - dff.min()),
+             color='black', linewidth='1.')
+plt.show()

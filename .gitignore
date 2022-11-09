@@ -6,8 +6,10 @@
 testdata
 data
 env
+
 # Mac Stuff 
-.DS_Store
+*.DS_Store
+
 ### Python ###
 # Byte-compiled / optimized / DLL files
 __pycache__/

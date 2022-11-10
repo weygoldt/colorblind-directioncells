@@ -149,6 +149,7 @@ for roi in tqdm(range(len(one_rec))):
 for i, s in enumerate(rposs):
     plt.scatter(i, s[0])
 
+
 """
 # convert to numpy array
 rposs = np.array(rposs)
@@ -201,4 +202,10 @@ roi = 10
 z_vel_30 = [z for z,a in zip(mean_zscore, angul_vel) if a == 30.0]
 z_vel_minus30 = [z for z,a in zip(mean_zscore, angul_vel) if a == -30.0]
 z_vel_0 = [z for z, a in zip(mean_zscore, angul_vel) if a == 0.0]
+"""
+
+"""
+correlate repeats with each other:
+take first two repeats of the same phase series to find cells that respond over time
+use dff
 """

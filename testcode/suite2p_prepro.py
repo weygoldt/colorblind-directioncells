@@ -2,10 +2,10 @@ import h5py as h5
 import matplotlib.pyplot as plt
 import numpy as np
 from IPython import embed
-from scipy.stats import spearmanr
+from scipy.stats import spearmanr, pearsonr
 from tqdm import tqdm
 from vxtools.summarize.structure import SummaryFile
-
+from itertools import combinations
 from functions import find_on_time as fc
 
 f = SummaryFile('../data/Summary.hdf5')
@@ -124,6 +124,35 @@ def mean_zscore_roi(one_recording, roi):
         mean_zscore.append(np.mean(zscores_snip))
 
     return mean_zscore
+    
+def mean_dff_roi(one_recording, roi):
+    """Calculates the mean zscore between the start and end point of the stimulus of one single ROI
+
+    Parameters
+    ----------
+    one_recording : vxtools.summarize.structure.Roi
+        hdf5 SummaryFile with all rois of the same recording id
+
+    Returns
+    -------
+    list
+       mean zscore for evry start and stop time
+    """
+    start_time, end_time, angul_vel, angul_pre, rgb_1, rgb_2 = get_attributes(
+        one_recording)
+
+    time_snippets = []
+    for st, end in zip(start_time, end_time):
+        start_inx = fc(time, st)
+        end_inx = fc(time, end)
+        time_snippets.append(np.arange(start_inx, end_inx))
+
+    mean_dff = []
+    for snip in time_snippets:
+        zscores_snip = one_recording[roi].dff[snip]
+        mean_dff.append(np.mean(zscores_snip))
+
+    return mean_dff
 
 def repeats(angul_vel, nrepeats=3):
     nonnan_angul_vel = [x for x in angul_vel if np.isnan(x) == False]
@@ -141,22 +170,75 @@ def repeats(angul_vel, nrepeats=3):
     return inx
 
 def corr_repeats(m_z_score, inx):
-    embed()
-    exit()
     z = []
     for i in inx:
         z.append(m_z_score[i[0]:i[-1]])
-
+    combs = [comb for comb in combinations(z, 2)]
+    spear = []
+    for co in combs:
+        spear.append(spearmanr(co[0], co[1])[0])
     
-  
+    spear_mean = np.mean(spear)
+    
+    return spear_mean
+
+def active_rois(one_recording, inx, threshold=0.6 ):
+    spearmeans = []
+    for r in tqdm(range(len(one_recording))):
+        mean_zscore= mean_dff_roi(one_recording, r)
+        spear_mean = corr_repeats(mean_zscore, inx)
+        spearmeans.append(spear_mean)
+    index = np.arange(len(spearmeans), dtype=int)
+    active_roi = index[np.array(spearmeans) >= threshold]
+    spearmeans_a_roi = np.array(spearmeans)[active_roi] 
+    result = np.empty((len(active_roi),2))
+    active_spear = np.vstack((active_roi, spearmeans_a_roi)).T
+    result[:,0] = active_roi
+    result[:,1] = spearmeans_a_roi
+    active_spear_sorted = sorted(result, key=lambda x : x[1], reverse=True)
+    embed()
+    exit()
+    return active_spear_sorted
+
+def plot_ang_velocity(onerecording, rois):
+    for r in rois:
+        mean_zscores = mean_dff_roi(onerecording, r)
+        z_vel_30 = [z for z, a in zip(mean_zscores, angul_vel) if a == 30.0]
+        z_vel_minus30 = [z for z, a in zip(mean_zscores, angul_vel) if a == -30.0]
+        z_vel_0 = [z for z, a in zip(mean_zscores, angul_vel) if a == 0.0]
+
+        fig, ax = plt.subplots()
+        ax.boxplot(z_vel_0, positions=[1])
+        ax.boxplot(z_vel_minus30, positions=[2])
+        ax.boxplot(z_vel_30, positions=[3])
+        ax.set_xticklabels(['0vel', '-30vel', '30vel'])
+        plt.show()
+
+
 one_rec = data_one_rec_id(f, 5)
 time = one_rec[0].times
 start_time, end_time, angul_vel, angul_pre, rgb_1, rgb_2 = get_attributes(
     one_rec)
-mean_zscore= mean_zscore_roi(one_rec, 10)
 inx = repeats(angul_vel)
-corr_repeats(mean_zscore, inx)
+active_spear = active_rois(one_rec,inx, threshold=0.3)
+embed()
+exit()
 
+active_dff = [one_rec[ar].dff for ar in active_roi]
+
+
+
+
+for i, roi in enumerate(active_roi):
+    dff = roi.dff
+    plt.plot(i + (dff - dff.min()) / (dff.max() - dff.min()),
+             color='black', linewidth='1.')
+plt.show()
+
+
+
+embed()
+exit()
 
 """
 rposs = []
@@ -217,11 +299,7 @@ plt.scatter(np.sort(end_time), np.ones_like(end_time))
 plt.scatter((start_time) + (end_time - start_time)/2, mean_zscore, c='k')
 plt.show()
 
-for i, roi in enumerate(one_rec[:20]):
-    dff = roi.dff
-    plt.plot(i + (dff - dff.min()) / (dff.max() - dff.min()),
-             color='black', linewidth='1.')
-plt.show()
+
 """
 
 """

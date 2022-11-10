@@ -65,9 +65,11 @@ def get_attributes(one_recording):
     angul_pre = []
     rgb_1 = []
     rgb_2 = []
-    len_phases = len(
-        one_recording[roi].rec.h5group['display_data']['phases'])
-    range_phases = np.arange(0, len_phases)
+
+    array_phases =np.sort(one_recording[roi].rec.h5group['display_data']['phases'])
+    int_phases = np.sort([int(x) for x in array_phases])
+    range_phases = np.arange(int_phases[0], int_phases[-1])
+
     for ph in range_phases:
         start_time.append(
             one_recording[roi].rec.h5group['display_data']['phases'][f'{ph}'].attrs['start_time'])
@@ -122,7 +124,7 @@ def mean_zscore_roi(one_recording, roi):
     return mean_zscore
 
 
-one_rec = data_one_rec_id(f, 1)
+one_rec = data_one_rec_id(f, 3)
 time = one_rec[0].times
 start_time, end_time, angul_vel, angul_pre, rgb_1, rgb_2 = get_attributes(
     one_rec)

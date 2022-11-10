@@ -1,25 +1,27 @@
-import numpy as np
-import matplotlib.pyplot as plt
-from IPython import embed
 import h5py as h5
-from vxtools.summarize.structure import SummaryFile
-from functions import find_on_time as fc
+import matplotlib.pyplot as plt
+import numpy as np
+from IPython import embed
 from scipy.stats import pearsonr
+from tqdm import tqdm
+from vxtools.summarize.structure import SummaryFile
 
-f = SummaryFile('data/Summary.hdf5')
+from functions import find_on_time as fc
+
+f = SummaryFile('../data/Summary.hdf5')
 # get all rois
 # get one recording
 
 
 def data_one_rec_id(summaryfile, rec_id):
-    """Get all rois of one recording 
+    """Get all rois of one recording
 
     Parameters
     ----------
     summaryfile : hdf5
-        summaryfile with all recordings 
+        summaryfile with all recordings
     rec_id : int
-        chooses wich recording one wants 
+        chooses wich recording one wants
 
     Returns
     -------
@@ -35,27 +37,27 @@ def data_one_rec_id(summaryfile, rec_id):
 
 
 def get_attributes(one_recording):
-    """get attributes of one recording. 
+    """get attributes of one recording.
 
     Parameters
     ----------
-    one_recording : vxtools.summarize.structure.Roi 
-        hdf5 SummaryFile with all rois of the same recording id 
+    one_recording : vxtools.summarize.structure.Roi
+        hdf5 SummaryFile with all rois of the same recording id
 
     Returns
     -------
     start_time np.array()
-        sorted start_times of the stimulus 
+        sorted start_times of the stimulus
     stop_time np.array()
-        sorted stop_times of the stimulus 
+        sorted stop_times of the stimulus
     angul_vel list()
-        angular velocitiy used in the stimulus 
+        angular velocitiy used in the stimulus
     angul_pre list()
-        angular period used for the stimulus 
-    rgb1 np.array of arrays with 3 colors 
-        colors used for the first stripe 
-    rgb2 np.array of arrays with 3 colors 
-        colors used for the second stripe 
+        angular period used for the stimulus
+    rgb1 np.array of arrays with 3 colors
+        colors used for the first stripe
+    rgb2 np.array of arrays with 3 colors
+        colors used for the second stripe
     """
 
     roi = 1
@@ -99,13 +101,13 @@ def mean_zscore_roi(one_recording, roi):
 
     Parameters
     ----------
-    one_recording : vxtools.summarize.structure.Roi 
-        hdf5 SummaryFile with all rois of the same recording id 
+    one_recording : vxtools.summarize.structure.Roi
+        hdf5 SummaryFile with all rois of the same recording id
 
     Returns
     -------
     list
-       mean zscore for evry start and stop time 
+       mean zscore for evry start and stop time
     """
     start_time, end_time, angul_vel, angul_pre, rgb_1, rgb_2 = get_attributes(
         one_recording)
@@ -115,7 +117,7 @@ def mean_zscore_roi(one_recording, roi):
         start_inx = fc(time, st)
         end_inx = fc(time, end)
         time_snippets.append(np.arange(start_inx, end_inx))
-    
+
     mean_zscore = []
     for snip in time_snippets:
         zscores_snip = one_recording[roi].zscore[snip]
@@ -128,8 +130,9 @@ one_rec = data_one_rec_id(f, 3)
 time = one_rec[0].times
 start_time, end_time, angul_vel, angul_pre, rgb_1, rgb_2 = get_attributes(
     one_rec)
+
+
 """roi = 10
-mean_zscore = mean_zscore_roi(one_rec, roi)
 
 z_vel_30 = [z for z,a in zip(mean_zscore, angul_vel) if a == 30.0]
 
@@ -138,39 +141,48 @@ z_vel_minus30 = [z for z,a in zip(mean_zscore, angul_vel) if a == -30.0]
 z_vel_0 = [z for z, a in zip(mean_zscore, angul_vel) if a == 0.0]
 """
 
-new_ang_phase_30 = []
+rposs = []
+rnegs = []
+for roi in tqdm(range(len(one_rec))):
+    mean_zscore = mean_zscore_roi(one_rec, roi)[1:-1]
+    angveloc_pos = [1 if a == 30.0 else 0 for a in angul_vel][1:-1]
+    angveloc_neg = [1 if a == -30.0 else 0 for a in angul_vel][1:-1]
+    rposs.append(pearsonr(mean_zscore, angveloc_pos))
+    rnegs.append(pearsonr(mean_zscore, angveloc_neg))
 
-for a in angul_vel[1:-1]:
-    if a == -30.0:
-        a = 0.0
-    new_ang_phase_30.append(a)
+plt.plot(rposs)
+plt.show()
 
-new_ang_phase_minus30 = []
+plt.plot(rnegs)
+plt.show()
 
-for a in angul_vel[1:-1]:
-    if a == 30.0:
-        a = 0.0
-    new_ang_phase_minus30.append(a)
+# convert to numpy array
+rposs = np.array(rposs)
+rnegs = np.array(rnegs)
 
+# threshold
+rposs[rposs < 0.3] = 0
+rnegs[rnegs < 0.3] = 0
 
-embed()
-exit()
-rois = len(one_rec)
-for r in range(rois):
+# find indices, which are rois
+index_array = np.arange(len(rposs))
+pos_rois = index_array[rposs != 0]
+neg_rois = index_array[rnegs != 0]
+
+# plot
+rois = neg_rois
+for r in rois:
     mean_zscores = mean_zscore_roi(one_rec, r)
-
-    z_vel_30 = [z for z,a in zip(mean_zscores, angul_vel) if a == 30.0]
-
-    z_vel_minus30 = [z for z,a in zip(mean_zscores, angul_vel) if a == -30.0]
-
+    z_vel_30 = [z for z, a in zip(mean_zscores, angul_vel) if a == 30.0]
+    z_vel_minus30 = [z for z, a in zip(mean_zscores, angul_vel) if a == -30.0]
     z_vel_0 = [z for z, a in zip(mean_zscores, angul_vel) if a == 0.0]
+
     fig, ax = plt.subplots()
-    ax.boxplot(z_vel_0,positions=[1] )
-    ax.boxplot(z_vel_minus30, positions=[2] )
+    ax.boxplot(z_vel_0, positions=[1])
+    ax.boxplot(z_vel_minus30, positions=[2])
     ax.boxplot(z_vel_30, positions=[3])
     ax.set_xticklabels(['0vel', '-30vel', '30vel'])
     plt.show()
-
 
 """
 plt.plot(time, one_rec[roi].zscore)

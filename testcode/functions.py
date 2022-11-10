@@ -3,6 +3,23 @@ import numpy as np
 from termcolors import TermColor as tc
 
 
+def flatten(l):
+    """
+    Flattens a list / array of lists.
+
+    Parameters
+    ----------
+    l : array or list of lists
+        The list to be flattened
+
+    Returns
+    -------
+    list
+        The flattened list
+    """
+    return [item for sublist in l for item in sublist]
+
+
 def find_on_time(array, target, limit=True, verbose=True):
     """Takes a time array and a target (e.g. timestamp) and returns an index for a value of the array that matches the target most closely.
 

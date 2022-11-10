@@ -129,16 +129,6 @@ time = one_rec[0].times
 start_time, end_time, angul_vel, angul_pre, rgb_1, rgb_2 = get_attributes(
     one_rec)
 
-
-"""roi = 10
-
-z_vel_30 = [z for z,a in zip(mean_zscore, angul_vel) if a == 30.0]
-
-z_vel_minus30 = [z for z,a in zip(mean_zscore, angul_vel) if a == -30.0]
-
-z_vel_0 = [z for z, a in zip(mean_zscore, angul_vel) if a == 0.0]
-"""
-
 rposs = []
 rnegs = []
 for roi in tqdm(range(len(one_rec))):
@@ -148,12 +138,6 @@ for roi in tqdm(range(len(one_rec))):
     rposs.append(pearsonr(mean_zscore, angveloc_pos))
     rnegs.append(pearsonr(mean_zscore, angveloc_neg))
 
-plt.plot(rposs)
-plt.show()
-
-plt.plot(rnegs)
-plt.show()
-
 # convert to numpy array
 rposs = np.array(rposs)
 rnegs = np.array(rnegs)
@@ -161,6 +145,8 @@ rnegs = np.array(rnegs)
 # threshold
 rposs[rposs < 0.3] = 0
 rnegs[rnegs < 0.3] = 0
+
+# threshold by significance
 
 # find indices, which are rois
 index_array = np.arange(len(rposs))
@@ -194,4 +180,11 @@ for i, roi in enumerate(one_rec[:20]):
     plt.plot(i + (dff - dff.min()) / (dff.max() - dff.min()),
              color='black', linewidth='1.')
 plt.show()
+"""
+
+"""
+roi = 10
+z_vel_30 = [z for z,a in zip(mean_zscore, angul_vel) if a == 30.0]
+z_vel_minus30 = [z for z,a in zip(mean_zscore, angul_vel) if a == -30.0]
+z_vel_0 = [z for z, a in zip(mean_zscore, angul_vel) if a == 0.0]
 """

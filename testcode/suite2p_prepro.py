@@ -135,10 +135,14 @@ z_vel_30 = [z for z,a in zip(mean_zscore, angul_vel) if a == 30.0]
 z_vel_minus30 = [z for z,a in zip(mean_zscore, angul_vel) if a == -30.0]
 
 z_vel_0 = [z for z, a in zip(mean_zscore, angul_vel) if a == 0.0]
-embed()
-exit()
-one_rec[0].dff
 
+plt.boxplot(z_vel_0,positions=[1] )
+plt.boxplot(z_vel_minus30, positions=[2] )
+plt.boxplot(z_vel_30, positions=[3])
+plt.show()
+
+
+"""
 plt.plot(time, one_rec[roi].zscore)
 plt.scatter(np.sort(start_time), np.ones_like(start_time), c='r')
 plt.scatter(np.sort(end_time), np.ones_like(end_time))
@@ -150,3 +154,4 @@ for i, roi in enumerate(one_rec[:20]):
     plt.plot(i + (dff - dff.min()) / (dff.max() - dff.min()),
              color='black', linewidth='1.')
 plt.show()
+"""

@@ -6,7 +6,7 @@ import numpy as np
 from termcolors import TermColor as tc
 
 
-def find_closest(array, target, limit=True, verbose=True):
+def find_on_time(array, target, limit=True, verbose=True):
     """Takes a time array and a target (e.g. timestamp) and returns an index for a value of the array that matches the target most closely.
 
     The time array must (a) contain unique values and (b) must be sorted from smallest to largest. If limit is True, the function checks for each target, if the difference between the target and the closest time on the time array is not larger than half of the distance between two time points at that place. When the distance exceed half the delta t, an error is returned. This also means that the time array must not nessecarily have a constant delta t.

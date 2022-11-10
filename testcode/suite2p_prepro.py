@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from IPython import embed
 import h5py as h5
 from vxtools.summarize.structure import SummaryFile
-from functions import find_closest as fc
+from functions import find_on_time as fc
 
 f = SummaryFile('data/Summary.hdf5')
 # get all rois
@@ -121,17 +121,17 @@ one_rec = data_one_rec_id(f, 1)
 time = one_rec[0].times
 start_time, end_time, angul_vel, angul_pre, rgb_1, rgb_2 = get_attributes(
     one_rec)
+roi = 10 
+mean_zscore = mean_zscore_roi(one_rec, roi)
 
-mean_zscore = mean_zscore_roi(one_rec, 10)
 
-embed()
-exit()
 
 one_rec[0].dff
 
-plt.plot(time, one_rec[0].zscore)
+plt.plot(time, one_rec[roi].zscore)
 plt.scatter(np.sort(start_time), np.ones_like(start_time), c='r')
 plt.scatter(np.sort(end_time), np.ones_like(end_time))
+plt.scatter((start_time) + (end_time - start_time)/2, mean_zscore, c = 'k')
 plt.show()
 
 for i, roi in enumerate(one_rec[:20]):

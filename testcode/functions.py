@@ -1,18 +1,20 @@
 import numpy as np
 
 from termcolors import TermColor as tc
+import numpy as np
+
+from termcolors import TermColor as tc
 
 
-def find_closest_new(array, target, limit=True, verbose=True):
-    """Takes an array and a target and returns an index for a value of the array that matches the target most closely.
+def find_closest(array, target, limit=True, verbose=True):
+    """Takes a time array and a target (e.g. timestamp) and returns an index for a value of the array that matches the target most closely.
 
-    Could also work with multiple targets and may not work for unsorted arrays, i.e. where a value occurs multiple times. Primarily used for time vectors. If limit is enabled, the difference between the target and a value on the array can not be smaller than half
-    of the difference between two points on the array.
+    The time array must (a) contain unique values and (b) must be sorted from smallest to largest. If limit is True, the function checks for each target, if the difference between the target and the closest time on the time array is not larger than half of the distance between two time points at that place. When the distance exceed half the delta t, an error is returned. This also means that the time array must not nessecarily have a constant delta t.
 
     Parameters
     ----------
     array : array, required
-        The array to search in.
+        The array to search in, must be sorted.
     target : float, required
         The number that needs to be found in the array.
     limit : bool, default True
@@ -26,57 +28,68 @@ def find_closest_new(array, target, limit=True, verbose=True):
         Index for the array where the closes value to target is.
     """
 
+    def find_closest(array, target):
+        idx = array.searchsorted(target)
+        idx = np.clip(idx, 1, len(array) - 1)
+        left = array[idx - 1]
+        right = array[idx]
+        idx -= target - left < right - target
+
+        return idx
+
+    def error(verbose):
+        if verbose:
+            raise ValueError(
+                f"{tc.err('[ERROR]')} [functions.find_closest] The data point (target) is not on the array!")
+
+    def warning(verbose):
+        if verbose:
+            print(
+                f"{tc.warn('[WARNING]')} [functions.find_closest] The data point (target) is not on the array!")
+
     # find the closest value
-    idx = array.searchsorted(target)
-    idx = np.clip(idx, 1, len(array) - 1)
-    left = array[idx - 1]
-    right = array[idx]
-    idx -= target - left < right - target
+    idx = find_closest(array, target)
 
-    # report error if limit is true
-    if limit:
-        dt = array[1] - array[0]
+    # compute dt at this point
+    found = array[idx]
+    dt_target = target - found
 
-        # check if difference between index and target is larger than half the sampling dt
-        if abs(array[idx]-target) > dt/2:
-            idx = np.nan
-            if verbose:
-                print(
-                    f"{tc.err('[ERROR]')} [functions.find_closest] The data point (target) is not on the array!")
+    # check if target between first and last value
+    if target <= array[-1] and target >= array[0]:
+        if dt_target > 0:
+            dt_sampled = array[idx+1]-array[idx]
+        else:
+            dt_sampled = array[idx]-array[idx-1]
 
-    # do the same check but still return the value and just print a warning
-    else:
-        dt = array[1] - array()[0]
-        if abs(array[idx]-target) > dt/2:
-            if verbose:
-                print(
-                    f"{tc.warn('[WARNING]')} [functions.find_closest] The data point (target) is not on the array!")
+        if abs(array[idx]-target) > dt_sampled/2:
+            if limit:
+                idx = np.nan
+                error(verbose)
+            else:
+                warning(verbose)
+
+    # check if target smaller than first value
+    elif target < array[0]:
+        dt_sampled = array[1]-array[0]
+
+        if abs(array[idx]-target) > dt_sampled/2:
+            if limit:
+                idx = np.nan
+                error(verbose)
+            else:
+                warning(verbose)
+
+    # check if target larger than last value
+    elif target > array[-1]:
+        dt_sampled = array[-1]-array[-2]
+
+        if abs(array[idx]-target) > dt_sampled/2:
+            if limit:
+                idx = np.nan
+                error(verbose)
+            else:
+                warning(verbose)
 
     return idx
 
-
-
-def find_closest(array, target):
-    """Takes an array and a target and returns an index for a value of the array that matches the target most closely.
-
-    Could also work with multiple targets and may not work for unsorted arrays, i.e. where a value occurs multiple times. Primarily used for time vectors.
-
-    Parameters
-    ----------
-    array : array, required
-        The array to search in.
-    target : float, required
-        The number that needs to be found in the array.
-
-    Returns
-    ----------
-    idx : array,
-        Index for the array where the closes value to target is.
-    """
-    idx = array.searchsorted(target)
-    idx = np.clip(idx, 1, len(array) - 1)
-    left = array[idx - 1]
-    right = array[idx]
-    idx -= target - left < right - target
-    return idx
 

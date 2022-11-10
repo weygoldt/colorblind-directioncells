@@ -66,24 +66,30 @@ def get_attributes(one_recording):
     rgb_1 = []
     rgb_2 = []
     len_phases = len(
-        one_recording[roi].rec.h5group['display_data']['phases']) - 1
-
-    for grp in one_recording[roi].rec.h5group['display_data']['phases'].values():
-        start_time.append(grp.attrs['start_time'])
-        end_time.append(grp.attrs['end_time'])
-        if (grp == one_recording[roi].rec.h5group['display_data']['phases']['0']) or \
-                (grp == one_recording[roi].rec.h5group['display_data']['phases'][f'{len_phases}']):
+        one_recording[roi].rec.h5group['display_data']['phases'])
+    range_phases = np.arange(0, len_phases)
+    for ph in range_phases:
+        start_time.append(
+            one_recording[roi].rec.h5group['display_data']['phases'][f'{ph}'].attrs['start_time'])
+        end_time.append(
+            one_recording[roi].rec.h5group['display_data']['phases'][f'{ph}'].attrs['end_time'])
+        if ph == 0 or ph == range_phases[-1]:
             angul_vel.append(np.nan)
             angul_pre.append(np.nan)
             rgb_1.append(np.nan)
             rgb_2.append(np.nan)
             continue
-        angul_vel.append(grp.attrs['angular_velocity'])
-        angul_pre.append(grp.attrs['angular_period'])
-        rgb_1.append(grp.attrs['rgb01'])
-        rgb_2.append(grp.attrs['rgb02'])
+        angul_vel.append(one_recording[roi].rec.h5group['display_data']
+                         ['phases'][f'{ph}'].attrs['angular_velocity'])
 
-    return np.sort(start_time), np.sort(end_time), angul_vel, angul_pre, rgb_1, rgb_2
+        angul_pre.append(one_recording[roi].rec.h5group['display_data']
+                         ['phases'][f'{ph}'].attrs['angular_period'])
+        rgb_1.append(
+            one_recording[roi].rec.h5group['display_data']['phases'][f'{ph}'].attrs['rgb01'])
+        rgb_2.append(
+            one_recording[roi].rec.h5group['display_data']['phases'][f'{ph}'].attrs['rgb02'])
+
+    return start_time, end_time, angul_vel, angul_pre, rgb_1, rgb_2
 
 
 def mean_zscore_roi(one_recording, roi):
@@ -121,17 +127,16 @@ one_rec = data_one_rec_id(f, 1)
 time = one_rec[0].times
 start_time, end_time, angul_vel, angul_pre, rgb_1, rgb_2 = get_attributes(
     one_rec)
-roi = 10 
+roi = 10
 mean_zscore = mean_zscore_roi(one_rec, roi)
-
-
-
+embed()
+exit()
 one_rec[0].dff
 
 plt.plot(time, one_rec[roi].zscore)
 plt.scatter(np.sort(start_time), np.ones_like(start_time), c='r')
 plt.scatter(np.sort(end_time), np.ones_like(end_time))
-plt.scatter((start_time) + (end_time - start_time)/2, mean_zscore, c = 'k')
+plt.scatter((start_time) + (end_time - start_time)/2, mean_zscore, c='k')
 plt.show()
 
 for i, roi in enumerate(one_rec[:20]):

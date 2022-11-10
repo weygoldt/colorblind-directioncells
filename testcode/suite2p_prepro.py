@@ -177,6 +177,7 @@ for i, s in enumerate(rposs):
     plt.scatter(i, s[0])
 
 """
+"""
 # convert to numpy array
 rposs = np.array(rposs)
 rnegs = np.array(rnegs)

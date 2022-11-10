@@ -4,10 +4,10 @@ from IPython import embed
 import h5py as h5
 from vxtools.summarize.structure import SummaryFile
 from functions import find_on_time as fc
+from scipy.stats import pearsonr
 
 f = SummaryFile('data/Summary.hdf5')
 # get all rois
-rois = f.rois()
 # get one recording
 
 
@@ -105,7 +105,6 @@ def mean_zscore_roi(one_recording, roi):
     list
        mean zscore for evry start and stop time 
     """
-
     start_time, end_time, angul_vel, angul_pre, rgb_1, rgb_2 = get_attributes(
         one_recording)
 
@@ -114,7 +113,7 @@ def mean_zscore_roi(one_recording, roi):
         start_inx = fc(time, st)
         end_inx = fc(time, end)
         time_snippets.append(np.arange(start_inx, end_inx))
-
+    
     mean_zscore = []
     for snip in time_snippets:
         zscores_snip = one_recording[roi].zscore[snip]
@@ -127,7 +126,7 @@ one_rec = data_one_rec_id(f, 1)
 time = one_rec[0].times
 start_time, end_time, angul_vel, angul_pre, rgb_1, rgb_2 = get_attributes(
     one_rec)
-roi = 10
+"""roi = 10
 mean_zscore = mean_zscore_roi(one_rec, roi)
 
 z_vel_30 = [z for z,a in zip(mean_zscore, angul_vel) if a == 30.0]
@@ -135,11 +134,40 @@ z_vel_30 = [z for z,a in zip(mean_zscore, angul_vel) if a == 30.0]
 z_vel_minus30 = [z for z,a in zip(mean_zscore, angul_vel) if a == -30.0]
 
 z_vel_0 = [z for z, a in zip(mean_zscore, angul_vel) if a == 0.0]
+"""
 
-plt.boxplot(z_vel_0,positions=[1] )
-plt.boxplot(z_vel_minus30, positions=[2] )
-plt.boxplot(z_vel_30, positions=[3])
-plt.show()
+new_ang_phase_30 = []
+
+for a in angul_vel[1:-1]:
+    if a == -30.0:
+        a = 0.0
+    new_ang_phase_30.append(a)
+
+new_ang_phase_minus30 = []
+
+for a in angul_vel[1:-1]:
+    if a == 30.0:
+        a = 0.0
+    new_ang_phase_minus30.append(a)
+
+
+embed()
+exit()
+rois = len(one_rec)
+for r in range(rois):
+    mean_zscores = mean_zscore_roi(one_rec, r)
+
+    z_vel_30 = [z for z,a in zip(mean_zscores, angul_vel) if a == 30.0]
+
+    z_vel_minus30 = [z for z,a in zip(mean_zscores, angul_vel) if a == -30.0]
+
+    z_vel_0 = [z for z, a in zip(mean_zscores, angul_vel) if a == 0.0]
+    fig, ax = plt.subplots()
+    ax.boxplot(z_vel_0,positions=[1] )
+    ax.boxplot(z_vel_minus30, positions=[2] )
+    ax.boxplot(z_vel_30, positions=[3])
+    ax.set_xticklabels(['0vel', '-30vel', '30vel'])
+    plt.show()
 
 
 """

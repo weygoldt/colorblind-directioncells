@@ -86,6 +86,4 @@ def find_on_time(array, target, limit=True, verbose=True):
                 error(verbose)
             else:
                 warning(verbose)
-
-
-return idx
+    return idx

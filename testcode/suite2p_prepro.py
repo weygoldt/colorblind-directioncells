@@ -9,8 +9,6 @@ from vxtools.summarize.structure import SummaryFile
 from functions import find_on_time as fc
 
 f = SummaryFile('../data/Summary.hdf5')
-# get all rois
-# get one recording
 
 
 def data_one_rec_id(summaryfile, rec_id):
@@ -132,8 +130,10 @@ time = one_rec[0].times
 start_time, end_time, angul_vel, angul_pre, rgb_1, rgb_2 = get_attributes(
     one_rec)
 
-rposs = np.zeros(2, len())
-rnegs = np.zeros(2, len())
+
+"""
+rposs = []
+rnegs = []
 for roi in tqdm(range(len(one_rec))):
 
     # make logical arrays for left and right turning motion
@@ -142,13 +142,13 @@ for roi in tqdm(range(len(one_rec))):
     angveloc_neg = [1 if a == -30.0 else 0 for a in angul_vel][1:-1]
 
     # compute correlation
-    rposs = spearmanr(mean_zscore, angveloc_pos)
-    rnegs = spearmanr(mean_zscore, angveloc_neg)
+    rposs.append(spearmanr(mean_zscore, angveloc_pos))
+    rnegs.append(spearmanr(mean_zscore, angveloc_neg))
 
 
 for i, s in enumerate(rposs):
     plt.scatter(i, s[0])
-
+"""
 """
 # convert to numpy array
 rposs = np.array(rposs)

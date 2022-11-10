@@ -157,6 +157,10 @@ mean_zscore= mean_zscore_roi(one_rec, 10)
 inx = repeats(angul_vel)
 corr_repeats(mean_zscore, inx)
 
+
+"""
+rposs = []
+rnegs = []
 for roi in tqdm(range(len(one_rec))):
 
     # make logical arrays for left and right turning motion
@@ -165,13 +169,12 @@ for roi in tqdm(range(len(one_rec))):
     angveloc_neg = [1 if a == -30.0 else 0 for a in angul_vel][1:-1]
 
     # compute correlation
-    rposs = spearmanr(mean_zscore, angveloc_pos)
-    rnegs = spearmanr(mean_zscore, angveloc_neg)
+    rposs.append(spearmanr(mean_zscore, angveloc_pos))
+    rnegs.append(spearmanr(mean_zscore, angveloc_neg))
 
 
 for i, s in enumerate(rposs):
     plt.scatter(i, s[0])
-
 
 """
 # convert to numpy array
@@ -222,8 +225,8 @@ plt.show()
 
 """
 roi = 10
-z_vel_30 = [z for z,a in zip(mean_zscore, angul_vel) if a == 30.0]
-z_vel_minus30 = [z for z,a in zip(mean_zscore, angul_vel) if a == -30.0]
+z_vel_30 = [z for z, a in zip(mean_zscore, angul_vel) if a == 30.0]
+z_vel_minus30 = [z for z, a in zip(mean_zscore, angul_vel) if a == -30.0]
 z_vel_0 = [z for z, a in zip(mean_zscore, angul_vel) if a == 0.0]
 """
 

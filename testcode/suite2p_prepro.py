@@ -2,7 +2,7 @@ import h5py as h5
 import matplotlib.pyplot as plt
 import numpy as np
 from IPython import embed
-from scipy.stats import pearsonr
+from scipy.stats import spearmanr
 from tqdm import tqdm
 from vxtools.summarize.structure import SummaryFile
 
@@ -68,7 +68,8 @@ def get_attributes(one_recording):
     rgb_1 = []
     rgb_2 = []
 
-    array_phases =np.sort(one_recording[roi].rec.h5group['display_data']['phases'])
+    array_phases = np.sort(
+        one_recording[roi].rec.h5group['display_data']['phases'])
     int_phases = np.sort([int(x) for x in array_phases])
     range_phases = np.arange(int_phases[0], int_phases[-1])
 
@@ -77,7 +78,7 @@ def get_attributes(one_recording):
             one_recording[roi].rec.h5group['display_data']['phases'][f'{ph}'].attrs['start_time'])
         end_time.append(
             one_recording[roi].rec.h5group['display_data']['phases'][f'{ph}'].attrs['end_time'])
-        if ph == 0 or ph == range_phases[-1]:
+        if ph == int_phases[0] or ph == int_phases[-1]:
             angul_vel.append(np.nan)
             angul_pre.append(np.nan)
             rgb_1.append(np.nan)
@@ -126,20 +127,29 @@ def mean_zscore_roi(one_recording, roi):
     return mean_zscore
 
 
-one_rec = data_one_rec_id(f, 3)
+one_rec = data_one_rec_id(f, 5)
 time = one_rec[0].times
 start_time, end_time, angul_vel, angul_pre, rgb_1, rgb_2 = get_attributes(
     one_rec)
 
-rposs = []
-rnegs = []
+rposs = np.zeros(2, len())
+rnegs = np.zeros(2, len())
 for roi in tqdm(range(len(one_rec))):
+
+    # make logical arrays for left and right turning motion
     mean_zscore = mean_zscore_roi(one_rec, roi)[1:-1]
     angveloc_pos = [1 if a == 30.0 else 0 for a in angul_vel][1:-1]
     angveloc_neg = [1 if a == -30.0 else 0 for a in angul_vel][1:-1]
-    rposs.append(pearsonr(mean_zscore, angveloc_pos))
-    rnegs.append(pearsonr(mean_zscore, angveloc_neg))
 
+    # compute correlation
+    rposs = spearmanr(mean_zscore, angveloc_pos)
+    rnegs = spearmanr(mean_zscore, angveloc_neg)
+
+
+for i, s in enumerate(rposs):
+    plt.scatter(i, s[0])
+
+"""
 # convert to numpy array
 rposs = np.array(rposs)
 rnegs = np.array(rnegs)
@@ -155,8 +165,9 @@ index_array = np.arange(len(rposs))
 pos_rois = index_array[rposs != 0]
 neg_rois = index_array[rnegs != 0]
 
+
 # plot
-rois = neg_rois
+rois = pos_rois
 for r in rois:
     mean_zscores = mean_zscore_roi(one_rec, r)
     z_vel_30 = [z for z, a in zip(mean_zscores, angul_vel) if a == 30.0]
@@ -169,6 +180,7 @@ for r in rois:
     ax.boxplot(z_vel_30, positions=[3])
     ax.set_xticklabels(['0vel', '-30vel', '30vel'])
     plt.show()
+""""
 
 """
 plt.plot(time, one_rec[roi].zscore)

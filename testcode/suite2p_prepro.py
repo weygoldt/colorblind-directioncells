@@ -8,7 +8,7 @@ from vxtools.summarize.structure import SummaryFile
 
 from functions import find_on_time as fc
 
-f = SummaryFile('data/Summary.hdf5')
+f = SummaryFile('../data/Summary.hdf5')
 # get all rois
 # get one recording
 
@@ -92,8 +92,6 @@ def get_attributes(one_recording):
             one_recording[roi].rec.h5group['display_data']['phases'][f'{ph}'].attrs['rgb01'])
         rgb_2.append(
             one_recording[roi].rec.h5group['display_data']['phases'][f'{ph}'].attrs['rgb02'])
-    embed()
-    exit()
 
     return start_time, end_time, angul_vel, angul_pre, rgb_1, rgb_2
 
@@ -127,14 +125,38 @@ def mean_zscore_roi(one_recording, roi):
 
     return mean_zscore
 
+def repeats(angul_vel, nrepeats=3):
+    nonnan_angul_vel = [x for x in angul_vel if np.isnan(x) == False]
 
+    nr = len(nonnan_angul_vel)/nrepeats
+    if nr % 1 != 0:
+        raise ValueError(f'Cant divide by {nrepeats}!')
+    inx  = []
+    for i in np.arange(1, nrepeats+1):
+        if i == 1:
+            inx.append((0,nr))
+        else:
+            inx.append(((i-1)*nr,nr*i))
+    inx = np.array(inx, dtype=int)
+    return inx
+
+def corr_repeats(m_z_score, inx):
+    embed()
+    exit()
+    z = []
+    for i in inx:
+        z.append(m_z_score[i[0]:i[-1]])
+
+    
+  
 one_rec = data_one_rec_id(f, 5)
 time = one_rec[0].times
 start_time, end_time, angul_vel, angul_pre, rgb_1, rgb_2 = get_attributes(
     one_rec)
+mean_zscore= mean_zscore_roi(one_rec, 10)
+inx = repeats(angul_vel)
+corr_repeats(mean_zscore, inx)
 
-rposs = np.zeros(2, len())
-rnegs = np.zeros(2, len())
 for roi in tqdm(range(len(one_rec))):
 
     # make logical arrays for left and right turning motion

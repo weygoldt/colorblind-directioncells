@@ -130,10 +130,6 @@ start_time, end_time, angul_vel, angul_pre, rgb_1, rgb_2 = get_attributes(
 roi = 10
 mean_zscore = mean_zscore_roi(one_rec, roi)
 
-for z, a in zip(mean_zscore, angul_vel):
-   if a == 30.0:
-       z_vel_30.append(z)
-
 z_vel_30 = [z for z,a in zip(mean_zscore, angul_vel) if a == 30.0]
 
 z_vel_minus30 = [z for z,a in zip(mean_zscore, angul_vel) if a == -30.0]

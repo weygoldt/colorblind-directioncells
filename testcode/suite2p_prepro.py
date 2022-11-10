@@ -8,7 +8,7 @@ from vxtools.summarize.structure import SummaryFile
 
 from functions import find_on_time as fc
 
-f = SummaryFile('../data/Summary.hdf5')
+f = SummaryFile('data/Summary.hdf5')
 # get all rois
 # get one recording
 
@@ -71,9 +71,8 @@ def get_attributes(one_recording):
     array_phases = np.sort(
         one_recording[roi].rec.h5group['display_data']['phases'])
     int_phases = np.sort([int(x) for x in array_phases])
-    range_phases = np.arange(int_phases[0], int_phases[-1])
 
-    for ph in range_phases:
+    for ph in int_phases:
         start_time.append(
             one_recording[roi].rec.h5group['display_data']['phases'][f'{ph}'].attrs['start_time'])
         end_time.append(
@@ -93,6 +92,8 @@ def get_attributes(one_recording):
             one_recording[roi].rec.h5group['display_data']['phases'][f'{ph}'].attrs['rgb01'])
         rgb_2.append(
             one_recording[roi].rec.h5group['display_data']['phases'][f'{ph}'].attrs['rgb02'])
+    embed()
+    exit()
 
     return start_time, end_time, angul_vel, angul_pre, rgb_1, rgb_2
 
@@ -181,7 +182,7 @@ for r in rois:
     ax.boxplot(z_vel_30, positions=[3])
     ax.set_xticklabels(['0vel', '-30vel', '30vel'])
     plt.show()
-""""
+"""
 
 """
 plt.plot(time, one_rec[roi].zscore)

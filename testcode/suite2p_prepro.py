@@ -8,7 +8,7 @@ from vxtools.summarize.structure import SummaryFile
 
 from functions import find_on_time as fc
 
-f = SummaryFile('data/Summary.hdf5')
+f = SummaryFile('../data/Summary.hdf5')
 # get all rois
 # get one recording
 

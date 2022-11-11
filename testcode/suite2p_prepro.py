@@ -41,7 +41,7 @@ def get_attributes(one_recording):
 
     Parameters
     ----------
-    one_recording : vxtools.summarize.structure.Roi
+    one_recording : list of vxtools.summarize.structure.Roi
         hdf5 SummaryFile with all rois of the same recording id
 
     Returns
@@ -101,8 +101,10 @@ def mean_zscore_roi(one_recording, roi):
 
     Parameters
     ----------
-    one_recording : vxtools.summarize.structure.Roi
+    one_recording : list of vxtools.summarize.structure.Roi
         hdf5 SummaryFile with all rois of the same recording id
+    roi: int
+        index of one ROI of the list one recording 
 
     Returns
     -------
@@ -130,8 +132,10 @@ def mean_dff_roi(one_recording, roi):
 
     Parameters
     ----------
-    one_recording : vxtools.summarize.structure.Roi
+    one_recording : list of vxtools.summarize.structure.Roi
         hdf5 SummaryFile with all rois of the same recording id
+    roi: int
+        index of one ROI of the list one recording 
 
     Returns
     -------
@@ -194,14 +198,14 @@ def corr_repeats(mean_score, inx):
     Parameters
     ----------
     mean_score : list or 1darray
-        mean_score values of 
-    inx : _type_
-        _description_
+        mean_score dff or zscore values in stimulus windows 
+    inx : tupel
+        index tupel, where the repeats of one recording starts and stops 
 
     Returns
     -------
-    _type_
-        _description_
+    ndarray
+        mean value of three correlations for one ROI 
     """
     z = []
     for i in inx:
@@ -216,6 +220,25 @@ def corr_repeats(mean_score, inx):
     return spear_mean
 
 def active_rois(one_recording, inx, threshold=0.6 ):
+    """calculate all active ROIs with a threshold. 
+    ROIs who have a high correlation with themselfs over time, are active rois 
+    Parameters
+    ----------
+    one_recording : list of vxtools.summarize.structure.Roi
+        hdf5 SummaryFile with all rois of the same recording id
+
+    inx : tupel
+        index tupel, where the repeats of one recording starts and stops 
+
+    threshold : float, optional
+        threshold of the correlation factor, by default 0.6
+
+    Returns
+    -------
+    2ndarray
+        1.dimension are the index fot the ROIs 
+        2.dimension are sorted correlation factors
+    """
     spearmeans = []
     for r in tqdm(range(len(one_recording))):
         mean_zscore= mean_dff_roi(one_recording, r)
@@ -232,6 +255,15 @@ def active_rois(one_recording, inx, threshold=0.6 ):
     return active_spear_sorted
 
 def plot_ang_velocity(onerecording, rois):
+    """plot the boxplot of rois with regards to the stimulus angular Velocity 
+
+    Parameters
+    ----------
+    one_recording : list of vxtools.summarize.structure.Roi
+        hdf5 SummaryFile with all rois of the same recording id
+    roi: int
+        index of one ROI of the list one recording 
+    """
     for r in rois:
         mean_zscores = mean_dff_roi(onerecording, r)
         z_vel_30 = [z for z, a in zip(mean_zscores, angul_vel) if a == 30.0]
@@ -257,7 +289,6 @@ active_spear = active_rois(one_rec,inx, threshold=0.3)
 active_dff = [one_rec[ar].dff for ar in active_spear]
 
 dff = np.array([roi.dff for roi in one_rec])
-o
 plt.imshow(dff)
 plt.show()
 

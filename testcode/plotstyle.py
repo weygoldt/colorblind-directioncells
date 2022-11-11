@@ -219,7 +219,7 @@ def PlotStyle():
     plt.rc("figure", titlesize=BIGGER_SIZE)  # fontsize of the figure title
 
     # plt.rcParams["figure.constrained_layout.use"] = True
-    plt.rcParams["image.cmap"] = s.lightcmap
+    # plt.rcParams["image.cmap"] = s.lightcmap
     plt.rcParams["axes.xmargin"] = 0.1
     plt.rcParams["axes.ymargin"] = 0.15
     plt.rcParams["axes.titlelocation"] = "center"

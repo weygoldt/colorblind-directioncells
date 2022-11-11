@@ -4,6 +4,7 @@ import numpy as np
 from scipy.stats import spearmanr
 from tqdm import tqdm
 import matplotlib.pyplot as plt 
+
 from termcolors import TermColor as tc
 
 
@@ -227,6 +228,24 @@ def mean_zscore_roi(one_recording, roi):
     return mean_zscore
 
 
+def get_mean_dffs(roi_dffs, times, startstop):
+
+    snippet_indices = []
+    for st, end in zip(startstop[0], startstop[1]):
+        start_inx = find_on_time(times, st)
+        end_inx = find_on_time(times, end)
+        snippet_indices.append(np.arange(start_inx, end_inx))
+
+    mean_dffs = np.empty((len(roi_dffs[:, 0]), len(snippet_indices)))
+    for i in range(len(roi_dffs[:, 0])):
+        roi = roi_dffs[i, :]
+        mean_dff = np.array([np.mean(roi[snip])
+                            for snip in snippet_indices])
+        mean_dffs[i, :] = mean_dff
+
+    return mean_dffs
+
+
 def mean_dff_roi(one_recording, roi):
     """Calculates the mean dff between the start and end point of the stimulus of one single ROI
 
@@ -322,7 +341,7 @@ def corr_repeats(mean_score, inx):
     return spear_mean
 
 
-def active_rois(one_recording, inx, threshold=0.6):
+def active_rois(mean_dffs, inx, threshold=0.6):
     """calculate all active ROIs with a threshold. 
     ROIs who have a high correlation with themselfs over time, are active rois 
     Parameters
@@ -343,10 +362,10 @@ def active_rois(one_recording, inx, threshold=0.6):
         2.dimension are sorted correlation factors
     """
     spearmeans = []
-    for r in tqdm(range(len(one_recording))):
+    for i in tqdm(range(len(mean_dffs[:, 0]))):
 
         # start_time = time.time()
-        means = mean_dff_roi(one_recording, r)
+        means = mean_dffs[i, :]
         # print("--- %s seconds ---" % (time.time() - start_time))
 
         # start_time = time.time()
@@ -362,12 +381,12 @@ def active_rois(one_recording, inx, threshold=0.6):
     result = np.empty((len(active_roi), 2))
     result[:, 0] = active_roi
     result[:, 1] = spearmeans_a_roi
-    active_spear_sorted = sorted(result, key=lambda x: x[1], reverse=True)
+    active_rois_sorted = sorted(result, key=lambda x: x[1], reverse=True)
 
-    return active_spear_sorted
+    return active_rois_sorted
 
 
-def plot_ang_velocity(onerecording, angul_vel,  rois):
+def plot_ang_velocity(onerecording, angul_vel, rois):
     """plot the boxplot of rois with regards to the stimulus angular Velocity 
 
     Parameters

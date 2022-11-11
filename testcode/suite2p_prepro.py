@@ -1,9 +1,11 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from IPython import embed
 from vxtools.summarize.structure import SummaryFile
 
 import functions as fs
+from plotstyle import PlotStyle
+
+ps = PlotStyle()
 
 # get data
 f = SummaryFile('../data/Summary.hdf5')  # import HDF5 file
@@ -12,11 +14,19 @@ times = one_rec[0].times  # get the time axis
 start_time, end_time, angul_vel, angul_pre, rgb_1, rgb_2 = fs.get_attributes(
     one_rec)
 
+# make matrix of dffs
+roi_dffs = np.empty((len(one_rec), len(one_rec[0].dff)))
+for i, roi in enumerate(one_rec):
+    roi_dffs[i, :] = roi.dff
+
+# convert dff matrix to mean dff matrix
+mean_dffs = fs.get_mean_dffs(roi_dffs, times, (start_time, end_time))
+
 # get indices for stimulus phase series repeats
 inx = fs.repeats(angul_vel)
 
 # compute correlation coefficient of thresholded active ROIs
-active_spear = fs.active_rois(one_rec, inx, threshold=0.3)
+active_spear = fs.active_rois(mean_dffs, inx, threshold=0.3)
 
 # get dffs for active ROIs
 active_dff = [one_rec[int(ar[0])].dff for ar in active_spear]

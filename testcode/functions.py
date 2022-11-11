@@ -227,6 +227,24 @@ def mean_zscore_roi(one_recording, roi):
     return mean_zscore
 
 
+def get_mean_dffs(roi_dffs, times, startstop):
+
+    snippet_indices = []
+    for st, end in zip(startstop[0], startstop[1]):
+        start_inx = find_on_time(times, st)
+        end_inx = find_on_time(times, end)
+        snippet_indices.append(np.arange(start_inx, end_inx))
+
+    mean_dffs = np.empty((len(roi_dffs[:, 0]), len(snippet_indices)))
+    for i in range(len(roi_dffs[:, 0])):
+        roi = roi_dffs[i, :]
+        mean_dff = np.array([np.mean(roi[snip])
+                            for snip in snippet_indices])
+        mean_dffs[i, :] = mean_dff
+
+    return mean_dffs
+
+
 def mean_dff_roi(one_recording, roi):
     """Calculates the mean dff between the start and end point of the stimulus of one single ROI
 
@@ -320,51 +338,6 @@ def corr_repeats(mean_score, inx):
     spear_mean = np.mean(spear)
 
     return spear_mean
-
-
-def active_rois(one_recording, inx, threshold=0.6):
-    """calculate all active ROIs with a threshold. 
-    ROIs who have a high correlation with themselfs over time, are active rois 
-    Parameters
-    ----------
-    one_recording : list of vxtools.summarize.structure.Roi
-        hdf5 SummaryFile with all rois of the same recording id
-
-    inx : tupel
-        index tupel, where the repeats of one recording starts and stops 
-
-    threshold : float, optional
-        threshold of the correlation factor, by default 0.6
-
-    Returns
-    -------
-    2ndarray
-        1.dimension are the index fot the ROIs 
-        2.dimension are sorted correlation factors
-    """
-    spearmeans = []
-    for r in tqdm(range(len(one_recording))):
-
-        # start_time = time.time()
-        means = mean_dff_roi(one_recording, r)
-        # print("--- %s seconds ---" % (time.time() - start_time))
-
-        # start_time = time.time()
-        spear_mean = corr_repeats(means, inx)
-        # print("--- %s seconds ---" % (time.time() - start_time))
-
-        spearmeans.append(spear_mean)
-
-    index = np.arange(len(spearmeans), dtype=int)
-    active_roi = index[np.array(spearmeans) >= threshold]
-    spearmeans_a_roi = np.array(spearmeans)[active_roi]
-
-    result = np.empty((len(active_roi), 2))
-    result[:, 0] = active_roi
-    result[:, 1] = spearmeans_a_roi
-    active_spear_sorted = sorted(result, key=lambda x: x[1], reverse=True)
-
-    return active_spear_sorted
 
 
 def plot_ang_velocity(onerecording, rois):

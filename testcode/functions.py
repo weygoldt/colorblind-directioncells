@@ -359,9 +359,9 @@ def repeats(startstop, nrepeats=3):
     for i in range(nrepeats):
         repeat_starts[i] = i*frac
         repeat_stops[i] = np.arange(i*frac, i*frac+frac)[-1]
-
     # reshape
-    idxs = np.array([[x, y] for x, y in zip(repeat_starts, repeat_stops)])
+    idxs = np.array([np.array([int(x), int(y)], dtype=int)
+                    for x, y in zip(repeat_starts, repeat_stops)], dtype=int)
 
     return idxs
 
@@ -400,7 +400,7 @@ def corr_repeats(mean_score, inx):
     """
     z = []
     for i in inx:
-        z.append(mean_score[i[0]:i[-1]])
+        z.append(mean_score[int(i[0]):int(i[-1])])
     combs = [comb for comb in combinations(z, 2)]
     spear = []
     for co in combs:

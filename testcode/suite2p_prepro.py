@@ -75,7 +75,7 @@ active_dffs = np.array([roi_dffs[int(roi), :] for roi in thresh_rois[:, 0]])
 # %% Make a meanstack ----------------------------------------------------------
 
 # get dffs for all ROIs
-sorted_dffs = np.array([roi_dffs[int(roi), :] for roi in sorted_rois[:, 0]])
+sorted_dffs = np.array([roi_dffs[roi, :] for roi in sorted_rois[:, 0]])
 
 # stack 3 repeats and compute mean
 meanstack_times, meanstack_dffs = fs.meanstack(active_dffs, mean_times, inx)

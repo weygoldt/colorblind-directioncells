@@ -281,8 +281,9 @@ time = one_rec[0].times
 start_time, end_time, angul_vel, angul_pre, rgb_1, rgb_2 = get_attributes(
     one_rec)
 inx = repeats(angul_vel)
-active_spear = active_rois(one_rec,inx, threshold=0.3)
-
+active_spear = active_rois(one_rec,inx, threshold=0.6)
+embed()
+exit()
 active_dff = [one_rec[ar].dff for ar in active_spear]
 
 dff = np.array([roi.dff for roi in one_rec])
@@ -298,7 +299,7 @@ for i, roi in enumerate(f.rois):
              color='black', linewidth='1.')
 plt.show()
 
-
+# alle hoche kontraste mal vergleiche violents plot anzeigen 
 
 embed()
 exit()

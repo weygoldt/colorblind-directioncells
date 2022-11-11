@@ -2,6 +2,7 @@ from itertools import combinations
 
 import matplotlib.pyplot as plt
 import numpy as np
+from IPython import embed
 from scipy.stats import spearmanr
 from tqdm import tqdm
 
@@ -73,10 +74,60 @@ def find_on_time(array, target, limit=True, verbose=True):
     found = array[idx]
     dt_target = target - found
 
-    # check if target between first and last value
-    if target <= array[-1] and target >= array[0]:
-        if dt_target > 0:
+    # new shit starts here
+    if target <= array[0]:
+        dt_sampled = array[idx+1]-array[idx]
+
+        if abs(array[idx]-target) > dt_sampled/2:
+            if limit:
+                idx = np.nan
+                error(verbose)
+            else:
+                warning(verbose)
+
+    if target > array[0] and target < array[-1]:
+        if dt_target >= 0:
             dt_sampled = array[idx+1]-array[idx]
+        else:
+            dt_sampled = array[idx]-array[idx-1]
+
+        if abs(array[idx]-target) > dt_sampled/2:
+            if limit:
+                idx = np.nan
+                error(verbose)
+            else:
+                warning(verbose)
+
+    if target >= array[-1]:
+        dt_sampled = array[idx] - array[idx-1]
+
+        if abs(array[idx]-target) > dt_sampled/2:
+            if limit:
+                idx = np.nan
+                error(verbose)
+            else:
+                warning(verbose)
+
+    # and ends here
+
+    """
+    # check if target between first and last value
+    if target < array[-1] and target >= array[0]:
+        if dt_target >= 0:
+            dt_sampled = array[idx+1]-array[idx]
+        else:
+            dt_sampled = array[idx]-array[idx-1]
+
+        if abs(array[idx]-target) > dt_sampled/2:
+            if limit:
+                idx = np.nan
+                error(verbose)
+            else:
+                warning(verbose)
+
+    if target == array[-1]:
+        if dt_target >= 0:
+            dt_sampled = array[idx]-array[idx-1]
         else:
             dt_sampled = array[idx]-array[idx-1]
 
@@ -108,6 +159,8 @@ def find_on_time(array, target, limit=True, verbose=True):
                 error(verbose)
             else:
                 warning(verbose)
+    """
+
     return idx
 
 
@@ -231,9 +284,12 @@ def mean_zscore_roi(one_recording, roi):
 def get_mean_dffs(roi_dffs, times, startstop):
 
     snippet_indices = []
+    center_indices = []
     for st, end in zip(startstop[0], startstop[1]):
         start_inx = find_on_time(times, st)
         end_inx = find_on_time(times, end)
+        center_inx = find_on_time(times, st + (end-st)/2)
+        center_indices.append(center_inx)
         snippet_indices.append(np.arange(start_inx, end_inx))
 
     mean_dffs = np.empty((len(roi_dffs[:, 0]), len(snippet_indices)))
@@ -243,7 +299,7 @@ def get_mean_dffs(roi_dffs, times, startstop):
                             for snip in snippet_indices])
         mean_dffs[i, :] = mean_dff
 
-    return mean_dffs
+    return mean_dffs, times[center_indices]
 
 
 def mean_dff_roi(one_recording, roi):
@@ -418,3 +474,16 @@ def plot_ang_velocity(onerecording, angul_vel, rois):
         ax.boxplot(z_vel_30, positions=[3])
         ax.set_xticklabels(['0vel', '-30vel', '30vel'])
         plt.show()
+
+
+def meanstack(roi_dffs, times, inx):
+
+    meanstack_times = times[inx[0][0]:inx[0][1]]
+    meanstack_dffs = np.empty((len(roi_dffs[:, 0]), inx[0][1]))
+    for roi in range(len(roi_dffs[:, 0])):
+        dff = roi_dffs[roi, :]
+        split_dff = np.array([dff[x[0]:x[1]] for x in inx])
+        mean_dff = np.mean(split_dff, axis=0)
+        meanstack_dffs[roi, :] = mean_dff
+
+    return meanstack_times, meanstack_dffs

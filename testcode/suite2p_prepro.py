@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy import interpolate
 from vxtools.summarize.structure import SummaryFile
 
 import functions as fs
@@ -17,20 +18,32 @@ times = one_rec[0].times  # get the time axis
 start_time, end_time, angul_vel, angul_pre, rgb_1, rgb_2 = fs.get_attributes(
     one_rec)
 
-# make matrix of dffs
-roi_dffs = np.empty((len(one_rec), len(one_rec[0].dff)))
+# make matrix of dffs & cut baseline at beginning and end
+stimstart = fs.find_on_time(times, start_time[0])
+stimstop = fs.find_on_time(times, end_time[-1])
+
+# rewrite start and stop times (this will end in chaos!!!)
+times = times[stimstart:stimstop]
+start_time[0] = times[0]
+end_time[-1] = times[-1]
+
+# make roi
+roi_dffs = np.empty((len(one_rec), len(one_rec[0].dff[stimstart:stimstop])))
 for i, roi in enumerate(one_rec):
-    roi_dffs[i, :] = roi.dff
+    roi_dffs[i, :] = roi.dff[stimstart:stimstop]
 
 # convert dff matrix to mean dff matrix
-mean_dffs = fs.get_mean_dffs(roi_dffs, times, (start_time, end_time))
+mean_dffs, mean_times = fs.get_mean_dffs(
+    roi_dffs, times, (start_time, end_time))
 
 # get indices for stimulus phase series repeats
 inx = fs.repeats(angul_vel)
-inx_all = fs.repeats(times)
+repeat_starts = np.array(start_time)[[i[0] for i in inx]]
+repeat_stops = np.array(end_time)[[i[1] for i in inx]]
 
 # compute correlation coefficient of thresholded active ROIs
-sorted_rois = fs.sort_rois(mean_dffs, inx)
+sorted_mean_rois = fs.sort_rois(mean_dffs, inx)
+sorted_rois = fs.sort_rois(roi_dffs, inx)
 
 # threshold them
 thresh_rois = fs.thresh_correlations(sorted_rois, thresh)
@@ -41,70 +54,26 @@ sorted_dffs = np.array([roi_dffs[int(roi), :] for roi in sorted_rois[:, 0]])
 # get dffs for active ROIs only
 active_dffs = np.array([roi_dffs[int(roi), :] for roi in thresh_rois[:, 0]])
 
-
-def meanstack(roi_dffs, times, inx):
-
-    meanstack_times = times[inx[0][0]:inx[0][1]]
-    meanstack_dffs = np.empty((len(roi_dffs[:, 0]), inx[0][1]))
-    for roi in range(len(roi_dffs[:, 0])):
-        dff = roi_dffs[roi, :]
-        split_dff = np.array([dff[x[0]:x[1]] for x in inx])
-        mean_dff = np.mean(split_dff, axis=0)
-        meanstack_dffs[roi, :] = mean_dff
-
-    return meanstack_times, meanstack_dffs
-
-
-meanstack_times, meanstack_dffs = meanstack(sorted_dffs, times, inx_all)
-
-# make stimulus arrays
-time_idx = np.arange(len(times))
-start_idx = [fs.find_on_time(times, x) for x in start_time]
-stop_idx = [fs.find_on_time(times, x) for x in end_time]
-
-# get movement data of stimulus
-new_start_idx = start_idx[inx[0][0]:inx[0][1]]
-new_stop_idx = stop_idx[inx[0][0]:inx[0][1]]
-new_angul_vel = angul_vel[inx[0][0]:inx[0][1]]
-
-no_motion = meanstack_times[[[new_start_idx[x], new_stop_idx[x]]
-                             for x in range(len(new_angul_vel)) if new_angul_vel[x] == 0.0]]
-
-left_motion = meanstack_times[[[new_start_idx[x], new_stop_idx[x]]
-                               for x in range(len(new_angul_vel)) if new_angul_vel[x] < 0.0]]
-
-right_motion = meanstack_times[[[new_start_idx[x], new_stop_idx[x]]
-                                for x in range(len(new_angul_vel)) if new_angul_vel[x] > 0.0]]
-
-
-def plot_filled_ranges(ax, ranges, style):
-    for r in ranges:
-        ax.axvspan(r[0], r[1], **style)
-
-
-style_nomo = dict(color='black', lw=0, zorder=10, alpha=0.2)
-style_left = dict(color='blue', lw=0, zorder=10, alpha=0.2)
-style_right = dict(color='red', lw=0, zorder=10, alpha=0.2)
+# stack 3 repeats and compute mean
+meanstack_times, meanstack_dffs = fs.meanstack(active_dffs, mean_times, inx)
 
 # plot raster of all dffs
-extent = (np.min(meanstack_times), np.max(meanstack_times),
+extent = (np.min(mean_times), np.max(mean_times),
           np.min(thresh_rois[:, 0]), np.max(thresh_rois[:, 0]))
 
 fig, ax = plt.subplots()
-ax.imshow(meanstack_dffs, cmap='binary', aspect='auto', extent=extent)
-plot_filled_ranges(ax, no_motion, style_nomo)
-plot_filled_ranges(ax, left_motion, style_left)
-plot_filled_ranges(ax, right_motion, style_right)
+ax.imshow(meanstack_dffs,
+          cmap='binary',
+          aspect='auto',
+          # extent=extent,
+          )
 plt.show()
 
 # plot dff lineplot for all dffs
 fig, ax = plt.subplots()
-for i, dff in enumerate(active_dffs):
+for i, dff in enumerate(roi_dffs):
     ax.plot(times, i + (dff - dff.min()) / (dff.max() - dff.min()),
             color='black', linewidth='1.')
-plot_filled_ranges(ax, no_motion, style_nomo)
-plot_filled_ranges(ax, left_motion, style_left)
-plot_filled_ranges(ax, right_motion, style_right)
 plt.show()
 
 """

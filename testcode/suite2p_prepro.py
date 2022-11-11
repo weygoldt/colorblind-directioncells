@@ -1,12 +1,11 @@
-from itertools import combinations
-
 import matplotlib.pyplot as plt
 import numpy as np
-from IPython import embed
-from tqdm import tqdm
 from vxtools.summarize.structure import SummaryFile
 
 import functions as fs
+from plotstyle import PlotStyle
+
+ps = PlotStyle()
 
 # get data
 f = SummaryFile('../data/Summary.hdf5')  # import HDF5 file

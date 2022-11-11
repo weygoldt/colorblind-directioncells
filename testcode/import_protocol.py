@@ -1,1 +1,0 @@
-import gp_2022_colorgrating

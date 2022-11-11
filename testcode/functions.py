@@ -334,39 +334,53 @@ def mean_dff_roi(one_recording, roi):
     return mean_dff
 
 
-def repeats(angul_vel, nrepeats=3):
-    """Calculate the repeats of one Recroding with the angular velocity 
+def repeats(startstop, nrepeats=3):
 
-    Parameters
-    ----------
-    angul_vel : list or ndarray
-        all the angular velocity in one recording including nan 
-    nrepeats : int, optional
-        how many repeats there are in the protocol , by default 3
+    # check if starts and stops are the same lenght
+    if len(startstop[0]) != len(startstop[1]):
+        raise ValueError(
+            f'{tc.err("ERROR")} [ functions.repeats ] The starts and stops are not the same length!')
 
-    Returns
-    -------
-    tuple 
-        Index tuple where one can index the recoring with nrepeats 
+    # get starts and stops
+    starts = startstop[0]
+    stops = startstop[1]
+    indices = np.arange(len(starts))
+    frac = len(indices)/nrepeats
 
-    Raises
-    ------
-    ValueError
-        if the recording is not dividable by nrepeats 
-    """
-    nonnan_angul_vel = [x for x in angul_vel if np.isnan(x) == False]
+    # check if array lengths are dividable by nrepeats
+    if frac % 1 != 0:
+        raise ValueError(
+            f'{tc.err("ERROR")} [ functions.repeats ] Cant divide by {nrepeats}!')
 
-    nr = len(nonnan_angul_vel)/nrepeats
-    if nr % 1 != 0:
-        raise ValueError(f'Cant divide by {nrepeats}!')
-    inx = []
-    for i in np.arange(1, nrepeats+1):
-        if i == 1:
-            inx.append((0, nr))
-        else:
-            inx.append(((i-1)*nr, nr*i))
-    inx = np.array(inx, dtype=int)
-    return inx
+    repeat_starts = np.empty(nrepeats)
+    repeat_stops = np.empty(nrepeats)
+
+    # get starts and stops
+    for i in range(nrepeats):
+        repeat_starts[i] = i*frac
+        repeat_stops[i] = np.arange(i*frac, i*frac+frac)[-1]
+
+    # reshape
+    idxs = np.array([[x, y] for x, y in zip(repeat_starts, repeat_stops)])
+
+    return idxs
+
+
+"""
+nonnan_angul_vel = [x for x in angul_vel if np.isnan(x) == False]
+
+nr = len(nonnan_angul_vel)/nrepeats
+if nr % 1 != 0:
+    raise ValueError(f'Cant divide by {nrepeats}!')
+inx = []
+for i in np.arange(1, nrepeats+1):
+    if i == 1:
+        inx.append((0, nr))
+    else:
+        inx.append(((i-1)*nr, nr*i))
+inx = np.array(inx, dtype=int)
+return inx
+"""
 
 
 def corr_repeats(mean_score, inx):

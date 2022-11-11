@@ -7,6 +7,9 @@ from plotstyle import PlotStyle
 
 ps = PlotStyle()
 
+# activity threshold (min spearman correlation)
+thresh = 0.6
+
 # get data
 f = SummaryFile('../data/Summary.hdf5')  # import HDF5 file
 one_rec = fs.data_one_rec_id(f, 5)  # extract one recording
@@ -26,20 +29,23 @@ mean_dffs = fs.get_mean_dffs(roi_dffs, times, (start_time, end_time))
 inx = fs.repeats(angul_vel)
 
 # compute correlation coefficient of thresholded active ROIs
-active_spear = fs.active_rois(mean_dffs, inx, threshold=0.3)
+sorted_rois = fs.sort_rois(mean_dffs, inx)
 
-# get dffs for active ROIs
-active_dff = [one_rec[int(ar[0])].dff for ar in active_spear]
+# threshold them
+thresh_rois = fs.thresh_correlations(sorted_rois, thresh)
 
-# get all dffs
-dffs = np.array([roi.dff for roi in one_rec])
+# get dffs for all ROIs
+sorted_dffs = np.array([roi_dffs[int(roi), :] for roi in sorted_rois[:, 0]])
+
+# get dffs for active ROIs only
+active_dffs = np.array([roi_dffs[int(roi), :] for roi in thresh_rois[:, 0]])
 
 # plot raster of all dffs
-plt.imshow(dffs)
+plt.imshow(sorted_dffs, cmap='binary', aspect='auto')
 plt.show()
 
 # plot dff lineplot for all dffs
-for i, dff in enumerate(active_dff):
+for i, dff in enumerate(active_dffs):
     plt.plot(i + (dff - dff.min()) / (dff.max() - dff.min()),
              color='black', linewidth='1.')
 plt.show()

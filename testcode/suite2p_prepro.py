@@ -126,7 +126,7 @@ def mean_zscore_roi(one_recording, roi):
     return mean_zscore
     
 def mean_dff_roi(one_recording, roi):
-    """Calculates the mean zscore between the start and end point of the stimulus of one single ROI
+    """Calculates the mean dff between the start and end point of the stimulus of one single ROI
 
     Parameters
     ----------
@@ -155,6 +155,25 @@ def mean_dff_roi(one_recording, roi):
     return mean_dff
 
 def repeats(angul_vel, nrepeats=3):
+    """Calculate the repeats of one Recroding with the angular velocity 
+
+    Parameters
+    ----------
+    angul_vel : list or ndarray
+        all the angular velocity in one recording including nan 
+    nrepeats : int, optional
+        how many repeats there are in the protocol , by default 3
+
+    Returns
+    -------
+    tuple 
+        Index tuple where one can index the recoring with nrepeats 
+
+    Raises
+    ------
+    ValueError
+        if the recording is not dividable by nrepeats 
+    """
     nonnan_angul_vel = [x for x in angul_vel if np.isnan(x) == False]
 
     nr = len(nonnan_angul_vel)/nrepeats
@@ -169,10 +188,24 @@ def repeats(angul_vel, nrepeats=3):
     inx = np.array(inx, dtype=int)
     return inx
 
-def corr_repeats(m_z_score, inx):
+def corr_repeats(mean_score, inx):
+    """Calculate the the correlation of one ROI within nrepeats
+
+    Parameters
+    ----------
+    mean_score : list or 1darray
+        mean_score values of 
+    inx : _type_
+        _description_
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
     z = []
     for i in inx:
-        z.append(m_z_score[i[0]:i[-1]])
+        z.append(mean_score[i[0]:i[-1]])
     combs = [comb for comb in combinations(z, 2)]
     spear = []
     for co in combs:
@@ -196,8 +229,6 @@ def active_rois(one_recording, inx, threshold=0.6 ):
     result[:,0] = active_roi
     result[:,1] = spearmeans_a_roi
     active_spear_sorted = sorted(result, key=lambda x : x[1], reverse=True)
-    embed()
-    exit()
     return active_spear_sorted
 
 def plot_ang_velocity(onerecording, rois):
@@ -214,22 +245,26 @@ def plot_ang_velocity(onerecording, rois):
         ax.set_xticklabels(['0vel', '-30vel', '30vel'])
         plt.show()
 
-
+embed()
+exit()
 one_rec = data_one_rec_id(f, 5)
 time = one_rec[0].times
 start_time, end_time, angul_vel, angul_pre, rgb_1, rgb_2 = get_attributes(
     one_rec)
 inx = repeats(angul_vel)
 active_spear = active_rois(one_rec,inx, threshold=0.3)
-embed()
-exit()
 
-active_dff = [one_rec[ar].dff for ar in active_roi]
+active_dff = [one_rec[ar].dff for ar in active_spear]
+
+dff = np.array([roi.dff for roi in one_rec])
+o
+plt.imshow(dff)
+plt.show()
 
 
+dff = np.array([roi.dff for roi in one_rec])
 
-
-for i, roi in enumerate(active_roi):
+for i, roi in enumerate(f.rois):
     dff = roi.dff
     plt.plot(i + (dff - dff.min()) / (dff.max() - dff.min()),
              color='black', linewidth='1.')

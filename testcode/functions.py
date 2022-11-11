@@ -340,6 +340,51 @@ def corr_repeats(mean_score, inx):
     return spear_mean
 
 
+def active_rois(mean_dffs, inx, threshold=0.6):
+    """calculate all active ROIs with a threshold. 
+    ROIs who have a high correlation with themselfs over time, are active rois 
+    Parameters
+    ----------
+    one_recording : list of vxtools.summarize.structure.Roi
+        hdf5 SummaryFile with all rois of the same recording id
+
+    inx : tupel
+        index tupel, where the repeats of one recording starts and stops 
+
+    threshold : float, optional
+        threshold of the correlation factor, by default 0.6
+
+    Returns
+    -------
+    2ndarray
+        1.dimension are the index fot the ROIs 
+        2.dimension are sorted correlation factors
+    """
+    spearmeans = []
+    for i in tqdm(range(len(mean_dffs[:, 0]))):
+
+        # start_time = time.time()
+        means = mean_dffs[i, :]
+        # print("--- %s seconds ---" % (time.time() - start_time))
+
+        # start_time = time.time()
+        spear_mean = corr_repeats(means, inx)
+        # print("--- %s seconds ---" % (time.time() - start_time))
+
+        spearmeans.append(spear_mean)
+
+    index = np.arange(len(spearmeans), dtype=int)
+    active_roi = index[np.array(spearmeans) >= threshold]
+    spearmeans_a_roi = np.array(spearmeans)[active_roi]
+
+    result = np.empty((len(active_roi), 2))
+    result[:, 0] = active_roi
+    result[:, 1] = spearmeans_a_roi
+    active_rois_sorted = sorted(result, key=lambda x: x[1], reverse=True)
+
+    return active_rois_sorted
+
+
 def plot_ang_velocity(onerecording, rois):
     """plot the boxplot of rois with regards to the stimulus angular Velocity 
 

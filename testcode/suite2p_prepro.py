@@ -27,54 +27,7 @@ mean_dffs = fs.get_mean_dffs(roi_dffs, times, (start_time, end_time))
 inx = fs.repeats(angul_vel)
 
 # compute correlation coefficient of thresholded active ROIs
-
-
-def active_rois(mean_dffs, inx, threshold=0.6):
-    """calculate all active ROIs with a threshold. 
-    ROIs who have a high correlation with themselfs over time, are active rois 
-    Parameters
-    ----------
-    one_recording : list of vxtools.summarize.structure.Roi
-        hdf5 SummaryFile with all rois of the same recording id
-
-    inx : tupel
-        index tupel, where the repeats of one recording starts and stops 
-
-    threshold : float, optional
-        threshold of the correlation factor, by default 0.6
-
-    Returns
-    -------
-    2ndarray
-        1.dimension are the index fot the ROIs 
-        2.dimension are sorted correlation factors
-    """
-    spearmeans = []
-    for i in tqdm(range(len(mean_dffs[:, 0]))):
-
-        # start_time = time.time()
-        means = mean_dffs[i, :]
-        # print("--- %s seconds ---" % (time.time() - start_time))
-
-        # start_time = time.time()
-        spear_mean = fs.corr_repeats(means, inx)
-        # print("--- %s seconds ---" % (time.time() - start_time))
-
-        spearmeans.append(spear_mean)
-
-    index = np.arange(len(spearmeans), dtype=int)
-    active_roi = index[np.array(spearmeans) >= threshold]
-    spearmeans_a_roi = np.array(spearmeans)[active_roi]
-
-    result = np.empty((len(active_roi), 2))
-    result[:, 0] = active_roi
-    result[:, 1] = spearmeans_a_roi
-    active_rois_sorted = sorted(result, key=lambda x: x[1], reverse=True)
-
-    return active_rois_sorted
-
-
-active_spear = active_rois(mean_dffs, inx, threshold=0.3)
+active_spear = fs.active_rois(mean_dffs, inx, threshold=0.3)
 
 # get dffs for active ROIs
 active_dff = [one_rec[int(ar[0])].dff for ar in active_spear]

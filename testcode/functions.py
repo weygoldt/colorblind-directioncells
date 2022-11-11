@@ -3,6 +3,7 @@ from itertools import combinations
 import numpy as np
 from scipy.stats import spearmanr
 from tqdm import tqdm
+import matplotlib.pyplot as plt 
 
 from termcolors import TermColor as tc
 
@@ -385,7 +386,7 @@ def active_rois(mean_dffs, inx, threshold=0.6):
     return active_rois_sorted
 
 
-def plot_ang_velocity(onerecording, rois):
+def plot_ang_velocity(onerecording, angul_vel, rois):
     """plot the boxplot of rois with regards to the stimulus angular Velocity 
 
     Parameters

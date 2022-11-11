@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from vxtools.summarize.structure import SummaryFile
-from IPython import embed
 
 import functions as fs
 from plotstyle import PlotStyle
@@ -44,11 +43,6 @@ for i, dff in enumerate(active_dff):
     plt.plot(i + (dff - dff.min()) / (dff.max() - dff.min()),
              color='black', linewidth='1.')
 plt.show()
-
-# alle hoche kontraste mal vergleiche violents plot anzeigen 
-
-embed()
-exit()
 
 """
 rposs = []

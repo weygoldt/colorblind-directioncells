@@ -35,7 +35,6 @@ def data_one_rec_id(summaryfile, rec_id):
             roi_one_rec.append(r)
     return roi_one_rec
 
-
 def get_attributes(one_recording):
     """get attributes of one recording.
 
@@ -94,7 +93,6 @@ def get_attributes(one_recording):
             one_recording[roi].rec.h5group['display_data']['phases'][f'{ph}'].attrs['rgb02'])
 
     return start_time, end_time, angul_vel, angul_pre, rgb_1, rgb_2
-
 
 def mean_zscore_roi(one_recording, roi):
     """Calculates the mean zscore between the start and end point of the stimulus of one single ROI
@@ -276,9 +274,8 @@ def plot_ang_velocity(onerecording, rois):
         ax.boxplot(z_vel_30, positions=[3])
         ax.set_xticklabels(['0vel', '-30vel', '30vel'])
         plt.show()
-
-embed()
-exit()
+ 
+        
 one_rec = data_one_rec_id(f, 5)
 time = one_rec[0].times
 start_time, end_time, angul_vel, angul_pre, rgb_1, rgb_2 = get_attributes(

@@ -1,9 +1,9 @@
 from itertools import combinations
 
+import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import spearmanr
 from tqdm import tqdm
-import matplotlib.pyplot as plt 
 
 from termcolors import TermColor as tc
 
@@ -341,7 +341,7 @@ def corr_repeats(mean_score, inx):
     return spear_mean
 
 
-def active_rois(mean_dffs, inx, threshold=0.6):
+def sort_rois(mean_dffs, inx):
     """calculate all active ROIs with a threshold. 
     ROIs who have a high correlation with themselfs over time, are active rois 
     Parameters
@@ -374,16 +374,25 @@ def active_rois(mean_dffs, inx, threshold=0.6):
 
         spearmeans.append(spear_mean)
 
-    index = np.arange(len(spearmeans), dtype=int)
-    active_roi = index[np.array(spearmeans) >= threshold]
-    spearmeans_a_roi = np.array(spearmeans)[active_roi]
+    # index = np.arange(len(spearmeans), dtype=int)
+    # active_roi = index[np.array(spearmeans) >= threshold]
+    # pearmeans_a_roi = np.array(spearmeans)[active_roi]
 
-    result = np.empty((len(active_roi), 2))
-    result[:, 0] = active_roi
-    result[:, 1] = spearmeans_a_roi
-    active_rois_sorted = sorted(result, key=lambda x: x[1], reverse=True)
+    result = np.empty((len(mean_dffs[:, 0]), 2))
+    result[:, 0] = np.arange(len(mean_dffs[:, 0]))
+    result[:, 1] = spearmeans
+    active_rois_sorted = np.array(
+        sorted(result, key=lambda x: x[1], reverse=True))
 
     return active_rois_sorted
+
+
+def thresh_correlations(sorted_rois, threshold):
+    index = np.arange(len(sorted_rois[:, 0]))
+    thresh_index = index[abs(sorted_rois[:, 1]) > threshold]
+    thresh_rois = sorted_rois[thresh_index, :]
+
+    return thresh_rois
 
 
 def plot_ang_velocity(onerecording, angul_vel, rois):

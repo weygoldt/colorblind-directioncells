@@ -7,6 +7,9 @@ from plotstyle import PlotStyle
 
 ps = PlotStyle()
 
+# activity threshold (min spearman correlation)
+thresh = 0.6
+
 # get data
 f = SummaryFile('../data/Summary.hdf5')  # import HDF5 file
 one_rec = fs.data_one_rec_id(f, 5)  # extract one recording
@@ -24,24 +27,84 @@ mean_dffs = fs.get_mean_dffs(roi_dffs, times, (start_time, end_time))
 
 # get indices for stimulus phase series repeats
 inx = fs.repeats(angul_vel)
+inx_all = fs.repeats(times)
 
 # compute correlation coefficient of thresholded active ROIs
-active_spear = fs.active_rois(mean_dffs, inx, threshold=0.3)
+sorted_rois = fs.sort_rois(mean_dffs, inx)
 
-# get dffs for active ROIs
-active_dff = [one_rec[int(ar[0])].dff for ar in active_spear]
+# threshold them
+thresh_rois = fs.thresh_correlations(sorted_rois, thresh)
 
-# get all dffs
-dffs = np.array([roi.dff for roi in one_rec])
+# get dffs for all ROIs
+sorted_dffs = np.array([roi_dffs[int(roi), :] for roi in sorted_rois[:, 0]])
+
+# get dffs for active ROIs only
+active_dffs = np.array([roi_dffs[int(roi), :] for roi in thresh_rois[:, 0]])
+
+
+def meanstack(roi_dffs, times, inx):
+
+    meanstack_times = times[inx[0][0]:inx[0][1]]
+    meanstack_dffs = np.empty((len(roi_dffs[:, 0]), inx[0][1]))
+    for roi in range(len(roi_dffs[:, 0])):
+        dff = roi_dffs[roi, :]
+        split_dff = np.array([dff[x[0]:x[1]] for x in inx])
+        mean_dff = np.mean(split_dff, axis=0)
+        meanstack_dffs[roi, :] = mean_dff
+
+    return meanstack_times, meanstack_dffs
+
+
+meanstack_times, meanstack_dffs = meanstack(sorted_dffs, times, inx_all)
+
+# make stimulus arrays
+time_idx = np.arange(len(times))
+start_idx = [fs.find_on_time(times, x) for x in start_time]
+stop_idx = [fs.find_on_time(times, x) for x in end_time]
+
+# get movement data of stimulus
+new_start_idx = start_idx[inx[0][0]:inx[0][1]]
+new_stop_idx = stop_idx[inx[0][0]:inx[0][1]]
+new_angul_vel = angul_vel[inx[0][0]:inx[0][1]]
+
+no_motion = meanstack_times[[[new_start_idx[x], new_stop_idx[x]]
+                             for x in range(len(new_angul_vel)) if new_angul_vel[x] == 0.0]]
+
+left_motion = meanstack_times[[[new_start_idx[x], new_stop_idx[x]]
+                               for x in range(len(new_angul_vel)) if new_angul_vel[x] < 0.0]]
+
+right_motion = meanstack_times[[[new_start_idx[x], new_stop_idx[x]]
+                                for x in range(len(new_angul_vel)) if new_angul_vel[x] > 0.0]]
+
+
+def plot_filled_ranges(ax, ranges, style):
+    for r in ranges:
+        ax.axvspan(r[0], r[1], **style)
+
+
+style_nomo = dict(color='black', lw=0, zorder=10, alpha=0.2)
+style_left = dict(color='blue', lw=0, zorder=10, alpha=0.2)
+style_right = dict(color='red', lw=0, zorder=10, alpha=0.2)
 
 # plot raster of all dffs
-plt.imshow(dffs)
+extent = (np.min(meanstack_times), np.max(meanstack_times),
+          np.min(thresh_rois[:, 0]), np.max(thresh_rois[:, 0]))
+
+fig, ax = plt.subplots()
+ax.imshow(meanstack_dffs, cmap='binary', aspect='auto', extent=extent)
+plot_filled_ranges(ax, no_motion, style_nomo)
+plot_filled_ranges(ax, left_motion, style_left)
+plot_filled_ranges(ax, right_motion, style_right)
 plt.show()
 
 # plot dff lineplot for all dffs
-for i, dff in enumerate(active_dff):
-    plt.plot(i + (dff - dff.min()) / (dff.max() - dff.min()),
-             color='black', linewidth='1.')
+fig, ax = plt.subplots()
+for i, dff in enumerate(active_dffs):
+    ax.plot(times, i + (dff - dff.min()) / (dff.max() - dff.min()),
+            color='black', linewidth='1.')
+plot_filled_ranges(ax, no_motion, style_nomo)
+plot_filled_ranges(ax, left_motion, style_left)
+plot_filled_ranges(ax, right_motion, style_right)
 plt.show()
 
 """

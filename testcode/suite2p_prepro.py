@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from vxtools.summarize.structure import SummaryFile
+from IPython import embed
 
 import functions as fs
 from plotstyle import PlotStyle

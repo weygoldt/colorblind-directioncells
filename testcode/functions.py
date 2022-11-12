@@ -494,6 +494,7 @@ def meanstack(roi_dffs, times, inx):
 
     meanstack_times = times[inx[0][0]:inx[0][1]]
     meanstack_dffs = np.empty((len(roi_dffs[:, 0]), inx[0][1]))
+
     for roi in range(len(roi_dffs[:, 0])):
         dff = roi_dffs[roi, :]
         split_dff = np.array([dff[x[0]:x[1]] for x in inx])

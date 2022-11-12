@@ -12,6 +12,31 @@ from termcolors import TermColor as tc
 
 
 def find_right_tail(x, y, target_auc, plot=True):
+    """
+    find_right_tail computes an index that marks a right tail of a curve where 
+    the integral of the curve is target_auc. This way we can get an x value 
+    of a distribution that marks the "significant part" if the curve is a
+    probability density.
+
+    Parameters
+    ----------
+    x : array-like
+        The x axis of the PDF
+    y : arra-like
+        The PDF
+    target_auc : float
+        The probability we choose
+    plot : bool, optional
+        Whether to plot an explanation or not, by default True
+
+    Returns
+    -------
+    gradient : array-like
+        The difference gradient from which the index in inferred from.
+    idx : int
+        The index of the x value that marks the onset of the right tail integral 
+        of the curve.
+    """
 
     # right tail area under curve
     gradient = np.zeros_like(x[:-1])
@@ -91,7 +116,7 @@ def flatten(l):
 
     Parameters
     ----------
-    l : array or list of lists
+    l : array / list of lists
         The list to be flattened
 
     Returns
@@ -150,7 +175,6 @@ def find_on_time(array, target, limit=True, verbose=True):
     found = array[idx]
     dt_target = target - found
 
-    # new shit starts here
     if target <= array[0]:
         dt_sampled = array[idx+1]-array[idx]
 
@@ -183,60 +207,6 @@ def find_on_time(array, target, limit=True, verbose=True):
                 error(verbose)
             else:
                 warning(verbose)
-
-    # and ends here
-
-    """
-    # check if target between first and last value
-    if target < array[-1] and target >= array[0]:
-        if dt_target >= 0:
-            dt_sampled = array[idx+1]-array[idx]
-        else:
-            dt_sampled = array[idx]-array[idx-1]
-
-        if abs(array[idx]-target) > dt_sampled/2:
-            if limit:
-                idx = np.nan
-                error(verbose)
-            else:
-                warning(verbose)
-
-    if target == array[-1]:
-        if dt_target >= 0:
-            dt_sampled = array[idx]-array[idx-1]
-        else:
-            dt_sampled = array[idx]-array[idx-1]
-
-        if abs(array[idx]-target) > dt_sampled/2:
-            if limit:
-                idx = np.nan
-                error(verbose)
-            else:
-                warning(verbose)
-
-    # check if target smaller than first value
-    elif target < array[0]:
-        dt_sampled = array[1]-array[0]
-
-        if abs(array[idx]-target) > dt_sampled/2:
-            if limit:
-                idx = np.nan
-                error(verbose)
-            else:
-                warning(verbose)
-
-    # check if target larger than last value
-    elif target > array[-1]:
-        dt_sampled = array[-1]-array[-2]
-
-        if abs(array[idx]-target) > dt_sampled/2:
-            if limit:
-                idx = np.nan
-                error(verbose)
-            else:
-                warning(verbose)
-    """
-
     return idx
 
 
@@ -323,7 +293,261 @@ def get_attributes(one_recording):
     return start_time, end_time, angul_vel, angul_pre, rgb_1, rgb_2
 
 
-def mean_zscore_roi(one_recording, roi):
+def get_mean_dffs(roi_dffs, times, startstop):
+    """
+    get_mean_dffs computes the mean dff or zscore inside a single 
+    stimulation phase for all stimulation phases.
+
+    Parameters
+    ----------
+    roi_dffs : 2d array
+        The dffs where dffs are all dffs for one ROI is a row the the matrix.
+    times : 1d array
+        The times for the dffs, must be the same length as roi_dffs[0,:].
+    startstop : touple(array, array)
+        Start and stop times of stimulus phases.
+
+    Returns
+    -------
+    mean_dffs : 2d array
+        The dff matrix only containing means now.
+    times : 1d array
+        A time vector for the mean dff matrix.
+    """
+
+    snippet_indices = []
+    center_indices = []
+    for st, end in zip(startstop[0], startstop[1]):
+        start_inx = find_on_time(times, st)
+        end_inx = find_on_time(times, end)
+        center_inx = find_on_time(times, st + (end-st)/2)
+        center_indices.append(center_inx)
+        snippet_indices.append(np.arange(start_inx, end_inx))
+
+    mean_dffs = np.empty((len(roi_dffs[:, 0]), len(snippet_indices)))
+    for i in range(len(roi_dffs[:, 0])):
+        roi = roi_dffs[i, :]
+        mean_dff = np.array([np.mean(roi[snip])
+                            for snip in snippet_indices])
+        mean_dffs[i, :] = mean_dff
+
+    return mean_dffs, times[center_indices]
+
+
+def repeats(startstop, nrepeats=3):
+    """
+    repeats seperates repeated stimulation series based on the start and stop 
+    times of all stimulation phases (i.e. excluding the baseline at start and end)
+    and a known number of repeats.
+
+    Parameters
+    ----------
+    startstop : touple(list, list)
+        Start and stop times of stimulation phases.
+    nrepeats : int, optional
+        The number of times the stimulus series is repeated, by default 3
+
+    Returns
+    -------
+    idxs : array
+        The indexes where the stimulus series are repeated.
+
+    Raises
+    ------
+    ValueError
+        Start and stop arrays are not compatible.
+    ValueError
+        Number of repeats does not fit to supplied start and stop timestamps.
+    """
+
+    # check if starts and stops are the same lenght
+    if len(startstop[0]) != len(startstop[1]):
+        raise ValueError(
+            f'{tc.err("ERROR")} [ functions.repeats ] The starts and stops are not the same length!')
+
+    # get starts and stops
+    starts = startstop[0]
+    stops = startstop[1]
+    indices = np.arange(len(starts))
+    frac = len(indices)/nrepeats
+
+    # check if array lengths are dividable by nrepeats
+    if frac % 1 != 0:
+        raise ValueError(
+            f'{tc.err("ERROR")} [ functions.repeats ] Cant divide by {nrepeats}!')
+
+    repeat_starts = np.empty(nrepeats)
+    repeat_stops = np.empty(nrepeats)
+
+    # get starts and stops
+    for i in range(nrepeats):
+        repeat_starts[i] = i*frac
+        repeat_stops[i] = np.arange(i*frac, i*frac+frac)[-1]
+    # reshape
+    idxs = np.array([np.array([int(x), int(y)], dtype=int)
+                    for x, y in zip(repeat_starts, repeat_stops)], dtype=int)
+
+    return idxs
+
+
+def meanstack(roi_dffs, times, inx):
+    """
+    meanstack stacks multiple repeats of the same stimulus series above each
+    other and computes the mean across repeats for a single ROI dffs.
+
+    Parameters
+    ----------
+    roi_dffs : 2d array
+        The dffs for each roi across multiple repeated stimulation series.
+    times : 1d array
+        The time array corresponding to the roi_dffs
+    inx : 2d array
+        The start and stop indices of the stimulation repeats (see function "repeats")
+
+    Returns
+    -------
+    meanstack_times : 1d array
+        Times for the meanstack
+    meanstack_dffs : 2d array
+        Stacked means for each ROI
+    """
+
+    meanstack_times = times[inx[0][0]:inx[0][1]]
+    meanstack_dffs = np.empty((len(roi_dffs[:, 0]), inx[0][1]))
+
+    for roi in range(len(roi_dffs[:, 0])):
+        dff = roi_dffs[roi, :]
+        split_dff = np.array([dff[x[0]:x[1]] for x in inx])
+        mean_dff = np.mean(split_dff, axis=0)
+        meanstack_dffs[roi, :] = mean_dff
+
+    return meanstack_times, meanstack_dffs
+
+
+def corr_repeats(mean_score, inx):
+    """Calculate the the correlation of one ROI within nrepeats
+
+    Parameters
+    ----------
+    mean_score : list or 1darray
+        mean_score dff or zscore values in stimulus windows 
+    inx : tupel
+        index tupel, where the repeats of one recording starts and stops 
+
+    Returns
+    -------
+    2d array
+        mean value of three correlations for one ROI 
+    """
+    z = []
+    for i in inx:
+        z.append(mean_score[int(i[0]):int(i[-1])])
+    combs = [comb for comb in combinations(z, 2)]
+    spear = []
+    for co in combs:
+        spear.append(spearmanr(co[0], co[1])[0])
+
+    spear_mean = np.mean(spear)
+
+    return spear_mean
+
+
+def sort_rois(mean_dffs, inx):
+    """calculate all active ROIs with a threshold. 
+    ROIs who have a high correlation with themselfs over time, are active rois 
+    Parameters
+    ----------
+    one_recording : list of vxtools.summarize.structure.Roi
+        hdf5 SummaryFile with all rois of the same recording id
+
+    inx : tupel
+        index tupel, where the repeats of one recording starts and stops 
+
+    threshold : float, optional
+        threshold of the correlation factor, by default 0.6
+
+    Returns
+    -------
+    2d array
+        1.dimension are the index fot the ROIs 
+        2.dimension are sorted correlation factors
+    """
+    spearmeans = []
+    for i in tqdm(range(len(mean_dffs[:, 0]))):
+
+        # start_time = time.time()
+        means = mean_dffs[i, :]
+
+        # start_time = time.time()
+        spear_mean = corr_repeats(means, inx)
+
+        spearmeans.append(spear_mean)
+
+    result = np.empty((len(mean_dffs[:, 0]), 2))
+    result[:, 0] = np.arange(len(mean_dffs[:, 0]))
+    result[:, 1] = spearmeans
+    active_rois_sorted = np.array(
+        sorted(result, key=lambda x: x[1], reverse=True))
+
+    return active_rois_sorted
+
+
+def thresh_correlations(sorted_rois, threshold):
+    """
+    thresh_correlations thresholds a the ROIs based by their autocorrelation 
+    across stimulation repeats.
+
+    Parameters
+    ----------
+    sorted_rois : 2d array
+        The rois and their correlation coefficients.
+    threshold : float
+        The correlation coefficient threshold.
+
+    Returns
+    -------
+    thresh : 2d array
+        The remaining ROIs and their correlation coefficients.
+    """
+    index = np.arange(len(sorted_rois[:, 0]))
+    thresh_index = index[abs(sorted_rois[:, 1]) > threshold]
+    thresh_rois = sorted_rois[thresh_index, :]
+
+    return thresh_rois
+
+
+def plot_ang_velocity(onerecording, angul_vel, rois):
+    """plot the boxplot of rois with regards to the stimulus angular Velocity 
+
+    Parameters
+    ----------
+    one_recording : list of vxtools.summarize.structure.Roi
+        hdf5 SummaryFile with all rois of the same recording id
+    roi: int
+        index of one ROI of the list one recording 
+    """
+    for r in rois:
+        mean_zscores = mean_dff_roi(onerecording, r)
+        z_vel_30 = [z for z, a in zip(mean_zscores, angul_vel) if a == 30.0]
+        z_vel_minus30 = [z for z, a in zip(
+            mean_zscores, angul_vel) if a == -30.0]
+        z_vel_0 = [z for z, a in zip(mean_zscores, angul_vel) if a == 0.0]
+
+        fig, ax = plt.subplots()
+        ax.boxplot(z_vel_0, positions=[1])
+        ax.boxplot(z_vel_minus30, positions=[2])
+        ax.boxplot(z_vel_30, positions=[3])
+        ax.set_xticklabels(['0vel', '-30vel', '30vel'])
+        plt.show()
+
+# ------------------------------------------------------------------------------
+#
+#                           Old stuff goes here
+#
+#  ------------------------------------------------------------------------------
+
+
+def mean_zscore_roi_DEPRECATED(one_recording, roi):
     """Calculates the mean zscore between the start and end point of the stimulus of one single ROI
 
     Parameters
@@ -357,28 +581,7 @@ def mean_zscore_roi(one_recording, roi):
     return mean_zscore
 
 
-def get_mean_dffs(roi_dffs, times, startstop):
-
-    snippet_indices = []
-    center_indices = []
-    for st, end in zip(startstop[0], startstop[1]):
-        start_inx = find_on_time(times, st)
-        end_inx = find_on_time(times, end)
-        center_inx = find_on_time(times, st + (end-st)/2)
-        center_indices.append(center_inx)
-        snippet_indices.append(np.arange(start_inx, end_inx))
-
-    mean_dffs = np.empty((len(roi_dffs[:, 0]), len(snippet_indices)))
-    for i in range(len(roi_dffs[:, 0])):
-        roi = roi_dffs[i, :]
-        mean_dff = np.array([np.mean(roi[snip])
-                            for snip in snippet_indices])
-        mean_dffs[i, :] = mean_dff
-
-    return mean_dffs, times[center_indices]
-
-
-def mean_dff_roi(one_recording, roi):
+def mean_dff_roi_DEPRECATED(one_recording, roi):
     """Calculates the mean dff between the start and end point of the stimulus of one single ROI
 
     Parameters
@@ -408,173 +611,3 @@ def mean_dff_roi(one_recording, roi):
         mean_dff.append(np.mean(zscores_snip))
 
     return mean_dff
-
-
-def repeats(startstop, nrepeats=3):
-
-    # check if starts and stops are the same lenght
-    if len(startstop[0]) != len(startstop[1]):
-        raise ValueError(
-            f'{tc.err("ERROR")} [ functions.repeats ] The starts and stops are not the same length!')
-
-    # get starts and stops
-    starts = startstop[0]
-    stops = startstop[1]
-    indices = np.arange(len(starts))
-    frac = len(indices)/nrepeats
-
-    # check if array lengths are dividable by nrepeats
-    if frac % 1 != 0:
-        raise ValueError(
-            f'{tc.err("ERROR")} [ functions.repeats ] Cant divide by {nrepeats}!')
-
-    repeat_starts = np.empty(nrepeats)
-    repeat_stops = np.empty(nrepeats)
-
-    # get starts and stops
-    for i in range(nrepeats):
-        repeat_starts[i] = i*frac
-        repeat_stops[i] = np.arange(i*frac, i*frac+frac)[-1]
-    # reshape
-    idxs = np.array([np.array([int(x), int(y)], dtype=int)
-                    for x, y in zip(repeat_starts, repeat_stops)], dtype=int)
-
-    return idxs
-
-
-"""
-nonnan_angul_vel = [x for x in angul_vel if np.isnan(x) == False]
-
-nr = len(nonnan_angul_vel)/nrepeats
-if nr % 1 != 0:
-    raise ValueError(f'Cant divide by {nrepeats}!')
-inx = []
-for i in np.arange(1, nrepeats+1):
-    if i == 1:
-        inx.append((0, nr))
-    else:
-        inx.append(((i-1)*nr, nr*i))
-inx = np.array(inx, dtype=int)
-return inx
-"""
-
-
-def corr_repeats(mean_score, inx):
-    """Calculate the the correlation of one ROI within nrepeats
-
-    Parameters
-    ----------
-    mean_score : list or 1darray
-        mean_score dff or zscore values in stimulus windows 
-    inx : tupel
-        index tupel, where the repeats of one recording starts and stops 
-
-    Returns
-    -------
-    ndarray
-        mean value of three correlations for one ROI 
-    """
-    z = []
-    for i in inx:
-        z.append(mean_score[int(i[0]):int(i[-1])])
-    combs = [comb for comb in combinations(z, 2)]
-    spear = []
-    for co in combs:
-        spear.append(spearmanr(co[0], co[1])[0])
-
-    spear_mean = np.mean(spear)
-
-    return spear_mean
-
-
-def sort_rois(mean_dffs, inx):
-    """calculate all active ROIs with a threshold. 
-    ROIs who have a high correlation with themselfs over time, are active rois 
-    Parameters
-    ----------
-    one_recording : list of vxtools.summarize.structure.Roi
-        hdf5 SummaryFile with all rois of the same recording id
-
-    inx : tupel
-        index tupel, where the repeats of one recording starts and stops 
-
-    threshold : float, optional
-        threshold of the correlation factor, by default 0.6
-
-    Returns
-    -------
-    2ndarray
-        1.dimension are the index fot the ROIs 
-        2.dimension are sorted correlation factors
-    """
-    spearmeans = []
-    for i in tqdm(range(len(mean_dffs[:, 0]))):
-
-        # start_time = time.time()
-        means = mean_dffs[i, :]
-        # print("--- %s seconds ---" % (time.time() - start_time))
-
-        # start_time = time.time()
-        spear_mean = corr_repeats(means, inx)
-        # print("--- %s seconds ---" % (time.time() - start_time))
-
-        spearmeans.append(spear_mean)
-
-    # index = np.arange(len(spearmeans), dtype=int)
-    # active_roi = index[np.array(spearmeans) >= threshold]
-    # pearmeans_a_roi = np.array(spearmeans)[active_roi]
-
-    result = np.empty((len(mean_dffs[:, 0]), 2))
-    result[:, 0] = np.arange(len(mean_dffs[:, 0]))
-    result[:, 1] = spearmeans
-    active_rois_sorted = np.array(
-        sorted(result, key=lambda x: x[1], reverse=True))
-
-    return active_rois_sorted
-
-
-def thresh_correlations(sorted_rois, threshold):
-    index = np.arange(len(sorted_rois[:, 0]))
-    thresh_index = index[abs(sorted_rois[:, 1]) > threshold]
-    thresh_rois = sorted_rois[thresh_index, :]
-
-    return thresh_rois
-
-
-def plot_ang_velocity(onerecording, angul_vel, rois):
-    """plot the boxplot of rois with regards to the stimulus angular Velocity 
-
-    Parameters
-    ----------
-    one_recording : list of vxtools.summarize.structure.Roi
-        hdf5 SummaryFile with all rois of the same recording id
-    roi: int
-        index of one ROI of the list one recording 
-    """
-    for r in rois:
-        mean_zscores = mean_dff_roi(onerecording, r)
-        z_vel_30 = [z for z, a in zip(mean_zscores, angul_vel) if a == 30.0]
-        z_vel_minus30 = [z for z, a in zip(
-            mean_zscores, angul_vel) if a == -30.0]
-        z_vel_0 = [z for z, a in zip(mean_zscores, angul_vel) if a == 0.0]
-
-        fig, ax = plt.subplots()
-        ax.boxplot(z_vel_0, positions=[1])
-        ax.boxplot(z_vel_minus30, positions=[2])
-        ax.boxplot(z_vel_30, positions=[3])
-        ax.set_xticklabels(['0vel', '-30vel', '30vel'])
-        plt.show()
-
-
-def meanstack(roi_dffs, times, inx):
-
-    meanstack_times = times[inx[0][0]:inx[0][1]]
-    meanstack_dffs = np.empty((len(roi_dffs[:, 0]), inx[0][1]))
-
-    for roi in range(len(roi_dffs[:, 0])):
-        dff = roi_dffs[roi, :]
-        split_dff = np.array([dff[x[0]:x[1]] for x in inx])
-        mean_dff = np.mean(split_dff, axis=0)
-        meanstack_dffs[roi, :] = mean_dff
-
-    return meanstack_times, meanstack_dffs

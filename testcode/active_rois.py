@@ -187,9 +187,9 @@ plot_times = meanstack_t_active_dffs
 plot_dffs = meanstack_d_active_dffs
 plot_rois = thresh_mean_rois[:, 0]
 
-# make matrix out of luminance contrast where rotation was ON
-lum_mask = np.arange(len(lum_contr))
-lum_mask = lum_mask[rots == 0]
+# make matrix out of luminance contrast (where rotation was ON)
+# lum_mask = np.arange(len(lum_contr))
+# lum_mask = lum_mask[rots == 0]
 # lum_contr[lum_mask] = np.nan
 lum_img = np.empty((len(plot_rois), len(lum_contr)))
 for i in range(len(lum_img[:, 0])):

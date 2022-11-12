@@ -2,6 +2,7 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy import interpolate
 from vxtools.summarize.structure import SummaryFile
 
 import functions as fs
@@ -21,21 +22,39 @@ times = one_rec[0].times  # get the time axis
 start_time, end_time, angul_vel, angul_pre, rgb_1, rgb_2 = fs.get_attributes(
     one_rec)
 
-
-# Working with and converting start and stop of stimulus -----------------------
+# Getting actual dff data ------------------------------------------------------
 
 # remove first and last start time because baseline
 start_time = start_time[1:-1]
 end_time = end_time[1:-1]
 
-# convert stim onset timestamps to indices
-stimstart = fs.find_on_time(times, start_time[0])
-stimstop = fs.find_on_time(times, end_time[-1])
+# new time for interpolation
+new_end_time = end_time-start_time[0]
+new_start_time = start_time-start_time[0]
+new_times = np.arange(new_start_time[0], new_end_time[-1]+0.1, 0.1)
 
-# rewrite start and stop times (this will end in chaos!!!)
-times = times[stimstart:stimstop]
-start_time[0] = times[0]
-end_time[-1] = times[-1]
+# convert stim onset timestamps to indices
+stimstart = fs.find_on_time(new_times, new_start_time[0])
+stimstop = fs.find_on_time(new_times, new_end_time[-1])
+
+# make matrix of dffs for this roi
+roi_dffs = np.empty((len(one_rec), len(new_times)))
+for i, roi in enumerate(one_rec):
+    dff = roi.dff
+    f = interpolate.interp1d(times-start_time[0], dff)
+    dff_interp = f(new_times)
+    roi_dffs[i, :] = dff_interp
+
+# reassing these variables (if something unexpected happens, keep this is mind!)
+times = new_times
+start_time = new_start_time
+end_time = new_end_time
+
+# convert dff matrix to mean dff matrix
+mean_dffs, mean_times = fs.get_mean_dffs(
+    roi_dffs, times, (start_time, end_time))
+
+# Working with and converting start and stop of stimulus -----------------------
 
 # get indices for stimulus phase series repeats
 inx_mean = fs.repeats((start_time, end_time))
@@ -49,41 +68,46 @@ repeat_starts_idx = [fs.find_on_time(times, x) for x in repeat_starts]
 repeat_stops_idx = [fs.find_on_time(times, x) for x in repeat_stops]
 
 # reformat to fit inx shape
-inx_full = np.array([[x, y]
-                    for x, y in zip(repeat_starts_idx, repeat_stops_idx)])
+inx_full = np.array(
+    [[x, y] for x, y in zip(repeat_starts_idx, repeat_stops_idx)]
+)
 
+# check if phase series repeats are of same length
 
-# Getting actual dff data ------------------------------------------------------
+# these MUST be of same length!
+repeat_df_mean = np.sum(np.diff([x[1]-x[0] for x in inx_mean]))
+# these may not be!
+repeat_df_full = np.sum(np.diff([x[1]-x[0] for x in inx_full]))
 
-# make matrix of dffs for this roi
-roi_dffs = np.empty((len(one_rec), len(one_rec[0].dff[stimstart:stimstop])))
-for i, roi in enumerate(one_rec):
-    roi_dffs[i, :] = roi.dff[stimstart:stimstop]
+# if they are not, cut the ends off (its just a few datapoints so should not matter much)
+if repeat_df_full != 0:
 
-# convert dff matrix to mean dff matrix
-mean_dffs, mean_times = fs.get_mean_dffs(
-    roi_dffs, times, (start_time, end_time))
+    # get the shortest one
+    imin = np.min([x[1]-x[0] for x in inx_full])
 
+    # cut the others short
+    for i, x in enumerate(inx_full):
+        if x[1]-x[0] != imin:
+            di = (x[1]-x[0])-imin
+            inx_full[i][1] = inx_full[i][1] - di
 
 # Compute corrcoeffs and threshold them ----------------------------------------
 
-# compute correlation coefficient of thresholded active ROIs
+# compute correlation coefficient of ROIs
 sorted_mean_rois = fs.sort_rois(mean_dffs, inx_mean)
-sorted_rois = fs.sort_rois(roi_dffs, inx_full)
 
 # get dffs for all ROIs
-sorted_dffs = np.array([roi_dffs[int(roi), :] for roi in sorted_rois[:, 0]])
+sorted_dffs = np.array([roi_dffs[int(roi), :]
+                       for roi in sorted_mean_rois[:, 0]])
 
-# threshold them based on correlation coefficient
+# threshold the means based on correlation coefficient
 thresh_mean_rois = fs.thresh_correlations(sorted_mean_rois, meanthresh)
-thresh_rois = fs.thresh_correlations(sorted_rois, thresh)
 
-# get dffs for active ROIs only
+# get dffs for active ROIs only for raster (means per stim) and lineplot (interp datapoints)
 active_mean_dffs = np.array([mean_dffs[int(roi), :]
-                            for roi in thresh_mean_rois[:, 0]])
+                             for roi in thresh_mean_rois[:, 0]])
 active_dffs = np.array([roi_dffs[int(roi), :]
-                        for roi in thresh_rois[:, 0]])
-
+                        for roi in thresh_mean_rois[:, 0]])
 
 # Make a meanstack -------------------------------------------------------------
 
@@ -106,7 +130,7 @@ meanstack_t_active_mean_dffs, meanstack_d_active_mean_dffs = fs.meanstack(
 
 plot_times = meanstack_t_active_dffs
 plot_dffs = meanstack_d_active_dffs
-plot_rois = thresh_rois[:, 0]
+plot_rois = thresh_mean_rois[:, 0]
 
 
 # Plot rasterplot --------------------------------------------------------------
@@ -122,9 +146,6 @@ ax.imshow(plot_dffs,
           extent=extent,
           )
 
-for t1, t2 in zip(repeat_starts, repeat_stops):
-    ax.axvline(t1, color="blue")
-    ax.axvline(t2, color="green")
 plt.show()
 
 

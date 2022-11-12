@@ -6,8 +6,10 @@
 testdata
 data
 data2
+data_old
 env
 trial_data
+
 # Mac Stuff 
 *.DS_Store
 

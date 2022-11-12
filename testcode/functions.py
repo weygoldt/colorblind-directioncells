@@ -4,9 +4,85 @@ import matplotlib.pyplot as plt
 import numpy as np
 from IPython import embed
 from scipy.stats import spearmanr
+from sklearn.metrics import auc
+from sklearn.neighbors import KernelDensity
 from tqdm import tqdm
 
 from termcolors import TermColor as tc
+
+
+def find_right_tail(x, y, target_auc, plot=True):
+
+    # right tail area under curve
+    gradient = np.zeros_like(x[:-1])
+    index = np.arange(len(x[:-1]))
+
+    # compute difference gradient (between actual auc and target auc)
+    for i, t in enumerate(x[:-1]):
+        area = auc(x[i:], y[i:])
+        gradient[i] = abs(area-target_auc)
+
+    idx = index[gradient == gradient.min()][0]
+
+    if plot:
+        fig, ax = plt.subplots(1, 2)
+
+        ax[0].plot(x, y, c="k")
+        ax[0].fill_between(x[idx:], np.zeros_like(x[idx:]),
+                           y[idx:], zorder=-10, alpha=0.8, facecolor="r")
+        ax[0].set_title("Input data and \n marked area")
+
+        ax[1].plot(x[:-1], gradient, c="k")
+        ax[1].scatter(x[idx], gradient[idx], c="r", zorder=10)
+        ax[1].set_title("Difference gradient \n and lowest point")
+
+        plt.show()
+
+    return gradient, idx
+
+
+def kde1d(y, bandwidth, xlims="auto", resolution=500, kernel="gaussian"):
+    """
+    Estimate the probability density function of a continuous variable using the kernel density method.
+    Computes the limits by minimum and maximum of the supplied variable or set the maxima (e.g. for variables that
+    cannot the smaller then 0 etc.).
+
+    Parameters
+    ----------
+    y : 1d array-like
+        The continuous variable
+    bandwidth : float
+        The bandwidth of the kernel (i.e. sigma of a gaussian)
+    xlims : {array-like, 'auto'}, optional
+        The limits of the data, by default "auto"
+    resolution : int, optional
+        The number of points to draw the KDE, by default 500
+    kernel : {'gaussian', 'tophat', 'epanechnikov', 'exponential', 'linear', 'cosine'}
+        The kernel to use, by default "gaussian"
+
+    Returns
+    -------
+    x : array
+        The x axis of the estimated PDF.
+    pdf : array
+        The KDE-estimated PDF of the input data.
+    """
+    if xlims == "auto":
+        x = np.linspace(np.min(y), np.max(y), resolution)
+    else:
+        try:
+            x = np.linspace(xlims[0], xlims[1], resolution)
+        except ValueError:
+            print("Invalid argument for 'xlims'. Must be a list/array or 'auto'.")
+    kde = KernelDensity(kernel=kernel, bandwidth=bandwidth).fit(y[:, None])
+    log_dens = kde.score_samples(x[:, None])
+
+    print(
+        "computed AreaUnderCurve (AUC) of KDE using sklearn.metrics.auc: {}".format(
+            auc(x, np.exp(log_dens))
+        )
+    )
+    return x, np.exp(log_dens)
 
 
 def flatten(l):

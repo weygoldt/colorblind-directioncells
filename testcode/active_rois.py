@@ -14,7 +14,7 @@ ps = PlotStyle()
 
 # activity threshold (min spearman correlation)
 
-prob_thresh = 0.05  # probability threshold for non-mean data
+prob_thresh = 0.1  # probability threshold for non-mean data
 
 # get data
 f = SummaryFile('../data/Summary.hdf5')  # import HDF5 file
@@ -117,7 +117,7 @@ xkde, kde = fs.kde1d(
 )
 
 # find where right auc matches threshold
-gradient, idx = fs.find_right_tail(xkde, kde, prob_thresh, plot=True)
+gradient, idx = fs.find_right_tail(xkde, kde, prob_thresh, plot=False)
 thresh = xkde[idx]
 thresh_mean_rois = fs.thresh_correlations(sorted_mean_rois, thresh)
 
@@ -145,6 +145,12 @@ meanstack_t_active_mean_dffs, meanstack_d_active_mean_dffs = fs.meanstack(
     active_mean_dffs, mean_times, inx_mean)
 
 
+# specify here what you want to plot -------------------------------------------
+
+plot_times = meanstack_t_active_mean_dffs
+plot_dffs = meanstack_d_active_mean_dffs
+plot_rois = thresh_mean_rois[:, 0]
+
 # Encode stimulus contrast -----------------------------------------------------
 
 # remove nans at start and stop
@@ -161,35 +167,39 @@ red = np.array(
     [abs(x[0]-y[0]) for x, y in zip(rgb_1, rgb_2)]
 )[inx_mean[0][0]:inx_mean[0][1]]
 
+reds = np.empty((len(plot_dffs[:, 0]), len(red)))
+for i in range(len(reds[:, 0])):
+    reds[i, :] = red
+
 green = np.array(
     [abs(x[1]-y[1]) for x, y in zip(rgb_1, rgb_2)]
 )[inx_mean[0][0]:inx_mean[0][1]]
+
+greens = np.empty((len(plot_dffs[:, 0]), len(green)))
+for i in range(len(greens[:, 0])):
+    greens[i, :] = green
 
 
 # Encode rotation direction ----------------------------------------------------
 
 # make no rot = 0, counterclock = -1, clockwise = 1
-ang_veloc = ang_veloc[1:-1]  # cut nans
-rots = np.zeros_like(ang_veloc, dtype=int)
+ang_veloc = ang_veloc[1:-1][inx_mean[0][0]:inx_mean[0][1]]  # cut nans
+norots = np.full(len(ang_veloc), np.nan)
+leftrots = np.full(len(ang_veloc), np.nan)
+rightrots = np.full(len(ang_veloc), np.nan)
+
 for i, rot in enumerate(ang_veloc):
     if rot > 0:
-        rots[i] = 1
+        rightrots[i] = 0
     elif rot == 0:
-        rots[i] = 0
+        norots[i] = 0
     else:
-        rots[i] = -1
-rots = rots[inx_mean[0][0]:inx_mean[0][1]]  # cut to first repeat
-
-
-# specify here what you want to plot -------------------------------------------
-
-plot_times = meanstack_t_active_dffs
-plot_dffs = meanstack_d_active_dffs
-plot_rois = thresh_mean_rois[:, 0]
+        leftrots[i] = 0
 
 # make matrix out of luminance contrast (where rotation was ON)
+
 # lum_mask = np.arange(len(lum_contr))
-# lum_mask = lum_mask[rots == 0]
+# lum_mask = lum_mask[norots == 0]
 # lum_contr[lum_mask] = np.nan
 lum_img = np.empty((len(plot_rois), len(lum_contr)))
 for i in range(len(lum_img[:, 0])):
@@ -236,21 +246,68 @@ plt.show()
 extent = (np.min(plot_times), np.max(plot_times),
           0, len(plot_rois))
 
-fig, ax = plt.subplots()
-ax.imshow(plot_dffs,
-          cmap='binary',
-          aspect='auto',
-          extent=extent,
-          )
+fig, ax = plt.subplots(5, 1,
+                       figsize=(24*ps.cm, 12*ps.cm),
+                       gridspec_kw={'height_ratios': [10, 1, 1, 1, 1]},
+                       sharex=True,
+                       )
+ax[0].imshow(plot_dffs,
+             cmap='binary',
+             aspect='auto',
+             extent=extent,
+             )
 
 # plot contrast
-ax.imshow(lum_img,
-          cmap="Blues",
-          alpha=0.3,
-          aspect="auto",
-          extent=extent,
-          )
+ax[1].imshow(lum_img,
+             cmap="binary",
+             alpha=1,
+             aspect="auto",
+             extent=extent,
+             )
+ax[2].imshow(reds,
+             cmap="Reds",
+             aspect="auto",
+             extent=extent,
+             )
+ax[3].imshow(greens,
+             cmap="Greens",
+             aspect="auto",
+             extent=extent,
+             )
 
+ax[4].scatter(plot_times+(plot_times[1]-plot_times[0]) /
+              2, norots, marker="_", color="k")
+
+ax[4].scatter(plot_times+(plot_times[1]-plot_times[0]) /
+              2, leftrots, marker="<", color="k")
+
+ax[4].scatter(plot_times+(plot_times[1]-plot_times[0]) /
+              2, rightrots, marker=">", color="k")
+
+ps.hide_helper_xax(ax[1])
+ps.hide_helper_xax(ax[2])
+ps.hide_helper_xax(ax[3])
+
+ax[0].set_xlim(np.min(plot_times), np.max(plot_times))
+
+# remove upper and right axis
+ax[0].spines["right"].set_visible(False)
+ax[0].spines["top"].set_visible(False)
+ax[0].spines["bottom"].set_visible(False)
+
+ax[4].spines["right"].set_visible(False)
+ax[4].spines["top"].set_visible(False)
+ax[4].spines["left"].set_visible(False)
+ax[4].tick_params(left=False, labelleft=False)
+
+# make axes nicer
+# ax[0].set_yticks(range(0, len(plot_rois)+1, 10))
+# ax[0].spines.left.set_bounds((0, len(plot_rois)))
+# ax[4].set_xticks(range(np.min(plot_times), np.max(plot_times), 100))
+# ax[4].spines.bottom.set_bounds((np.min(plot_times), np.max(plot_times)))
+
+ax[0].set_ylabel("Region of interest")
+ax[4].set_xlabel("Time [s]")
 plt.show()
 
 

@@ -8,8 +8,8 @@ from scipy.stats import spearmanr
 from sklearn.metrics import auc
 from vxtools.summarize.structure import SummaryFile
 
-import functions as fs
-from plotstyle import PlotStyle
+import modules.functions as fs
+from modules.plotstyle import PlotStyle
 
 ps = PlotStyle()
 
@@ -93,6 +93,7 @@ if repeat_df_full != 0:
     # cut the others short
     for i, x in enumerate(inx_full):
         if x[1]-x[0] != imin:
+            ``
             di = (x[1]-x[0])-imin
             inx_full[i][1] = inx_full[i][1] - di
 

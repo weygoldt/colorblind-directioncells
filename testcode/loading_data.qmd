@@ -1,8 +1,11 @@
 ---
-title: "ROI selection"
+title: "Loading data - the `all_rois` class"
 format:
   html:
-    code-fold: true
+    code-fold: false
+    theme:
+        light: flatly
+        dark: darkly
 jupyter: python3
 ---
 
@@ -11,26 +14,20 @@ jupyter: python3
 Import essential packages.
 
 ```{python}
-import matplotlib.pyplot as plt
 import numpy as np
-import scipy.stats as ss
-from IPython import embed
 from scipy import interpolate
-from scipy.stats import spearmanr
-from sklearn.metrics import auc
 from vxtools.summarize.structure import SummaryFile
-import functions as fs
-from plotstyle import PlotStyle
-
-ps = PlotStyle()
+import modules.functions as fs
 ```
 
-Import data.
+Import the data using the `SummaryFile` class form `vxtools`. 
 
 ```{python}
-f = SummaryFile('../data/Summary.hdf5')   # import HDF5 file
-one_rec = fs.data_one_rec_id(f, 8)        # extract one recording
-times = one_rec[0].times                  # get the time axis
+f = SummaryFile('../data/Summary.hdf5')  # import HDF5 file
+
+one_rec = fs.data_one_rec_id(f, 14)  # extract one recording
+
+times = one_rec[0].times  # get the time axis
 
 start_times, stop_times, ang_veloc, ang_period, rgb_1, rgb_2 = fs.get_attributes(
     one_rec)
@@ -124,7 +121,7 @@ inx_full = np.array(
 )
 ```
 
-### Compute and threshold autocorrelations
+### Compute autocorrelations
 
 The function `functions.sort_rois` computes the spearman correlation coefficient of the ROIs in the dff matrix over multiple repeats if given the repeat indices. The function computes the correlation between all possible unique combinations of repeats and saves the mean correlation coefficient, next to the ROI in a matrix. In a last step, the resulting matrix of ROIs is sorted by the mean correlation coefficient.
 
@@ -132,8 +129,4 @@ The function `functions.sort_rois` computes the spearman correlation coefficient
 sorted_mean_rois = fs.sort_rois(mean_dffs, inx_mean)
 ```
 
-Now we can use the correlation coefficient of each ROIs autocorrelation and threshold it to get the cells that reliably reacted to something in the stimulus.
-
-Instead of simply using a hard threshold, we can estimate the probability density function of the correlation coefficients and use the ones that are significantly different from the mean.
-
-We first plot a histogram and 
+All processes described above are neatly tucked into the `dataloader.all_rois` class. Usage of the class is demonstrated in the [filter_rois.qmd](filter_rois.html) notebook. 

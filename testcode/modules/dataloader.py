@@ -1,17 +1,15 @@
 import numpy as np
 from scipy import interpolate
-from tqdm import tqdm
+from tqdm.autonotebook import tqdm
 from vxtools.summarize.structure import SummaryFile
 
-import functions as fs
-from termcolors import TermColor as tc
+from . import functions as fs
+from .termcolors import TermColor as tc
 
 
-class roimatrix:
+class all_rois:
 
     def __init__(self, SummaryFile, recordings):
-
-        print(f"{tc.succ('[ roimatrix.__init__ ]')} Loading data ...")
 
         f = SummaryFile
         rec_nos = recordings
@@ -28,7 +26,8 @@ class roimatrix:
         self.rgbs_1 = []
         self.rgbs_2 = []
 
-        for rec_no in tqdm(rec_nos):
+        print("")
+        for rec_no in tqdm(rec_nos, desc=f"{tc.succ('[ roimatrix.__init__ ]')} Loading data ..."):
 
             # get recording data
             one_rec = fs.data_one_rec_id(f, rec_no)  # extract one recording
@@ -133,9 +132,8 @@ class roimatrix:
         self.mean_dffs = np.full(
             (len(self.dffs[:, 0]), len(snippet_indices)), np.nan)
 
-        print(
-            f"{tc.succ('[ roimatrix.stimulus_means ]')} Computing means in phases ...")
-        for i in tqdm(range(len(self.dffs[:, 0]))):
+        print("")
+        for i in tqdm(range(len(self.dffs[:, 0])), desc=f"{tc.succ('[ roimatrix.stimulus_means ]')} Computing means in phases ..."):
             roi = self.dffs[i, :]
             mean_dff = np.array([np.mean(roi[snip])
                                  for snip in snippet_indices])
@@ -144,13 +142,9 @@ class roimatrix:
 
     def repeat_means(self):
 
+        print("")
         print(
             f"{tc.succ('[ roimatrix.repeat_means ]')} Computing means across repeats...")
-
-        # get indices for stimulus phase series repeats
-        inx_mean = fs.repeats((self.start_times, self.stop_times))
-
-        self.inx_mean = inx_mean
 
         self.meanstack_mean_times, \
             self.meanstack_mean_dffs = fs.meanstack(
@@ -158,11 +152,53 @@ class roimatrix:
 
     def sort_means_by_corr(self):
 
-        print(
-            f"{tc.succ('[ roimatrix.sort_means_by_corr ]')} Computing autocorrelation for every dff ...")
+        def sort_rois(mean_dffs, inx):
+            """calculate all active ROIs with a threshold. 
+            ROIs who have a high correlation with themselfs over time, are active rois 
+            Parameters
+            ----------
+            one_recording : list of vxtools.summarize.structure.Roi
+                hdf5 SummaryFile with all rois of the same recording id
+
+            inx : tupel
+                index tupel, where the repeats of one recording starts and stops 
+
+            threshold : float, optional
+                threshold of the correlation factor, by default 0.6
+
+            Returns
+            -------
+            2d array
+                1.dimension are the index fot the ROIs 
+                2.dimension are sorted correlation factors
+            """
+
+            spearmeans = []
+            print("")
+            for i in tqdm(range(len(mean_dffs[:, 0])), desc=f"{tc.succ('[ roimatrix.sort_means_by_corr ]')} Computing autocorrelation for every dff ..."):
+
+                # start_time = time.time()
+                means = mean_dffs[i, :]
+
+                # start_time = time.time()
+                spear_mean = fs.corr_repeats(means, inx)
+
+                spearmeans.append(spear_mean)
+
+            result = np.empty((len(mean_dffs[:, 0]), 2))
+            result[:, 0] = np.arange(len(mean_dffs[:, 0]))
+            result[:, 1] = spearmeans
+            active_rois_sorted = np.array(
+                sorted(result, key=lambda x: x[1], reverse=True))
+
+            return active_rois_sorted
+
+        # get indices for stimulus phase series repeats
+        inx_mean = fs.repeats((self.start_times, self.stop_times))
+        self.inx_mean = inx_mean
 
         # compute correlation coefficient of ROIs
-        self.corrs = fs.sort_rois(self.mean_dffs, self.inx_mean)
+        self.corrs = sort_rois(self.mean_dffs, self.inx_mean)
 
         self.metaindex = self.corrs[:, 0]
 

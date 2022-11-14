@@ -6,9 +6,9 @@ from IPython import embed
 from scipy.stats import spearmanr
 from sklearn.metrics import auc
 from sklearn.neighbors import KernelDensity
-from tqdm import tqdm
+from tqdm.autonotebook import tqdm
 
-from termcolors import TermColor as tc
+from .termcolors import TermColor as tc
 
 
 def find_right_tail(x, y, target_auc, plot=True):

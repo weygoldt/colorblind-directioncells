@@ -1,9 +1,10 @@
 # Essentials -------------------------------------------------------------------
-
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats as ss
+from IPython import embed
 from scipy import interpolate
+from scipy.stats import spearmanr
 from sklearn.metrics import auc
 from vxtools.summarize.structure import SummaryFile
 
@@ -14,11 +15,11 @@ ps = PlotStyle()
 
 # activity threshold (min spearman correlation)
 
-prob_thresh = 0.1  # probability threshold for non-mean data
+prob_thresh = 0.05  # probability threshold for non-mean data
 
 # get data
 f = SummaryFile('../data/Summary.hdf5')  # import HDF5 file
-one_rec = fs.data_one_rec_id(f, 7)  # extract one recording
+one_rec = fs.data_one_rec_id(f, 8)  # extract one recording
 times = one_rec[0].times  # get the time axis
 start_times, stop_times, ang_veloc, ang_period, rgb_1, rgb_2 = fs.get_attributes(
     one_rec)
@@ -128,6 +129,69 @@ active_mean_dffs = np.array([mean_dffs[int(roi), :]
                              for roi in thresh_mean_rois[:, 0]])
 active_dffs = np.array([roi_dffs[int(roi), :]
                         for roi in thresh_mean_rois[:, 0]])
+
+# Get motion selective dffs ----------------------------------------------------
+
+# make regressors for clockwise, counterclockwise and just movement
+
+red_contr = []
+green_contr = []
+for rgb1, rgb2 in zip(rgb_1[1:-1], rgb_2[1:-1]):
+    if rgb2[1] == 0:
+        red_contr.append(rgb1[0])
+    else:
+        red_contr.append(0)
+
+    if rgb1[0] == 0:
+        green_contr.append(rgb2[1])
+    else:
+        green_contr.append(0)
+
+
+counterclock_red = [1 * red if x < 0 else 0 for x, red in zip(
+    ang_veloc[1:-1], red_contr)]
+
+counterclock_green = [1 * green if x < 0 else 0 for x, green in zip(
+    ang_veloc[1:-1], green_contr)]
+
+clock_red = [1 * red if x > 0 else 0 for x, red in zip(
+    ang_veloc[1:-1], red_contr)]
+
+clock_green = [1 * green if x > 0 else 0 for x, green in zip(
+    ang_veloc[1:-1], green_contr)]
+
+
+# compute correlation between dffs and regressors
+corr_cclock_red = [spearmanr(x, counterclock_red)[0] for x in active_mean_dffs]
+corr_cclock_green = [spearmanr(x, counterclock_green)[0]
+                     for x in active_mean_dffs]
+
+corr_clock_red = [spearmanr(x, clock_red)[0] for x in active_mean_dffs]
+corr_clock_green = [spearmanr(x, clock_green)[0] for x in active_mean_dffs]
+
+hist1, bins1 = np.histogram(corr_clock_red, bins=20)
+hist2, bins2 = np.histogram(corr_clock_green, bins=20)
+
+plt.bar(bins1[:-1],
+        hist1,
+        width=np.diff(bins2),
+        edgecolor="white",
+        facecolor="orange",
+        alpha=0.2,
+        linewidth=0,
+        align="edge",
+        )
+plt.bar(bins2[:-1],
+        hist2,
+        width=np.diff(bins2),
+        edgecolor="white",
+        facecolor="green",
+        alpha=0.2,
+        linewidth=0,
+        align="edge",
+        )
+
+plt.show()
 
 # Make a meanstack -------------------------------------------------------------
 

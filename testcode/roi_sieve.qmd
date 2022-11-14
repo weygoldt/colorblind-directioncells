@@ -1,0 +1,139 @@
+---
+title: "ROI selection"
+format:
+  html:
+    code-fold: true
+jupyter: python3
+---
+
+## Importing the data
+
+Import essential packages.
+
+```{python}
+import matplotlib.pyplot as plt
+import numpy as np
+import scipy.stats as ss
+from IPython import embed
+from scipy import interpolate
+from scipy.stats import spearmanr
+from sklearn.metrics import auc
+from vxtools.summarize.structure import SummaryFile
+import functions as fs
+from plotstyle import PlotStyle
+
+ps = PlotStyle()
+```
+
+Import data.
+
+```{python}
+f = SummaryFile('../data/Summary.hdf5')   # import HDF5 file
+one_rec = fs.data_one_rec_id(f, 8)        # extract one recording
+times = one_rec[0].times                  # get the time axis
+
+start_times, stop_times, ang_veloc, ang_period, rgb_1, rgb_2 = fs.get_attributes(
+    one_rec)
+```
+
+Remove first and last value from the stimulus data because no stimulus was presented, i.e. baseline activity was recorded.
+
+```{python}
+start_times = start_times[1:-1]
+stop_times = stop_times[1:-1]
+ang_veloc = ang_veloc[1:-1]
+ang_period = ang_period[1:-1]
+rbg_1 = rgb_1[1:-1]
+rgb_2 = rgb_2[1:-1]
+```
+
+## Interpolation
+
+We interpolate the calcium data to 10 Hz and shift the time array to 0.
+To shift the time array, we first need to shift the start and stop times from the original recording, so that the start time is at 0 seconds. The new time array is then created between the new start and stop time with a time step of 0.1 s resulting in a samplting rate of 1/0.1s = 10 Hz.
+
+```{python}
+# shift start and stop time
+new_end_time = stop_times-start_times[0]
+new_start_time = start_times-start_times[0]
+
+# create new time array
+new_times = np.arange(new_start_time[0], new_end_time[-1]+0.1, 0.1)
+```
+
+Now we collect the dffs, i.e. the calcium data for every ROI, normalize it, interpolate it to the new time vector and then append it to a matrix with as many rows as ROIs and a collumn for every time point.
+
+```{python}
+# make empty matrix 
+roi_dffs = np.empty((len(one_rec), len(new_times)))
+
+for i, roi in enumerate(one_rec):
+    
+    # get rois from dataset
+    dff = roi.dff 
+
+    # normalize
+    dff = (dff - dff.min()) / (dff.max() - dff.min()) 
+
+    # interpolate
+    f = interpolate.interp1d(times-start_times[0], dff)
+    dff_interp = f(new_times)
+
+    # save into matrix
+    roi_dffs[i, :] = dff_interp
+```
+
+Now we are finished with converting the original data and can reassing some variables.
+
+```{python}
+times = new_times
+start_times = new_start_time
+stop_times = new_end_time
+```
+
+## Computing the means over every stimulus phase
+
+Every vector included in the matrix has multiple datapoints for a single stimulation interval. This way, the stimulation data and the dffs do not match. Since we do not need this fine temporal resolution at this point, we compute the mean dff inside a single stimulation interval for every stimulation intervals, across all dffs included in our matrix. This is done with a coustom written function using the start and stop times of the stimulus.
+
+```{python}
+mean_dffs, mean_times = fs.get_mean_dffs(
+    roi_dffs, times, (start_times, stop_times))
+```
+
+## Detecting repeated stimulation
+
+The same series of stimuli are played back to a fish for multiple times (3 times in this example). To find cells that reacted to the stimulus, we are looking for cells with similar activity to the same stimulations over time. In the next step, we find the time stamps where the series of stimuli repeated itself and then compute the correlation between a cells activities to the repeats.
+
+First, we find the indices of the timestamps on the `start_times` and `stop_times` arrays. Then we use these indices to grab the respective timestamps from the arrays. In an additional step, which is only needed at a later point in time, we use these time stamps to find the closest matching value on the time array we created for the original data. At last, we reformat the indices on the full time vector to the same shape as our original indices so we can use them in a similar manner.
+
+```{python}
+# find repeats
+inx_mean = fs.repeats((start_times, stop_times))
+
+# convert them to timestamps
+repeat_starts = np.array(start_times)[[int(i[0]) for i in inx_mean]]
+repeat_stops = np.array(stop_times)[[int(i[1]) for i in inx_mean]]
+
+# convert repeat start and stop timestamp to indices on full time vector
+repeat_starts_idx = [fs.find_on_time(times, x) for x in repeat_starts]
+repeat_stops_idx = [fs.find_on_time(times, x) for x in repeat_stops]
+
+# reformat to fit inx shape
+inx_full = np.array(
+    [[x, y] for x, y in zip(repeat_starts_idx, repeat_stops_idx)]
+)
+```
+
+### Compute and threshold autocorrelations
+
+The function `functions.sort_rois` computes the spearman correlation coefficient of the ROIs in the dff matrix over multiple repeats if given the repeat indices. The function computes the correlation between all possible unique combinations of repeats and saves the mean correlation coefficient, next to the ROI in a matrix. In a last step, the resulting matrix of ROIs is sorted by the mean correlation coefficient.
+
+```{python}
+sorted_mean_rois = fs.sort_rois(mean_dffs, inx_mean)
+```
+
+Now we can use the correlation coefficient of each ROIs autocorrelation and threshold it to get the cells that reliably reacted to something in the stimulus.
+
+Instead of simply using a hard threshold, we can estimate the probability density function of the correlation coefficients and use the ones that are significantly different from the mean.
+
+We first plot a histogram and 

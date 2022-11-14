@@ -10,6 +10,7 @@ data_old
 env
 trial_data
 trash
+.vscode
 *_files
 *.html
 

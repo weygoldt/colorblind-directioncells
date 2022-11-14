@@ -19,7 +19,7 @@ prob_thresh = 0.05  # probability threshold for non-mean data
 
 # get data
 f = SummaryFile('../data/Summary.hdf5')  # import HDF5 file
-one_rec = fs.data_one_rec_id(f, 8)  # extract one recording
+one_rec = fs.data_one_rec_id(f, 14)  # extract one recording
 times = one_rec[0].times  # get the time axis
 start_times, stop_times, ang_veloc, ang_period, rgb_1, rgb_2 = fs.get_attributes(
     one_rec)

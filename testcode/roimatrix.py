@@ -111,6 +111,7 @@ class roimatrix:
         self.dffs = dffs
         self.index_rois = index_rois
         self.index_recs = index_recs
+        self.metaindex = np.arange(len(self.dffs[:, 0]))
         self.start_times = start_time
         self.stop_times = stop_time
         self.ang_velocs = ang_veloc
@@ -118,7 +119,7 @@ class roimatrix:
         self.rgb_1 = rgb_1
         self.rgb_2 = rgb_2
 
-    def mean_matrix(self):
+    def stimulus_means(self):
 
         snippet_indices = []
         center_indices = []
@@ -132,13 +133,38 @@ class roimatrix:
         self.mean_dffs = np.full(
             (len(self.dffs[:, 0]), len(snippet_indices)), np.nan)
 
-        print(f"{tc.succ('[ roimatrix.mean_matrix ]')} Computing means ...")
+        print(
+            f"{tc.succ('[ roimatrix.stimulus_means ]')} Computing means in phases ...")
         for i in tqdm(range(len(self.dffs[:, 0]))):
             roi = self.dffs[i, :]
             mean_dff = np.array([np.mean(roi[snip])
                                  for snip in snippet_indices])
             self.mean_dffs[i, :] = mean_dff
         self.mean_times = self.times[center_indices]
+
+    def repeat_means(self):
+
+        print(
+            f"{tc.succ('[ roimatrix.repeat_means ]')} Computing means across repeats...")
+
+        # get indices for stimulus phase series repeats
+        inx_mean = fs.repeats((self.start_times, self.stop_times))
+
+        self.inx_mean = inx_mean
+
+        self.meanstack_mean_times, \
+            self.meanstack_mean_dffs = fs.meanstack(
+                self.mean_dffs, self.mean_times, self.inx_mean)
+
+    def sort_means_by_corr(self):
+
+        print(
+            f"{tc.succ('[ roimatrix.sort_means_by_corr ]')} Computing autocorrelation for every dff ...")
+
+        # compute correlation coefficient of ROIs
+        self.corrs = fs.sort_rois(self.mean_dffs, self.inx_mean)
+
+        self.metaindex = self.corrs[:, 0]
 
 
 if __name__ == "__main__":
@@ -147,4 +173,5 @@ if __name__ == "__main__":
     num_rec = len(f.recordings())
     rec_nos = np.arange(3, num_rec)
     d = roimatrix(f, rec_nos)
-    d.mean_matrix()
+    d.stimulus_means()
+    d.repeat_means()

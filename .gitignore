@@ -9,6 +9,9 @@ data2
 data_old
 env
 trial_data
+*_files
+*.html
+
 
 # Mac Stuff 
 *.DS_Store

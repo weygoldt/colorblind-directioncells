@@ -9,6 +9,7 @@ data2
 data_old
 env
 trial_data
+trash
 *_files
 *.html
 

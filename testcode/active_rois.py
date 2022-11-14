@@ -18,7 +18,7 @@ prob_thresh = 0.1  # probability threshold for non-mean data
 
 # get data
 f = SummaryFile('../data/Summary.hdf5')  # import HDF5 file
-one_rec = fs.data_one_rec_id(f, 5)  # extract one recording
+one_rec = fs.data_one_rec_id(f, 7)  # extract one recording
 times = one_rec[0].times  # get the time axis
 start_times, stop_times, ang_veloc, ang_period, rgb_1, rgb_2 = fs.get_attributes(
     one_rec)
@@ -42,6 +42,7 @@ stimstop = fs.find_on_time(new_times, new_end_time[-1])
 roi_dffs = np.empty((len(one_rec), len(new_times)))
 for i, roi in enumerate(one_rec):
     dff = roi.dff
+    dff = (dff - dff.min()) / (dff.max() - dff.min())
     f = interpolate.interp1d(times-start_times[0], dff)
     dff_interp = f(new_times)
     roi_dffs[i, :] = dff_interp
@@ -117,7 +118,7 @@ xkde, kde = fs.kde1d(
 )
 
 # find where right auc matches threshold
-gradient, idx = fs.find_right_tail(xkde, kde, prob_thresh, plot=False)
+gradient, idx = fs.find_right_tail(xkde, kde, prob_thresh, plot=True)
 thresh = xkde[idx]
 thresh_mean_rois = fs.thresh_correlations(sorted_mean_rois, thresh)
 
@@ -150,6 +151,9 @@ meanstack_t_active_mean_dffs, meanstack_d_active_mean_dffs = fs.meanstack(
 plot_times = meanstack_t_active_mean_dffs
 plot_dffs = meanstack_d_active_mean_dffs
 plot_rois = thresh_mean_rois[:, 0]
+# plot_times = meanstack_t_active_dffs
+# plot_dffs = meanstack_d_active_dffs
+# plot_rois = thresh_mean_rois[:, 0]
 
 # Encode stimulus contrast -----------------------------------------------------
 
@@ -248,13 +252,15 @@ extent = (np.min(plot_times), np.max(plot_times),
 
 fig, ax = plt.subplots(5, 1,
                        figsize=(24*ps.cm, 12*ps.cm),
-                       gridspec_kw={'height_ratios': [10, 1, 1, 1, 1]},
+                       gridspec_kw={'height_ratios': [10, 0.2, 0.2, 0.2, 0.2]},
                        sharex=True,
                        )
 ax[0].imshow(plot_dffs,
              cmap='binary',
              aspect='auto',
              extent=extent,
+             origin="upper",
+             interpolation="none",
              )
 
 # plot contrast
@@ -263,16 +269,19 @@ ax[1].imshow(lum_img,
              alpha=1,
              aspect="auto",
              extent=extent,
+             interpolation="gaussian",
              )
 ax[2].imshow(reds,
              cmap="Reds",
              aspect="auto",
              extent=extent,
+             interpolation="gaussian",
              )
 ax[3].imshow(greens,
              cmap="Greens",
              aspect="auto",
              extent=extent,
+             interpolation="gaussian",
              )
 
 ax[4].scatter(plot_times+(plot_times[1]-plot_times[0]) /
@@ -314,8 +323,38 @@ plt.show()
 # Plot stacked lineplot --------------------------------------------------------
 
 # plot dff lineplot for all dffs
-fig, ax = plt.subplots()
-for i, dff in enumerate(plot_dffs):
-    ax.plot(plot_times, i + (dff - dff.min()) / (dff.max() - dff.min()),
-            color='black', linewidth='1.')
+fig, ax = plt.subplots(5, 1,
+                       figsize=(24*ps.cm, 12*ps.cm),
+                       gridspec_kw={'height_ratios': [10, 1, 1, 1, 1]},
+                       sharex=True,
+                       )
+for i, dff in enumerate(reversed(plot_dffs)):
+    ax[0].plot(plot_times, i + (dff - dff.min()) / (dff.max() - dff.min()),
+               color='black', linewidth='1.')
+
+# plot contrast
+ax[1].imshow(lum_img,
+             cmap="binary",
+             alpha=1,
+             aspect="auto",
+             extent=extent,
+             interpolation="none",
+             )
+ax[2].imshow(reds,
+             cmap="Reds",
+             aspect="auto",
+             extent=extent,
+             interpolation="none",
+             )
+ax[3].imshow(greens,
+             cmap="Greens",
+             aspect="auto",
+             extent=extent,
+             interpolation="none",
+             )
+ps.hide_helper_xax(ax[1])
+ps.hide_helper_xax(ax[2])
+ps.hide_helper_xax(ax[3])
+
+ax[0].set_xlim(np.min(plot_times), np.max(plot_times))
 plt.show()

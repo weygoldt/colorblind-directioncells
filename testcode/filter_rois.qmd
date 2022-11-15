@@ -33,8 +33,8 @@ To filter all ROIs for the ones that reacted to our stimulus, we first have to l
 f = SummaryFile('../data/Summary.hdf5')
 
 # now select the recordings that were good
-good_recs = [5, 8, 9, 10, 11, 13, 14]
-# good_recs = [14]
+# good_recs = [5, 8, 9, 10, 11, 13, 14]
+good_recs = [5, 14]
 
 # load matrix of all rois of all layers with good rois
 d = all_rois(f, good_recs)
@@ -82,7 +82,7 @@ fig, ax = plt.subplots(figsize=(14*ps.cm, 6*ps.cm))
 ax.bar(edges[:-1], counts, width=np.diff(edges),edgecolor="white", facecolor="k", alpha=0.2,linewidth=0, align="edge", zorder=20)
 ax.plot(xkde, kde, zorder=10, c="k")
 ax.axvline([0], lw=1, ls="dashed", c="k")
-ax.set_xlabel("Spearman correlation")
+ax.set_xlabel("Correlation")
 ax.set_ylabel("Probability density")
 ```
 

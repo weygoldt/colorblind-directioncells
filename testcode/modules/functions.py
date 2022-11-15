@@ -3,7 +3,7 @@ from itertools import combinations
 import matplotlib.pyplot as plt
 import numpy as np
 from IPython import embed
-from scipy.stats import spearmanr
+from scipy.stats import pearsonr
 from sklearn.metrics import auc
 from sklearn.neighbors import KernelDensity
 from tqdm.autonotebook import tqdm
@@ -334,7 +334,7 @@ def get_mean_dffs(roi_dffs, times, startstop):
     return mean_dffs, times[center_indices]
 
 
-def repeats(startstop, nrepeats=3):
+def repeats(mean_dffs, nrepeats=3):
     """
     repeats seperates repeated stimulation series based on the start and stop 
     times of all stimulation phases (i.e. excluding the baseline at start and end)
@@ -360,14 +360,9 @@ def repeats(startstop, nrepeats=3):
         Number of repeats does not fit to supplied start and stop timestamps.
     """
 
-    # check if starts and stops are the same lenght
-    if len(startstop[0]) != len(startstop[1]):
-        raise ValueError(
-            f'{tc.err("ERROR")} [ functions.repeats ] The starts and stops are not the same length!')
-
     # get starts and stops
-    starts = startstop[0]
-    stops = startstop[1]
+    starts = np.arange(len(mean_dffs[0, :]))
+
     indices = np.arange(len(starts))
     frac = len(indices)/nrepeats
 
@@ -376,13 +371,14 @@ def repeats(startstop, nrepeats=3):
         raise ValueError(
             f'{tc.err("ERROR")} [ functions.repeats ] Cant divide by {nrepeats}!')
 
-    repeat_starts = np.empty(nrepeats)
-    repeat_stops = np.empty(nrepeats)
+    repeat_starts = np.full(nrepeats, np.nan)
+    repeat_stops = np.full(nrepeats, np.nan)
 
     # get starts and stops
     for i in range(nrepeats):
         repeat_starts[i] = i*frac
         repeat_stops[i] = np.arange(i*frac, i*frac+frac)[-1]
+
     # reshape
     idxs = np.array([np.array([int(x), int(y)], dtype=int)
                     for x, y in zip(repeat_starts, repeat_stops)], dtype=int)
@@ -445,7 +441,7 @@ def corr_repeats(mean_score, inx):
     combs = [comb for comb in combinations(z, 2)]
     spear = []
     for co in combs:
-        spear.append(spearmanr(co[0], co[1])[0])
+        spear.append(pearsonr(co[0], co[1])[0])
 
     spear_mean = np.mean(spear)
 

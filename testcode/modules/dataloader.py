@@ -122,15 +122,11 @@ class all_rois:
 
     def stimulus_means(self):
 
-        meta_center_indices = []
-        meta_snippet_indices = []
         recordings = np.unique(self.index_recs)
         recordings_index = np.arange(len(recordings))
 
         self.mean_dffs = []
         self.mean_times = []
-        # self.mean_dffs = np.full(
-        #     (len(self.dffs[:, 0]), len(meta_snippet_indices[0])), np.nan)
 
         for i1 in tqdm(recordings_index, desc=f"{tc.succ('[ roimatrix.stimulus_means ]')} Computing means in phases ..."):
 
@@ -157,7 +153,9 @@ class all_rois:
 
             self.mean_times.append(self.times[center_indices])
 
-        embed()
+        # convert to numpy array
+        self.mean_dffs = np.array(self.mean_dffs)
+        self.mean_times = np.mean(self.mean_times, axis=0)
 
         # print("")
 
@@ -176,9 +174,9 @@ class all_rois:
         print(
             f"{tc.succ('[ roimatrix.repeat_means ]')} Computing means across repeats...")
 
-        self.meanstack_mean_times,
-        self.meanstack_mean_dffs = fs.meanstack(
-            self.mean_dffs, self.mean_times, self.inx_mean)
+        self.meanstack_mean_times, \
+            self.meanstack_mean_dffs = fs.meanstack(
+                self.mean_dffs, self.mean_times, self.inx_mean)
 
     def sort_means_by_corr(self):
 
@@ -224,7 +222,7 @@ class all_rois:
             return active_rois_sorted
 
         # get indices for stimulus phase series repeats
-        inx_mean = fs.repeats((self.start_times, self.stop_times))
+        inx_mean = fs.repeats(self.mean_dffs)
         self.inx_mean = inx_mean
 
         # compute correlation coefficient of ROIs

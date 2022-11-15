@@ -1,4 +1,5 @@
 # Essentials -------------------------------------------------------------------
+from modules.dataloader import all_rois
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats as ss
@@ -53,6 +54,10 @@ for i, roi in enumerate(one_rec):
 times = new_times
 start_times = new_start_time
 stop_times = new_end_time
+
+d = all_rois(f, [5, 8, 9, 10, 11, 13, 14])
+roi_dffs =
+
 
 # convert dff matrix to mean dff matrix
 mean_dffs, mean_times = fs.get_mean_dffs(
@@ -368,7 +373,6 @@ ax[0].set_xlim(np.min(plot_times), np.max(plot_times))
 ax[0].spines["right"].set_visible(False)
 ax[0].spines["top"].set_visible(False)
 ax[0].spines["bottom"].set_visible(False)
-
 ax[4].spines["right"].set_visible(False)
 ax[4].spines["top"].set_visible(False)
 ax[4].spines["left"].set_visible(False)

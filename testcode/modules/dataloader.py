@@ -1,4 +1,5 @@
 import numpy as np
+from IPython import embed
 from scipy import interpolate
 from tqdm.autonotebook import tqdm
 from vxtools.summarize.structure import SummaryFile
@@ -85,6 +86,9 @@ class all_rois:
             all_dffs.append(roi_dffs)
             dff_times.append(times)
 
+            self.start_times.append(start_time)
+            self.stop_times.append(stop_time)
+
         # get longest time array
         timelens = [len(x) for x in dff_times]
         idx = np.arange(len(timelens))
@@ -111,34 +115,60 @@ class all_rois:
         self.index_rois = index_rois
         self.index_recs = index_recs
         self.metaindex = np.arange(len(self.dffs[:, 0]))
-        self.start_times = start_time
-        self.stop_times = stop_time
-        self.ang_velocs = ang_veloc
         self.ang_periods = ang_period
+        self.ang_velocs = ang_veloc
         self.rgb_1 = rgb_1
         self.rgb_2 = rgb_2
 
     def stimulus_means(self):
 
-        snippet_indices = []
-        center_indices = []
-        for st, end in zip(self.start_times, self.stop_times):
-            start_inx = fs.find_on_time(self.times, st)
-            stop_inx = fs.find_on_time(self.times, end)
-            center_inx = fs.find_on_time(self.times, st + (end-st)/2)
-            center_indices.append(center_inx)
-            snippet_indices.append(np.arange(start_inx, stop_inx))
+        meta_center_indices = []
+        meta_snippet_indices = []
+        recordings = np.unique(self.index_recs)
+        recordings_index = np.arange(len(recordings))
 
-        self.mean_dffs = np.full(
-            (len(self.dffs[:, 0]), len(snippet_indices)), np.nan)
+        self.mean_dffs = []
+        self.mean_times = []
+        # self.mean_dffs = np.full(
+        #     (len(self.dffs[:, 0]), len(meta_snippet_indices[0])), np.nan)
 
-        print("")
-        for i in tqdm(range(len(self.dffs[:, 0])), desc=f"{tc.succ('[ roimatrix.stimulus_means ]')} Computing means in phases ..."):
-            roi = self.dffs[i, :]
-            mean_dff = np.array([np.mean(roi[snip])
-                                 for snip in snippet_indices])
-            self.mean_dffs[i, :] = mean_dff
-        self.mean_times = self.times[center_indices]
+        for i1 in tqdm(recordings_index, desc=f"{tc.succ('[ roimatrix.stimulus_means ]')} Computing means in phases ..."):
+
+            start_times = self.start_times[i1]
+            stop_times = self.stop_times[i1]
+            snippet_indices = []
+            center_indices = []
+
+            for st, end in zip(start_times, stop_times):
+
+                start_inx = fs.find_on_time(self.times, st)
+                stop_inx = fs.find_on_time(self.times, end)
+                center_inx = fs.find_on_time(self.times, st + (end-st)/2)
+                center_indices.append(center_inx)
+                snippet_indices.append(np.arange(start_inx, stop_inx))
+
+            dff_idx = self.index_recs == recordings[i1]
+
+            for i2 in range(len(self.dffs[dff_idx, :])):
+                roi = self.dffs[dff_idx, :][i2, :]
+                mean_dff = np.array([np.mean(roi[snip])
+                                     for snip in snippet_indices])
+                self.mean_dffs.append(mean_dff)
+
+            self.mean_times.append(self.times[center_indices])
+
+        embed()
+
+        # print("")
+
+        # for i in tqdm(range(len(self.dffs[:, 0])), desc=f"{tc.succ('[ roimatrix.stimulus_means ]')} Computing means in phases ..."):
+        #     roi = self.dffs[i, :]
+        #     snippet_indices = meta_snippet_indices[rec_idx]
+        #     mean_dff = np.array([np.mean(roi[snip])
+        #                         for snip in snippet_indices])
+        #     self.mean_dffs[i, :] = mean_dff
+
+        # self.mean_times = self.times[center_indices]
 
     def repeat_means(self):
 
@@ -146,22 +176,22 @@ class all_rois:
         print(
             f"{tc.succ('[ roimatrix.repeat_means ]')} Computing means across repeats...")
 
-        self.meanstack_mean_times, \
-            self.meanstack_mean_dffs = fs.meanstack(
-                self.mean_dffs, self.mean_times, self.inx_mean)
+        self.meanstack_mean_times,
+        self.meanstack_mean_dffs = fs.meanstack(
+            self.mean_dffs, self.mean_times, self.inx_mean)
 
     def sort_means_by_corr(self):
 
         def sort_rois(mean_dffs, inx):
-            """calculate all active ROIs with a threshold. 
-            ROIs who have a high correlation with themselfs over time, are active rois 
+            """calculate all active ROIs with a threshold.
+            ROIs who have a high correlation with themselfs over time, are active rois
             Parameters
             ----------
             one_recording : list of vxtools.summarize.structure.Roi
                 hdf5 SummaryFile with all rois of the same recording id
 
             inx : tupel
-                index tupel, where the repeats of one recording starts and stops 
+                index tupel, where the repeats of one recording starts and stops
 
             threshold : float, optional
                 threshold of the correlation factor, by default 0.6
@@ -169,7 +199,7 @@ class all_rois:
             Returns
             -------
             2d array
-                1.dimension are the index fot the ROIs 
+                1.dimension are the index fot the ROIs
                 2.dimension are sorted correlation factors
             """
 
@@ -205,9 +235,11 @@ class all_rois:
 
 if __name__ == "__main__":
 
-    f = SummaryFile('../data/Summary.hdf5')   # import HDF5 file
+    # import HDF5 file
+    f = SummaryFile(
+        '/mnt/archlinux/@home/weygoldt/Data/uni/neuro_gp/calciumimaging/data/Summary.hdf5')
     num_rec = len(f.recordings())
     rec_nos = np.arange(3, num_rec)
-    d = roimatrix(f, rec_nos)
+    d = all_rois(f, rec_nos)
     d.stimulus_means()
     d.repeat_means()

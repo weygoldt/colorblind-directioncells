@@ -17,7 +17,7 @@ import modules.functions as fs
 
 from vxtools.summarize.structure import SummaryFile
 from sklearn.metrics import auc
-from scipy.stats import spearmanr
+from scipy.stats import pearsonr
 from modules.dataloader import all_rois
 from modules.plotstyle import PlotStyle
 
@@ -34,6 +34,7 @@ f = SummaryFile('../data/Summary.hdf5')
 
 # now select the recordings that were good
 good_recs = [5, 8, 9, 10, 11, 13, 14]
+# good_recs = [14]
 
 # load matrix of all rois of all layers with good rois
 d = all_rois(f, good_recs)
@@ -56,7 +57,7 @@ d.sort_means_by_corr()
 Now that we have the correlation coefficients, we can sort all ROIs in out dataset (i.e. all dffs) by their correlation coefficient.
 
 ```{python}
-d.mean_dffs = np.array([d.mean_dffs[int(roi)] for roi in d.metaindex])
+#d.mean_dffs = np.array([d.mean_dffs[int(roi)] for roi in d.corrs[:,0]])
 ```
 
 ## Thresholding the autocorrelation
@@ -142,20 +143,117 @@ d.repeat_means()
 
 # get the dffs
 d.active_meanmean_dffs = np.array([d.meanstack_mean_dffs[int(roi), :] for roi in d.thresh_mean_rois[:,0]])
+
+d.active_mean_dffs = np.array([d.mean_dffs[int(roi), :] for roi in d.thresh_mean_rois[:,0]])
 ```
 
 Now lets plot a raster plot of our thresholded data.
 
 ```{python}
 #| code-fold: true
-fig, ax = plt.subplots(figsize=(24*ps.cm, 16*ps.cm))
+
+# take only first repeat
+idx = np.arange(d.inx_mean[0][0], d.inx_mean[0][1])
+
+# encode the stimulus
+
+# luminance contrast: max(all)_stripe1 - max(all)_stripe2
+stripe1 = np.array([np.max(x) for x in d.rgb_1])
+stripe2 = np.array([np.max(x) for x in d.rgb_2])
+lum_contr = abs(stripe1-stripe2)[d.inx_mean[0][0]:d.inx_mean[0][1]]
+
+# color contrast: red_stripe1 - red_stripe2 (for red and green)
+red = np.array(
+    [abs(x[0]-y[0]) for x, y in zip(d.rgb_1, d.rgb_2)]
+)[d.inx_mean[0][0]:d.inx_mean[0][1]]
+
+reds = np.empty((len(d.active_meanmean_dffs[:, 0]), len(red)))
+for i in range(len(reds[:, 0])):
+    reds[i, :] = red
+
+green = np.array(
+    [abs(x[1]-y[1]) for x, y in zip(d.rgb_1, d.rgb_2)]
+)[d.inx_mean[0][0]:d.inx_mean[0][1]]
+
+greens = np.empty((len(d.active_meanmean_dffs[:, 0]), len(green)))
+for i in range(len(greens[:, 0])):
+    greens[i, :] = green
+
+# make no rot = 0, counterclock = -1, clockwise = 1
+ang_veloc = d.ang_velocs[1:-1][d.inx_mean[0][0]:d.inx_mean[0][1]]
+norots = np.full(len(d.ang_velocs), np.nan)
+leftrots = np.full(len(d.ang_velocs), np.nan)
+rightrots = np.full(len(d.ang_velocs), np.nan)
+
+for i, rot in enumerate(d.ang_velocs):
+    if rot > 0.0:
+        rightrots[i] = 0
+    elif rot == 0.0:
+        norots[i] = 0
+    else:
+        leftrots[i] = 0
+
+lum_img = np.empty((len(d.thresh_mean_rois[0]), len(lum_contr)))
+for i in range(len(lum_img[:, 0])):
+    lum_img[i, :] = lum_contr
+
+# plot the raster
+fig, ax = plt.subplots(5, 1,
+                       figsize=(24*ps.cm, 24*ps.cm),
+                       gridspec_kw={'height_ratios': [10, 0.2, 0.2, 0.2, 0.5]},
+                       sharex=True,
+                       )
 
 extent = (np.min(d.meanstack_mean_times), np.max(d.meanstack_mean_times), 0, len(d.active_meanmean_dffs))
 
-ax.imshow(d.active_meanmean_dffs, cmap="binary", aspect="auto", extent=extent, origin="upper", interpolation="none")
+ax[0].imshow(d.active_meanmean_dffs, cmap="binary", aspect="auto", extent=extent, origin="upper", interpolation="none")
 
-ax.set_xlabel("Time [s]")
-ax.set_ylabel("ROI")
+
+# plot contrast
+ax[1].imshow(lum_img,
+             cmap="binary",
+             alpha=1,
+             aspect="auto",
+             extent=extent,
+             interpolation="none",
+             )
+ax[2].imshow(reds,
+             cmap="Reds",
+             aspect="auto",
+             extent=extent,
+             interpolation="none",
+             )
+ax[3].imshow(greens,
+             cmap="Greens",
+             aspect="auto",
+             extent=extent,
+             interpolation="none",
+             )
+
+ax[4].scatter(d.mean_times[idx]+(d.mean_times[idx][1]-d.mean_times[idx][0]) / 2, norots[idx], marker="_", color="k")
+
+ax[4].scatter(d.mean_times[idx]+(d.mean_times[idx][1]-d.mean_times[idx][0]) / 2, leftrots[idx], marker="<", color="k")
+
+ax[4].scatter(d.mean_times[idx]+(d.mean_times[idx][1]-d.mean_times[idx][0]) / 2, rightrots[idx], marker=">", color="k")
+
+ps.hide_helper_xax(ax[1])
+ps.hide_helper_xax(ax[2])
+ps.hide_helper_xax(ax[3])
+
+ax[0].set_xlim(np.min(d.mean_times[idx]), np.max(d.mean_times[idx]))
+
+# remove upper and right axis
+ax[0].spines["right"].set_visible(False)
+ax[0].spines["top"].set_visible(False)
+ax[0].spines["bottom"].set_visible(False)
+ax[4].spines["right"].set_visible(False)
+ax[4].spines["top"].set_visible(False)
+ax[4].spines["left"].set_visible(False)
+ax[4].tick_params(left=False, labelleft=False)
+
+
+ax[4].set_xlabel("Time [s]")
+ax[0].set_ylabel("ROI")
 ```
 
 We already see some repeated activity but now we want to narrow it down further to get cells that reacted to (i.e. are correlated with) some feature of the stimulus, such as motion direction and / or contrasts.
@@ -165,27 +263,24 @@ We already see some repeated activity but now we want to narrow it down further 
 To find selective cells, we first need to build a regressor from the stimulus data. As a first step, we build a regressor for **motion**, **counterclockwise rotation** and **clockwise rotation**.
 
 ```{python}
-# take only first repeat
-idx = np.arange(d.inx_mean[0][0], d.inx_mean[0][1])
-
 # motion regressor
-motion = np.array([1 if x != 0 else 0 for x in d.ang_velocs])[idx]
+motion = np.array([1 if x != 0 else 0 for x in d.ang_velocs])
 
 # clockwise motion regressor
-clock = np.array([1 if x > 0 else 0 for x in d.ang_velocs])[idx]
+clock = np.array([1 if x > 0 else 0 for x in d.ang_velocs])
 
 # counterclockwise motion regressor
-cclock = np.array([1 if x < 0 else 0 for x in d.ang_velocs])[idx]
+cclock = np.array([1 if x < 0 else 0 for x in d.ang_velocs])
 ```
 
 We now have arrays that we can use to correlate with our calcium activity, i.e. the dffs for each ROI.
 
 ```{python}
-corr_motion = np.array([spearmanr(x, motion)[0] for x in d.active_meanmean_dffs])
+corr_motion = np.array([pearsonr(x, motion)[0] for x in d.active_mean_dffs])
 
-corr_clock = np.array([spearmanr(x, clock)[0] for x in d.active_meanmean_dffs])
+corr_clock = np.array([pearsonr(x, clock)[0] for x in d.active_mean_dffs])
 
-corr_cclock = np.array([spearmanr(x, cclock)[0] for x in d.active_meanmean_dffs])
+corr_cclock = np.array([pearsonr(x, cclock)[0] for x in d.active_mean_dffs])
 ```
 
 Now we can plot the distribution of the correlation coefficients.
@@ -201,4 +296,184 @@ ax[1].set_title("clockw.")
 ax[2].set_title("counterclockw.")
 fig.supxlabel("Spearman correlation", fontsize=14)
 fig.supylabel("Count", fontsize=14)
+```
+
+Since this does not look so promising, we'll include the contrasts in our regressors. If the contrast was low but the motion was on, we expect to see no cells reacting. But this condition is still included in our current regressors. This is fixed once we include contrasts.
+
+## Finding contrast selective cells
+
+To include contrast, we first need to calculate the achromatic contrast and the contrast for the red and green color channel seperately.
+Instead of already combining contrast and motion, we first want to see the correlation between the contrasts and the calcium activity excluding motion.
+
+```{python}
+# make empty lists for contrasts
+red_contr = []
+green_contr = []
+acr_contr = []
+
+# iterate across channels and append chromatic contrasts
+for rgb1, rgb2 in zip(d.rgb_1, d.rgb_2):
+    if rgb2[1] == 0:
+        red_contr.append(rgb1[0])
+    else:
+        red_contr.append(0)
+    if rgb1[0] == 0:
+        green_contr.append(rgb2[1])
+    else:
+        green_contr.append(0)
+green_contr = np.array(green_contr)
+red_contr = np.array(red_contr)
+
+
+# make achromatic contrast as the difference between the sums of both stripes
+acr_contr = np.array([abs(np.sum(x)-np.sum(y)) for x, y in zip(d.rgb_1, d.rgb_2)])
+```
+
+Now we correlate the contrasts with the calcium data.
+
+```{python}
+corr_red = np.array([pearsonr(x, red_contr)[0] for x in d.active_mean_dffs])
+
+corr_green = np.array([pearsonr(x, green_contr)[0] for x in d.active_mean_dffs])
+
+corr_acr = np.array([pearsonr(x, acr_contr)[0] for x in d.active_mean_dffs])
+```
+
+```{python}
+#| code-fold: true
+fig, ax = plt.subplots(1,3, figsize=(20*ps.cm, 10*ps.cm), sharex=True, sharey=True, constrained_layout=True)
+ax[0].hist(corr_acr, bins=40, range=(-0.6,0.6))
+ax[1].hist(corr_red, bins=40, range=(-0.6,0.6))
+ax[2].hist(corr_green, bins=40, range=(-0.6,0.6))
+ax[0].set_title("achromatic")
+ax[1].set_title("red")
+ax[2].set_title("green")
+fig.supxlabel("Spearman correlation", fontsize=14)
+fig.supylabel("Count", fontsize=14)
+```
+
+## Finding motion selective cells by encoding contrast with motion
+
+We see that some cells might correlate with achromatic contrast. Does this hold up when we include motion into the regressor? In order to find motion sensitive cells instead of just contrast sensitive cells, we need to encode the motion including the contrast so that the motions with low contrasts are not represented as strong stimuli.
+
+```{python}
+
+motions = [motion, clock, cclock]
+motions_string = ["motion", "clock", "counterclock"]
+contr = [acr_contr, red_contr, green_contr]
+contr_string = ["achrom", "red", "green"]
+
+fig, axs = plt.subplots(3,3, figsize=(20*ps.cm, 20*ps.cm), sharex=True, sharey=True, constrained_layout=True)
+
+for i1, m in enumerate(motions):
+  for i2, c in enumerate(contr):
+    reg = c*m
+    corr = np.array([pearsonr(x, reg)[0] for x in d.active_mean_dffs])
+    title = motions_string[i1] + '*' + contr_string[i2]
+    n, bins, patches = axs[i1, i2].hist(corr, bins=40, range=(-0.6,0.6))
+    axs[i1, i2].set_title(title)
+    # axs[i1, i2].set_ylim(0,1/3*np.max(n))
+fig.supxlabel('Spearman correlation')
+fig.supylabel('Count')
+```
+
+## Removing low contrasts to reduce the effect of flickering
+
+We still don't see clear correlations with the stimulus, which could be due to strong flickering of the video projector in the setup at low contrast levels. In a next step, we'll remove all stimulation phases with the 3 lowest contrast levels except 0 and redo our correlation analysis.
+
+```{python}
+# make remove index
+remove_red = [True if x == 0 or x > 0.5 else False for x in red_contr]
+remove_green = [True if x == 0 or x > 0.5 else False for x in green_contr]
+remove = [True if x and y else False for x,y in zip(remove_red, remove_green)]
+```
+
+Now that we have a boolean index of the data points that we still want to inlcude, we have to index all arrays that go into the correlation with this index.
+
+We now have arrays that we can use to correlate with our calcium activity, i.e. the dffs for each ROI.
+
+```{python}
+corr_motion = np.array([pearsonr(x[remove], motion[remove])[0] for x in d.active_mean_dffs])
+
+corr_clock = np.array([pearsonr(x[remove], clock[remove])[0] for x in d.active_mean_dffs])
+
+corr_cclock = np.array([pearsonr(x[remove], cclock[remove])[0] for x in d.active_mean_dffs])
+```
+
+Now we can plot the distribution of the correlation coefficients.
+
+```{python}
+#| code-fold: true
+fig, ax = plt.subplots(1,3, figsize=(20*ps.cm, 10*ps.cm), sharex=True, sharey=True, constrained_layout=True)
+ax[0].hist(corr_motion, bins=40, range=(-0.6,0.6), facecolor='orange')
+ax[1].hist(corr_clock, bins=40, range=(-0.6,0.6), facecolor='orange')
+ax[2].hist(corr_cclock, bins=40, range=(-0.6,0.6), facecolor='orange')
+ax[0].set_title("motion")
+ax[1].set_title("clockw.")
+ax[2].set_title("counterclockw.")
+fig.supxlabel("Spearman correlation", fontsize=14)
+fig.supylabel("Count", fontsize=14)
+```
+
+```{python}
+corr_red = np.array([pearsonr(x[remove], red_contr[remove])[0] for x in d.active_mean_dffs])
+
+corr_green = np.array([pearsonr(x[remove], green_contr[remove])[0] for x in d.active_mean_dffs])
+
+corr_acr = np.array([pearsonr(x[remove], acr_contr[remove])[0] for x in d.active_mean_dffs])
+```
+
+First we plot the correlation between the contrasts.
+
+```{python}
+#| code-fold: true
+fig, ax = plt.subplots(1,3, figsize=(20*ps.cm, 10*ps.cm), sharex=True, sharey=True, constrained_layout=True)
+ax[0].hist(corr_acr, bins=40, range=(-0.6,0.6), facecolor='orange')
+ax[1].hist(corr_red, bins=40, range=(-0.6,0.6), facecolor='orange')
+ax[2].hist(corr_green, bins=40, range=(-0.6,0.6), facecolor='orange')
+ax[0].set_title("achromatic")
+ax[1].set_title("red")
+ax[2].set_title("green")
+fig.supxlabel("Spearman correlation", fontsize=14)
+fig.supylabel("Count", fontsize=14)
+```
+
+Now we combine motions and contrast levels. We would expect high correlation coefficients for motion directions and achromatic contrasts.
+
+```{python}
+motions = [motion[remove], clock[remove], cclock[remove]]
+motions_string = ["motion", "clock", "counterclock"]
+contr = [acr_contr[remove], red_contr[remove], green_contr[remove]]
+contr_string = ["achrom", "red", "green"]
+
+fig, axs = plt.subplots(3,3, figsize=(20*ps.cm, 20*ps.cm), sharex=True, sharey=True, constrained_layout=True)
+
+for i1, m in enumerate(motions):
+  for i2, c in enumerate(contr):
+    reg = c*m
+    corr = np.array([pearsonr(x[remove], reg)[0] for x in d.active_mean_dffs])
+    title = motions_string[i1] + '*' + contr_string[i2]
+    n, bins, patches = axs[i1, i2].hist(corr, bins=40, range=(-0.6,0.6), facecolor='orange')
+    axs[i1, i2].set_title(title)
+    # axs[i1, i2].set_ylim(0,1/3*np.max(n))
+fig.supxlabel('Spearman correlation')
+fig.supylabel('Count')
+```
+
+## Plot the stimulus and ROI for thresholded correlation coefficient
+
+Since the histograms do not reflect the correlations we expected, we choose a threshold and plot the strongly correlated calcium activities on top of the stimulus.
+
+```{python}
+# build stimulus
+clock_acr = motions[1] * contr[0]
+cclock_acr = motions[2] * contr[0]
+
+# correlate
+corr_clock_acr = [pearsonr(clock_acr, x[remove]) for x in d.active_mean_dffs]
+corr_cclock_acr = [pearsonr(cclock_acr, x[remove]) for x in d.active_mean_dffs]
+
+# threshold
+
+
 ```

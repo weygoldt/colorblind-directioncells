@@ -56,7 +56,7 @@ start_times = new_start_time
 stop_times = new_end_time
 
 d = all_rois(f, [5, 8, 9, 10, 11, 13, 14])
-roi_dffs =
+#roi_dffs =
 
 
 # convert dff matrix to mean dff matrix

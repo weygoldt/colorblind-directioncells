@@ -511,30 +511,30 @@ def thresh_correlations(sorted_rois, threshold):
 
     return thresh_rois
 
-
-def plot_ang_velocity(onerecording, angul_vel, rois):
-    """plot the boxplot of rois with regards to the stimulus angular Velocity 
-
-    Parameters
-    ----------
-    one_recording : list of vxtools.summarize.structure.Roi
-        hdf5 SummaryFile with all rois of the same recording id
-    roi: int
-        index of one ROI of the list one recording 
-    """
-    for r in rois:
-        mean_zscores = mean_dff_roi(onerecording, r)
-        z_vel_30 = [z for z, a in zip(mean_zscores, angul_vel) if a == 30.0]
-        z_vel_minus30 = [z for z, a in zip(
-            mean_zscores, angul_vel) if a == -30.0]
-        z_vel_0 = [z for z, a in zip(mean_zscores, angul_vel) if a == 0.0]
-
-        fig, ax = plt.subplots()
-        ax.boxplot(z_vel_0, positions=[1])
-        ax.boxplot(z_vel_minus30, positions=[2])
-        ax.boxplot(z_vel_30, positions=[3])
-        ax.set_xticklabels(['0vel', '-30vel', '30vel'])
-        plt.show()
+#def plot_ang_velocity(onerecording, angul_vel, rois):
+#    """plot the boxplot of rois with regards to the stimulus angular Velocity 
+#
+#    Parameters
+#    ----------
+#    one_recording : list of vxtools.summarize.structure.Roi
+#        hdf5 SummaryFile with all rois of the same recording id
+#    roi: int
+#        index of one ROI of the list one recording 
+#    """
+#    for r in rois:
+#        mean_zscores = mean_dff_roi(onerecording, r)
+#        z_vel_30 = [z for z, a in zip(mean_zscores, angul_vel) if a == 30.0]
+#        z_vel_minus30 = [z for z, a in zip(
+#            mean_zscores, angul_vel) if a == -30.0]
+#        z_vel_0 = [z for z, a in zip(mean_zscores, angul_vel) if a == 0.0]
+#
+#        fig, ax = plt.subplots()
+#        ax.boxplot(z_vel_0, positions=[1])
+#        ax.boxplot(z_vel_minus30, positions=[2])
+#        ax.boxplot(z_vel_30, positions=[3])
+#        ax.set_xticklabels(['0vel', '-30vel', '30vel'])
+#        plt.show()
+#
 
 # ------------------------------------------------------------------------------
 #

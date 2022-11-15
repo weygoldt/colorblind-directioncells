@@ -171,7 +171,8 @@ corr_clock_green = [spearmanr(x, clock_green)[0] for x in active_mean_dffs]
 
 hist1, bins1 = np.histogram(corr_clock_red, bins=20)
 hist2, bins2 = np.histogram(corr_clock_green, bins=20)
-
+embed()
+exit()
 plt.bar(bins1[:-1],
         hist1,
         width=np.diff(bins2),

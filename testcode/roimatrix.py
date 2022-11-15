@@ -1,10 +1,10 @@
+import functions as fs
 import numpy as np
 from scipy import interpolate
+from termcolors import TermColor as tc
 from tqdm import tqdm
 from vxtools.summarize.structure import SummaryFile
-
-import functions as fs
-from termcolors import TermColor as tc
+from IPython import embed
 
 
 class roimatrix:
@@ -123,6 +123,7 @@ class roimatrix:
 
         snippet_indices = []
         center_indices = []
+        # arent there different stat times for every recordings?
         for st, end in zip(self.start_times, self.stop_times):
             start_inx = fs.find_on_time(self.times, st)
             stop_inx = fs.find_on_time(self.times, end)
@@ -175,3 +176,5 @@ if __name__ == "__main__":
     d = roimatrix(f, rec_nos)
     d.stimulus_means()
     d.repeat_means()
+    embed()
+    exit()

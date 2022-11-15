@@ -493,19 +493,25 @@ index_cclock_acr = index[corr_cclock_acr > thresh]
 dffs_clock_acr = d.active_mean_dffs[index_clock_acr, :]
 dffs_cclock_acr = d.active_mean_dffs[index_cclock_acr, :]
 
+```
+
+```{python}
+#| code-fold: true
 # plot them
 idx = np.arange(d.inx_mean[0][1]+1)
-fig, ax = plt.subplots(2,1, figsize=(16*ps.cm, 12*ps.cm), constrained_layout=True)
+fig, ax = plt.subplots(2,1, figsize=(20*ps.cm, 12*ps.cm), constrained_layout=True, sharex=True, sharey=True)
 
+ax[0].set_title('Clockw. * achrom.', loc='left')
 ax[0].plot(d.mean_times[idx], clock_acr[idx], c='darkgray', label='stimulus')
 for i in range(5):
     clock_acr_dff = dffs_clock_acr[i]
-    ax[0].plot(d.mean_times[idx], clock_acr_dff[idx]-clock_acr_dff[idx].min(), label = 'dff')
+    ax[0].plot(d.mean_times[idx], clock_acr_dff[idx]-clock_acr_dff[idx].min(), label = 'dff', alpha = 0.6)
 
+ax[1].set_title('Counterclockw. * achrom.', loc='left')
 ax[1].plot(d.mean_times[idx], cclock_acr[idx], c='darkgray', label='stimulus')
 for i in range(5):
     cclock_acr_dff = dffs_cclock_acr[i]
-    ax[1].plot(d.mean_times[idx], cclock_acr_dff[idx]-cclock_acr_dff[idx].min(), label = 'dff')
+    ax[1].plot(d.mean_times[idx], cclock_acr_dff[idx]-cclock_acr_dff[idx].min(), label = 'dff', alpha = 0.6)
 
 # ax[0].legend()
 fig.supxlabel('Time [s]', fontsize=14)
@@ -526,19 +532,25 @@ index_cclock_acr = index[corr_cclock_acr < thresh]
 dffs_clock_acr = d.active_mean_dffs[index_clock_acr, :]
 dffs_cclock_acr = d.active_mean_dffs[index_cclock_acr, :]
 
+```
+
+```{python}
+#| code-fold: true
 # plot them
 idx = np.arange(d.inx_mean[0][1]+1)
-fig, ax = plt.subplots(2,1, figsize=(16*ps.cm, 12*ps.cm), constrained_layout=True)
+fig, ax = plt.subplots(2,1, figsize=(20*ps.cm, 12*ps.cm), constrained_layout=True, sharex=True, sharey=True)
 
+ax[0].set_title('Clockw. * achrom.', loc='left')
 ax[0].plot(d.mean_times[idx], clock_acr[idx], c='darkgray', label='stimulus')
 for i in range(5):
     clock_acr_dff = dffs_clock_acr[i]
-    ax[0].plot(d.mean_times[idx], clock_acr_dff[idx]-clock_acr_dff[idx].min(), label = 'dff')
+    ax[0].plot(d.mean_times[idx], clock_acr_dff[idx]-clock_acr_dff[idx].min(), label = 'dff', alpha = 0.6)
 
+ax[1].set_title('Counterclockw. * achrom.', loc='left')
 ax[1].plot(d.mean_times[idx], cclock_acr[idx], c='darkgray', label='stimulus')
 for i in range(5):
     cclock_acr_dff = dffs_cclock_acr[i]
-    ax[1].plot(d.mean_times[idx], cclock_acr_dff[idx]-cclock_acr_dff[idx].min(), label = 'dff')
+    ax[1].plot(d.mean_times[idx], cclock_acr_dff[idx]-cclock_acr_dff[idx].min(), label = 'dff', alpha = 0.6)
 
 # ax[0].legend()
 fig.supxlabel('Time [s]', fontsize=14)

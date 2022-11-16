@@ -278,8 +278,8 @@ def PlotStyle():
     plt.rcParams["legend.fancybox"] = False
 
     # specify the custom font to use
-    plt.rcParams["font.family"] = "sans-serif"
-    plt.rcParams["font.sans-serif"] = "Helvetica Now Text"
+    #plt.rcParams["font.family"] = "sans-serif"
+    #plt.rcParams["font.sans-serif"] = "Helvetica Now Text"
 
     return s
 

@@ -29,7 +29,6 @@ class all_rois:
 
         print("")
         for rec_no in tqdm(rec_nos, desc=f"{tc.succ('[ roimatrix.__init__ ]')} Loading data ..."):
-
             # get recording data
             one_rec = fs.data_one_rec_id(f, rec_no)  # extract one recording
             times = one_rec[0].times  # get the time axis
@@ -55,9 +54,7 @@ class all_rois:
             # make empty matrix
             roi_dffs = np.ones((len(one_rec), len(new_times)))
 
-            # collect all dffs for all ROIs in empty matrix
-            index_roi = []
-            index_rec = []
+            # collect all dffs for all ROIs in empty matrix ROI dffs interpoliert
             for i, roi in enumerate(one_rec):
 
                 index_rois.append(i)
@@ -79,9 +76,6 @@ class all_rois:
             times = new_times
             start_time = new_start_time
             stop_time = new_end_time
-
-            index_rois.extend(index_roi)
-            index_recs.extend(index_rec)
 
             all_dffs.append(roi_dffs)
             dff_times.append(times)
@@ -119,7 +113,7 @@ class all_rois:
         self.ang_velocs = ang_veloc
         self.rgb_1 = rgb_1
         self.rgb_2 = rgb_2
-
+    
     def stimulus_means(self):
 
         recordings = np.unique(self.index_recs)

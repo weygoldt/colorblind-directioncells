@@ -248,13 +248,13 @@ def get_attributes(one_recording):
     stop_time np.array()
         sorted stop_times of the stimulus
     angul_vel list()
-        angular velocitiy used in the stimulus
+        angular velocitiy used in the stimulus with nans for first and last entrance 
     angul_pre list()
-        angular period used for the stimulus
+        angular period used for the stimulus with nans for first and last entrance 
     rgb1 np.array of arrays with 3 colors
-        colors used for the first stripe
+        colors used for the first stripe with nans for first and last entrance 
     rgb2 np.array of arrays with 3 colors
-        colors used for the second stripe
+        colors used for the second stripe with nans for first and last entrance 
     """
 
     roi = 1

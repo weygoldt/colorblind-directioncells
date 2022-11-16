@@ -601,6 +601,8 @@ ax[0].hist(corr_clock, bins=40, range=(-0.8,0.8))
 ax[0].axvline(thresh, lw=1, c='r', ls='dashed')
 ax[1].hist(corr_cclock, bins=40, range=(-0.8,0.8))
 ax[1].axvline(thresh, lw=1, c='r', ls='dashed')
+ax[0].set_title('Clockwise')
+ax[1].set_title('Countercl.')
 fig.supxlabel('Pearson correlation', fontsize=14)
 fig.supylabel('Count', fontsize=14)
 
@@ -674,6 +676,7 @@ acr_cclock_activity = phase_activity(dcc, acr_cclock_stim)
 ```
 
 ```{python}
+#| code-fold: true
 fig, ax = plt.subplots(1,2,figsize=(20*ps.cm, 12*ps.cm),sharex=True,sharey=True, constrained_layout=True)
 ax[0].plot(acr_clock_activity.cats, acr_clock_activity.mean_dffs, c='darkgray', lw=1,)
 ax[1].plot(acr_cclock_activity.cats, acr_cclock_activity.mean_dffs, c='darkgray', lw=1)
@@ -685,4 +688,34 @@ fig.supxlabel('Contrast', fontsize=14)
 fig.supylabel('Mean dff', fontsize=14)
 ```
 
-Both direction selective cell types increase their activity with increasing absolute intensity contrast. Now lets see
+Both direction selective cell types increase their activity with increasing absolute intensity contrast. Now lets see how red and green contrast influence the activity together.
+
+```{python}
+class rg_activity:
+    def __init__(self, selective_rois, red, green):
+
+        self.__rois = selective_rois
+        self.__red = red
+        self.__green = green
+        self.__cat_index = np.arange(len(self.__stim))
+        self.reds = np.unique(self.__red[~np.isnan(self.__red)])
+        self.greens = np.unique(self.__green[~np.isnan(self.__green)])
+        self.dffs = []
+        self.mean_dffs = []
+        self.reds_index = []
+        self.green_index = []
+        self.rois = self.__rois.rois
+        self.recs = self.__rois.recs
+        
+        for r in self.reds:
+            self.reds_index.append(r)
+
+            for g in self.greens:
+                self.greens_index.append(g)
+
+                idx = self.__cat_index[self.__stim == i]
+                cat_dffs = self.__rois.dffs[:,idx]
+                mean_dffs = np.mean(cat_dffs, axis=1)
+                self.dffs.append(cat_dffs)
+                self.mean_dffs.append(mean_dffs)
+```

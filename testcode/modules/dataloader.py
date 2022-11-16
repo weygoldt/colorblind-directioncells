@@ -113,8 +113,7 @@ class all_rois:
         self.ang_velocs = ang_veloc
         self.rgb_1 = rgb_1
         self.rgb_2 = rgb_2
-        embed()
-        exit()
+    
     def stimulus_means(self):
 
         recordings = np.unique(self.index_recs)

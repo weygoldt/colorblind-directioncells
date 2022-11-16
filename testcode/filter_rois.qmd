@@ -33,7 +33,7 @@ To filter all ROIs for the ones that reacted to our stimulus, we first have to l
 f = SummaryFile('../data/Summary.hdf5')
 
 # now select the recordings that were good
-good_recs = [5, 8, 9, 10, 11, 13, 14]
+good_recs = [5, 8, 9, 10, 11, 13, 14]#
 # good_recs = [5, 14]
 
 # load matrix of all rois of all layers with good rois

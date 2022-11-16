@@ -697,25 +697,40 @@ class rg_activity:
         self.__rois = selective_rois
         self.__red = red
         self.__green = green
-        self.__cat_index = np.arange(len(self.__stim))
+        self.__index = np.arange(len(self.__red))
         self.reds = np.unique(self.__red[~np.isnan(self.__red)])
         self.greens = np.unique(self.__green[~np.isnan(self.__green)])
         self.dffs = []
         self.mean_dffs = []
         self.reds_index = []
-        self.green_index = []
+        self.greens_index = []
         self.rois = self.__rois.rois
         self.recs = self.__rois.recs
         
         for r in self.reds:
-            self.reds_index.append(r)
 
             for g in self.greens:
+                self.reds_index.append(r)
                 self.greens_index.append(g)
 
-                idx = self.__cat_index[self.__stim == i]
+                idx = self.__index[(self.__red == r) & (self.__green == g)]
+                print(r, g)
+                print(idx)
                 cat_dffs = self.__rois.dffs[:,idx]
                 mean_dffs = np.mean(cat_dffs, axis=1)
                 self.dffs.append(cat_dffs)
                 self.mean_dffs.append(mean_dffs)
+
+        self.mean_dffs = np.array(self.mean_dffs)
+        self.reds_index = np.array(self.reds_index)
+        self.greens_index = np.array(self.greens_index)
+
+red_clock_stim = red_contr*cclock_stim
+green_clock_stim = green_contr*cclock_stim
+
+rg_clock = rg_activity(dcc, red_clock_stim, green_clock_stim)
+
+rds = rg_clock.reds[0]
+
+plt.plot(rg_clock.greens_index[rg_clock.reds_index==rds], rg_clock.mean_dffs[rg_clock.reds_index==rds])
 ```

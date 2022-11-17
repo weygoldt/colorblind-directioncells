@@ -258,15 +258,15 @@ def PlotStyle():
     plt.rc("axes", labelsize=MEDIUM_SIZE)  # fontsize of the x and y labels
     plt.rc("xtick", labelsize=SMALL_SIZE)  # fontsize of the tick labels
     plt.rc("ytick", labelsize=SMALL_SIZE)  # fontsize of the tick labels
-    plt.rc("legend", fontsize=SMALL_SIZE)  # legend fontsize
-    plt.rc("figure", titlesize=BIGGER_SIZE)  # fontsize of the figure title
+    plt.rc("legend", fontsize=MEDIUM_SIZE)  # legend fontsize
+    plt.rc("figure", titlesize=MEDIUM_SIZE)  # fontsize of the figure title
 
     # plt.rcParams["figure.constrained_layout.use"] = True
     # plt.rcParams["image.cmap"] = s.lightcmap
     plt.rcParams["axes.xmargin"] = 0.1
     plt.rcParams["axes.ymargin"] = 0.15
     plt.rcParams["axes.titlelocation"] = "left"
-    plt.rcParams["axes.titlesize"] = BIGGER_SIZE
+    plt.rcParams["axes.titlesize"] = MEDIUM_SIZE
     plt.rcParams["axes.titlepad"] = 10
     plt.rcParams["legend.frameon"] = False
     plt.rcParams["legend.loc"] = "best"

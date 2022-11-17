@@ -41,6 +41,8 @@ ps = PlotStyle()
 To filter all ROIs for the ones that reacted to our stimulus, we first have to load the data.
 
 ```{python}
+#| output: false
+
 # now load the data
 dataroot = '../data/'
 f = SummaryFile(dataroot + 'Summary.hdf5')
@@ -60,6 +62,8 @@ d = all_rois(f, good_recs)
 As described in the [loading_data](loading_data.qmd) notebook, we can now compute the means for all dff time series in each stimulation window.
 
 ```{python}
+#| output: false
+
 dataname = "mean_dffs.npy"
 timename = "mean_times.npy"
 
@@ -92,6 +96,8 @@ ax.set_ylabel('ROI')
 Now we can compute the autocorrelation of each time series to quantify how well a cell (i.e. a single ROI) responds to the stimulation - and sort the ROIs by their correlation coefficient.
 
 ```{python}
+#| output: false
+
 d.sort_means_by_corr()
 ```
 
@@ -131,6 +137,8 @@ Instead of implementing a fixed correlation coefficient as a threshold, we can i
 Since we are only insterested in strong positive correlations, we can integrate (compute the area under curve, the AUC)between a value on the x axis and the maximum correlation coefficient.
 
 ```{python}
+#| output: false
+
 target_auc = 0.2 # probability threshold
 
 # create empty arrays for the gradient and index
@@ -165,6 +173,8 @@ fig.supxlabel("Pearson r")
 The correlation threshold is now the value on the x-axis at the computed index.
 
 ```{python}
+#| output: false
+
 thresh = xkde[idx]
 ```
 
@@ -175,6 +185,8 @@ Before we do this, we first compute the means for a single time series across tr
 In a next step, we get the dffs for these ROIs.
 
 ```{python}
+#| output: false
+
 # get the rois
 d.thresh_mean_rois = fs.thresh_correlations(d.corrs, thresh)
 
@@ -308,6 +320,8 @@ We already see some repeated activity but now we want to narrow it down further 
 To find selective cells, we first need to build a regressor from the stimulus data. As a first step, we build a regressor for **motion**, **counterclockwise rotation** and **clockwise rotation**.
 
 ```{python}
+#| output: false
+
 # motion regressor
 motion = np.array([1 if x != 0 else 0 for x in d.ang_velocs])
 
@@ -321,6 +335,8 @@ cclock = np.array([1 if x < 0 else 0 for x in d.ang_velocs])
 We now have arrays that we can use to correlate with our calcium activity, i.e. the dffs for each ROI.
 
 ```{python}
+#| output: false
+
 corr_motion = np.array([pearsonr(x, motion)[0] for x in d.active_mean_dffs])
 corr_clock = np.array([pearsonr(x, clock)[0] for x in d.active_mean_dffs])
 corr_cclock = np.array([pearsonr(x, cclock)[0] for x in d.active_mean_dffs])
@@ -352,6 +368,8 @@ To include contrast, we first need to calculate the achromatic contrast and the 
 Instead of already combining contrast and motion, we first want to see the correlation between the contrasts and the calcium activity excluding motion.
 
 ```{python}
+#| output: false
+
 # make empty lists for contrasts
 red_contr = []
 green_contr = []
@@ -385,6 +403,8 @@ acr_contr = np.array([abs(np.sum(x)-np.sum(y)) for x, y in zip(d.rgb_1, d.rgb_2)
 Now we correlate the contrasts with the calcium data.
 
 ```{python}
+#| output: false
+
 corr_red = np.array([pearsonr(x, red_contr)[0] for x in d.active_mean_dffs])
 corr_green = np.array([pearsonr(x, green_contr)[0] for x in d.active_mean_dffs])
 corr_acr = np.array([pearsonr(x, acr_contr)[0] for x in d.active_mean_dffs])
@@ -411,6 +431,8 @@ fig.supylabel("Count")
 We see that some cells might correlate with achromatic contrast. Does this hold up when we include motion into the regressor? In order to find motion sensitive cells instead of just contrast sensitive cells, we need to encode the motion including the contrast so that the motions with low contrasts are not represented as strong stimuli.
 
 ```{python}
+#| output: false
+
 motions = [motion, clock, cclock]
 motions_string = ["motion", "clock", "counterclock"]
 contr = [acr_contr, red_contr, green_contr]
@@ -437,6 +459,8 @@ The distributions show peaks at positive but also negative correlation coefficie
 First, we'll build two of the stimuli regressors we already used in plotting the correlation histogram matrix. Then we correlate the active dffs with the regressor and choose a correlation coefficient as a threshold. In the plotting loop, we then choose the 5 dff traces with the highest correlation coefficient and plot them on top of the regressor.
 
 ```{python}
+#| output: false
+
 # build stimulus
 clock_acr = np.array(clock * acr_contr)
 cclock_acr = np.array(cclock * acr_contr)
@@ -468,14 +492,14 @@ idx = np.arange(d.inx_mean[0][1]+1)
 fig, ax = plt.subplots(2,1, figsize=(20*ps.cm, 12*ps.cm), constrained_layout=True, sharex=True, sharey=True)
 
 ax[0].set_title('Clockw. * achrom.', loc='left')
-ax[0].plot(d.mean_times[idx], clock_acr[idx], c='darkgray', label='stimulus')
+ax[0].plot(d.mean_times[idx], clock_acr[idx], c='k', label='stimulus', zorder=100, lw=1)
 
 for i in range(len(dffs_clock_acr[:,0])):
     clock_acr_dff = dffs_clock_acr[i]
     ax[0].plot(d.mean_times[idx], clock_acr_dff[idx]-clock_acr_dff[idx].min(), label = 'dff', alpha = 0.6)
 
 ax[1].set_title('Counterclockw. * achrom.', loc='left')
-ax[1].plot(d.mean_times[idx], cclock_acr[idx], c='darkgray', label='stimulus')
+ax[1].plot(d.mean_times[idx], cclock_acr[idx], c='k', label='stimulus', zorder=100, lw=1)
 
 for i in range(len(dffs_cclock_acr[:,0])):
     cclock_acr_dff = dffs_cclock_acr[i]
@@ -489,6 +513,8 @@ fig.supylabel('Norm. activity')
 Now we try the same for a negative correlation threshold. The same routine is repeated just with a negative correlation coefficient threshold. In this case the threshold was smaller because there were fewer dffs that were strongly negatively correlated to the regressor.
 
 ```{python}
+#| output: false
+
 # make threshold
 thresh = -0.25
 
@@ -509,14 +535,14 @@ idx = np.arange(d.inx_mean[0][1]+1)
 fig, ax = plt.subplots(2,1, figsize=(20*ps.cm, 12*ps.cm), constrained_layout=True, sharex=True, sharey=True)
 
 ax[0].set_title('Clockw. * achrom.', loc='left')
-ax[0].plot(d.mean_times[idx], clock_acr[idx], c='darkgray', label='stimulus')
+ax[0].plot(d.mean_times[idx], clock_acr[idx], c='k', label='stimulus', zorder=100, lw=1)
 
 for i in range(len(dffs_clock_acr[:,0])):
     clock_acr_dff = dffs_clock_acr[i]
     ax[0].plot(d.mean_times[idx], clock_acr_dff[idx]-clock_acr_dff[idx].min(), label = 'dff', alpha = 0.6)
 
 ax[1].set_title('Counterclockw. * achrom.', loc='left')
-ax[1].plot(d.mean_times[idx], cclock_acr[idx], c='darkgray', label='stimulus')
+ax[1].plot(d.mean_times[idx], cclock_acr[idx], c='k', label='stimulus', zorder=100, lw=1)
 
 for i in range(len(dffs_cclock_acr[:,0])):
     cclock_acr_dff = dffs_cclock_acr[i]
@@ -532,6 +558,8 @@ fig.supylabel('Norm. activity')
 We have now explored the data and know that we have units in our dataset that respond to our stimulus. In a next step, we want to extract these cells while staying stimulus agnosting. The test stimulus were the different contrast levels. In order to exclude this in our selected units, we will use the regressor that only includes motion direction to correlate, and subsequenctly threshold, to get the dffs of the units for further analysis.
 
 ```{python}
+#| output: false
+
 # compute corrs
 corr_clock = np.array([pearsonr(x, clock)[0] for x in d.active_mean_dffs])
 corr_cclock = np.array([pearsonr(x, cclock)[0] for x in d.active_mean_dffs])
@@ -585,6 +613,8 @@ dcc = selective_rois(d, corr_cclock, thresh)
 Now lets first take a look at the responses of both direction selective cells to different levels of achromatic contrast.
 
 ```{python}
+#| output: false
+
 class phase_activity:
     def __init__(self, selective_rois, stim):
 
@@ -644,6 +674,8 @@ If we have a red contrast of e.g. 0.5, we should see increased activity in the b
 For a red contrast of 1 we should see a monotonically decreasing line. The point were the contrasts are 1:1 i.e. only the chromatic component governs the response, is only reached for the last datapoint.
 
 ```{python}
+#| output: false
+
 class rg_activity:
     def __init__(self, selective_rois, contr1, contr2):
 

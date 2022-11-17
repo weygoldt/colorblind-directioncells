@@ -3,12 +3,44 @@ from itertools import combinations
 import matplotlib.pyplot as plt
 import numpy as np
 from IPython import embed
+from scipy.signal import butter, sosfiltfilt
 from scipy.stats import pearsonr
 from sklearn.metrics import auc
 from sklearn.neighbors import KernelDensity
 from tqdm.autonotebook import tqdm
 
 from .termcolors import TermColor as tc
+
+
+def highpass_filter(data, rate, cutoff, order=2):
+    """
+    highpass filter
+
+    Parameters
+    ----------
+    data : 1d array
+        data to filter
+    rate : float
+        sampling rate of the data in Hz
+    cutoff : float
+        cutoff frequency of the filter in Hz
+    order : int, optional
+        order of the filter, by default 2
+
+    Returns
+    -------
+    1d array
+        filtered data
+    """
+    sos = butter(order, cutoff, btype="high", fs=rate, output="sos")
+    y = sosfiltfilt(sos, data)
+    return y
+
+
+def bandpass_filter(data, rate, flow, fhigh, order=2):
+    sos = butter(order, [flow, fhigh], btype="band", fs=rate, output="sos")
+    y = sosfiltfilt(sos, data)
+    return y
 
 
 def find_right_tail(x, y, target_auc, plot=True):

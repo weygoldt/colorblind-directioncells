@@ -67,15 +67,13 @@ As described in the [loading_data](loading_data.qmd) notebook, we can now comput
 dataname = "mean_dffs.npy"
 timename = "mean_times.npy"
 
-# if os.path.exists(dataroot+dataname) == False:
-#     d.stimulus_means()
-#     np.save(dataroot+dataname, d.mean_dffs)
-#     np.save(dataroot+timename, d.mean_times)
-# else:
-#     d.mean_dffs = np.load(dataroot+dataname)
-#     d.mean_times = np.load(dataroot+timename)
-
-d.stimulus_means()
+if os.path.exists(dataroot+dataname) == False:
+    d.stimulus_means()
+    np.save(dataroot+dataname, d.mean_dffs)
+    np.save(dataroot+timename, d.mean_times)
+else:
+    d.mean_dffs = np.load(dataroot+dataname)
+    d.mean_times = np.load(dataroot+timename)
 ```
 
 To get an overview, we plot all mean dffs in a heatmap.
@@ -759,6 +757,7 @@ for lab, color, rg_clock in zip(labels, colors, [rg_clock_data, rg_cclock_data])
 
         ax[i1].plot(contrs, meandff, label=lab, c=color, lw=2.5)
         ax[i1].set_title(f"Red contr = {np.round(rds,2)}")
+        ax[i1].axhline(0, lw=1, linestyle='dashed', color=ps.black, zorder = 100, alpha=0.2)
 
 fig.supxlabel('Green channel contrast')
 fig.supylabel('Norm. dff')
@@ -816,6 +815,7 @@ for lab, color, rg_clock in zip(labels, colors, [rg_clock_data, rg_cclock_data])
 
         ax[i1].plot(contrs, meandff, label=lab, c=color, lw=2.5)
         ax[i1].set_title(f"Green contr = {np.round(rds,2)}")
+        ax[i1].axhline(0, lw=1, linestyle='dashed', color=ps.black, zorder = 100, alpha=0.2)
 
 fig.supxlabel('Red channel contrast')
 fig.supylabel('Norm. dff')

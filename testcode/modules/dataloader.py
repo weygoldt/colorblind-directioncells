@@ -18,6 +18,7 @@ class all_rois:
         index_rois = []
         index_recs = []
         all_dffs = []
+        all_zscores = []
         dff_times = []
 
         self.start_times = []
@@ -53,6 +54,7 @@ class all_rois:
 
             # make empty matrix
             roi_dffs = np.ones((len(one_rec), len(new_times)))
+            roi_zscores = np.ones((len(one_rec), len(new_times)))
 
             # collect all dffs for all ROIs in empty matrix ROI dffs interpoliert
             for i, roi in enumerate(one_rec):
@@ -62,6 +64,7 @@ class all_rois:
 
                 # get rois from dataset
                 dff = roi.dff
+                zscore = roi.zscore
 
                 # normalize
                 dff = (dff - dff.min()) / (dff.max() - dff.min())
@@ -69,15 +72,19 @@ class all_rois:
                 # interpolate
                 finterp = interpolate.interp1d(times-start_time[0], dff)
                 dff_interp = finterp(new_times)
+                finterp = interpolate.interp1d(times-start_time[0], zscore)
+                zscore_interp = finterp(new_times)
 
                 # save into matrix
                 roi_dffs[i, :] = dff_interp
+                roi_zscores[i, :] = zscore_interp
 
             times = new_times
             start_time = new_start_time
             stop_time = new_end_time
 
             all_dffs.append(roi_dffs)
+            all_zscores.append(roi_zscores)
             dff_times.append(times)
 
             self.start_times.append(start_time)
@@ -97,15 +104,18 @@ class all_rois:
         ydim = np.sum([len(x[:, 0]) for x in all_dffs])
         xdim = np.max([len(x[0, :]) for x in all_dffs])
         dffs = np.full((ydim, xdim), np.nan)
+        zscores = np.full((ydim, xdim), np.nan)
 
         ylen = 0
-        for i, roi_dffs in enumerate(all_dffs):
+        for i, (roi_dffs, roi_zscores) in enumerate(zip(all_dffs, all_zscores)):
             dims = np.shape(roi_dffs)
             dffs[ylen:ylen+dims[0], : dims[1]] = roi_dffs
+            zscores[ylen:ylen+dims[0], : dims[1]] = roi_zscores
             ylen += dims[0]
 
         self.times = times
-        self.dffs = dffs
+        # self.dffs = dffs >>>>>>> TTHIS iS HThE ISSuE!!! <<<<<<<<<<<<<<<<<<<
+        self.dffs = zscores
         self.index_rois = index_rois
         self.index_recs = index_recs
         self.metaindex = np.arange(len(self.dffs[:, 0]))

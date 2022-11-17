@@ -248,9 +248,9 @@ def PlotStyle():
         pass
 
     # rcparams text setup
-    SMALL_SIZE = 12
-    MEDIUM_SIZE = 14
-    BIGGER_SIZE = 16
+    SMALL_SIZE = 10
+    MEDIUM_SIZE = 12
+    BIGGER_SIZE = 14
 
     # rcparams
     plt.rc("font", size=MEDIUM_SIZE)  # controls default text sizes
@@ -265,9 +265,9 @@ def PlotStyle():
     # plt.rcParams["image.cmap"] = s.lightcmap
     plt.rcParams["axes.xmargin"] = 0.1
     plt.rcParams["axes.ymargin"] = 0.15
-    plt.rcParams["axes.titlelocation"] = "center"
+    plt.rcParams["axes.titlelocation"] = "left"
     plt.rcParams["axes.titlesize"] = BIGGER_SIZE
-    plt.rcParams["axes.titlepad"] = -10
+    plt.rcParams["axes.titlepad"] = 10
     plt.rcParams["legend.frameon"] = False
     plt.rcParams["legend.loc"] = "best"
     plt.rcParams["legend.borderpad"] = 0.4

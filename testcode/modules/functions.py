@@ -511,15 +511,15 @@ def thresh_correlations(sorted_rois, threshold):
 
     return thresh_rois
 
-#def plot_ang_velocity(onerecording, angul_vel, rois):
-#    """plot the boxplot of rois with regards to the stimulus angular Velocity 
+# def plot_ang_velocity(onerecording, angul_vel, rois):
+#    """plot the boxplot of rois with regards to the stimulus angular Velocity
 #
 #    Parameters
 #    ----------
 #    one_recording : list of vxtools.summarize.structure.Roi
 #        hdf5 SummaryFile with all rois of the same recording id
 #    roi: int
-#        index of one ROI of the list one recording 
+#        index of one ROI of the list one recording
 #    """
 #    for r in rois:
 #        mean_zscores = mean_dff_roi(onerecording, r)

@@ -57,10 +57,10 @@ ax.plot(ri_time, ri_pos)
 #ax.scatter(postive_peaks, np.ones_like(postive_peaks))
 #ax.scatter(negative_peaks, np.ones_like(negative_peaks)*-1)
 for i in range(len(start_time)):
-    plt.axvspan (start_time[i], stop_time[i], color ='b', alpha=0.6)
+    ax.axvspan (start_time[i], stop_time[i], color ='b', alpha=0.6)
     ax.text(start_time[i]+stop_time[i]/2, 10, f"{ang_veloc}")
-    
 
+plt.show()
 
 
 embed()

@@ -279,6 +279,8 @@ def get_attributes(one_recording):
         sorted start_times of the stimulus
     stop_time np.array()
         sorted stop_times of the stimulus
+    target_dur np.array()
+        target duration of stimulus phases
     angul_vel list()
         angular velocitiy used in the stimulus with nans for first and last entrance 
     angul_pre list()
@@ -292,10 +294,11 @@ def get_attributes(one_recording):
     roi = 1
     start_time = []
     end_time = []
+    target_dur = []
     angul_vel = []
     angul_pre = []
-    rgb_1 = []
-    rgb_2 = []
+    red = []
+    green = []
 
     array_phases = np.sort(
         one_recording[roi].rec.h5group['display_data']['phases'])
@@ -306,23 +309,26 @@ def get_attributes(one_recording):
             one_recording[roi].rec.h5group['display_data']['phases'][f'{ph}'].attrs['start_time'])
         end_time.append(
             one_recording[roi].rec.h5group['display_data']['phases'][f'{ph}'].attrs['end_time'])
+        target_dur.append(
+            one_recording[roi].rec.h5group['display_data']['phases'][f'{ph}'].attrs['target_duration'])
+
         if ph == int_phases[0] or ph == int_phases[-1]:
             angul_vel.append(np.nan)
             angul_pre.append(np.nan)
-            rgb_1.append(np.nan)
-            rgb_2.append(np.nan)
+            red.append(np.nan)
+            green.append(np.nan)
             continue
         angul_vel.append(one_recording[roi].rec.h5group['display_data']
                          ['phases'][f'{ph}'].attrs['angular_velocity'])
 
         angul_pre.append(one_recording[roi].rec.h5group['display_data']
                          ['phases'][f'{ph}'].attrs['angular_period'])
-        rgb_1.append(
-            one_recording[roi].rec.h5group['display_data']['phases'][f'{ph}'].attrs['rgb01'])
-        rgb_2.append(
-            one_recording[roi].rec.h5group['display_data']['phases'][f'{ph}'].attrs['rgb02'])
+        green.append(
+            one_recording[roi].rec.h5group['display_data']['phases'][f'{ph}'].attrs['green02'])
+        red.append(
+            one_recording[roi].rec.h5group['display_data']['phases'][f'{ph}'].attrs['red01'])
 
-    return start_time, end_time, angul_vel, angul_pre, rgb_1, rgb_2
+    return start_time, end_time, target_dur, angul_vel, angul_pre, red, green
 
 
 def get_mean_dffs(roi_dffs, times, startstop):

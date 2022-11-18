@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 from IPython import embed
 from scipy import interpolate
@@ -10,167 +12,213 @@ from .termcolors import TermColor as tc
 
 class all_rois:
 
-    def __init__(self, SummaryFile, recordings):
+    def __init__(self, SummaryFile, recordings, recalc=False):
 
         f = SummaryFile
-        rec_nos = recordings
+        self.rec_nos = np.array(recordings)
+        self.rec_nos_cached = np.array([])
+        self.dataroot = os.path.dirname(f.file_path)
 
-        index_rois = []
-        index_recs = []
-        all_dffs = []
-        all_zscores = []
-        dff_times = []
+        # check if recordings in file are the same
+        if os.path.exists(self.dataroot+'/rec_nos.npy'):
+            self.rec_nos_cached = np.load(self.dataroot+'/rec_nos.npy')
 
-        self.start_times = []
-        self.stop_times = []
-        self.ang_velocs = []
-        self.ang_periods = []
-        self.rgbs_1 = []
-        self.rgbs_2 = []
+        # check if the supplied recordings are already processed on disk
+        if np.array_equal(self.rec_nos, self.rec_nos_cached) & (recalc == False):
 
-        print("")
-        for rec_no in tqdm(rec_nos, desc=f"{tc.succ('[ roimatrix.__init__ ]')} Loading data ..."):
-            # get recording data
-            one_rec = fs.data_one_rec_id(f, rec_no)  # extract one recording
-            times = one_rec[0].times  # get the time axis
+            # load all the data from files
+            self.rec_nos = np.load(self.dataroot + '/rec_nos.npy')
+            self.dffs = np.load(self.dataroot + '/dffs.npy')
+            self.zscores = np.load(self.dataroot + '/zscores.npy')
+            self.pmean_dffs = np.load(self.dataroot + '/pmean_dffs.npy')
+            self.pmean_zscores = np.load(self.dataroot + '/pmean_zscores.npy')
+            self.rois = np.load(self.dataroot + '/rois.npy')
+            self.recs = np.load(self.dataroot + '/recs.npy')
+            self.start_times = np.load(self.dataroot + '/start_times.npy')
+            self.stop_times = np.load(self.dataroot + '/stop_times.npy')
+            self.pmean_times = np.load(self.dataroot + '/pmean_times.npy')
+            self.target_durs = np.load(self.dataroot + '/target_durs.npy')
+            self.ang_velocs = np.load(self.dataroot + '/ang_velocs.npy')
+            self.ang_periods = np.load(self.dataroot + '/ang_periods.npy')
+            self.red = np.load(self.dataroot + '/red.npy')
+            self.green = np.load(self.dataroot + '/green.npy')
 
-            start_time, stop_time, ang_veloc, ang_period, rgb_1, rgb_2 = fs.get_attributes(
-                one_rec)
+        # if not the case, recompute and save the stuff
+        else:
 
-            # reformat time arrays
-            start_time = start_time[1:-1]
-            stop_time = stop_time[1:-1]
-            ang_veloc = ang_veloc[1:-1]
-            ang_period = ang_period[1:-1]
-            rgb_1 = rgb_1[1:-1]
-            rgb_2 = rgb_2[1:-1]
+            interp_dt = 0.1
 
-            # shift start and stop time
-            new_end_time = stop_time-start_time[0]
-            new_start_time = start_time-start_time[0]
+            all_dffs = []
+            all_zscores = []
 
-            # create new time array
-            new_times = np.arange(new_start_time[0], new_end_time[-1]+0.1, 0.1)
+            self.rois = []
+            self.recs = []
+            self.start_times = []
+            self.stop_times = []
+            self.target_durs = []
+            self.ang_velocs = []
+            self.ang_periods = []
+            self.red = []
+            self.green = []
 
-            # make empty matrix
-            roi_dffs = np.ones((len(one_rec), len(new_times)))
-            roi_zscores = np.ones((len(one_rec), len(new_times)))
+            for rec_no in tqdm(self.rec_nos, desc=f"{tc.succ('[ roimatrix.__init__ ]')} Loading data ..."):
 
-            # collect all dffs for all ROIs in empty matrix ROI dffs interpoliert
-            for i, roi in enumerate(one_rec):
+                # get recording data
+                one_rec = fs.data_one_rec_id(
+                    f, rec_no)  # extract one recording
+                times = one_rec[0].times                 # get the time axis
+                start_time, stop_time, target_dur, ang_veloc, ang_period, red, green = fs.get_attributes(
+                    one_rec)
 
-                index_rois.append(i)
-                index_recs.append(rec_no)
+                # reformat time arrays
+                start_time = start_time[1:-1]
+                stop_time = stop_time[1:-1]
+                target_dur = target_dur[1:-1]
+                ang_veloc = ang_veloc[1:-1]
+                ang_period = ang_period[1:-1]
+                red = red[1:-1]
+                green = green[1:-1]
 
-                # get rois from dataset
-                dff = roi.dff
-                zscore = roi.zscore
+                # make empty matrix
+                rois_dffs = []
+                rois_zscores = []
 
-                # normalize
-                dff = (dff - dff.min()) / (dff.max() - dff.min())
+                self.red.append(red)
+                self.green.append(green)
+                self.ang_velocs.append(ang_veloc)
+                self.ang_periods.append(ang_period)
+                self.target_durs.append(target_dur)
 
-                # interpolate
-                finterp = interpolate.interp1d(times-start_time[0], dff)
-                dff_interp = finterp(new_times)
-                finterp = interpolate.interp1d(times-start_time[0], zscore)
-                zscore_interp = finterp(new_times)
+                # make dffs
+                for i, roi in enumerate(one_rec):
 
-                # save into matrix
-                roi_dffs[i, :] = dff_interp
-                roi_zscores[i, :] = zscore_interp
+                    self.rois.append(i)
+                    self.recs.append(rec_no)
 
-            times = new_times
-            start_time = new_start_time
-            stop_time = new_end_time
+                    # get rois from dataset
+                    dff = roi.dff
+                    zscore = roi.zscore
 
-            all_dffs.append(roi_dffs)
-            all_zscores.append(roi_zscores)
-            dff_times.append(times)
+                    # normalize
+                    dff = (dff - dff.min()) / (dff.max() - dff.min())
 
-            self.start_times.append(start_time)
-            self.stop_times.append(stop_time)
+                    # create interpolate function
+                    dffinterp = interpolate.interp1d(times, dff)
+                    zscinterp = interpolate.interp1d(times, zscore)
 
-        # get longest time array
-        timelens = [len(x) for x in dff_times]
-        idx = np.arange(len(timelens))
-        times = dff_times[idx[timelens == np.max(timelens)][0]]
+                    # interpolate for each phase
+                    roi_dffs = []
+                    roi_zscores = []
 
-        # check stimulus data
-        if len(np.unique([len(x) for x in self.start_times])) > 1:
-            raise Exception(
-                f"{tc.err('ERROR')} Start times mismatch across layers!")
+                    for st, td in zip(start_time, target_dur):
 
-        # concatenate numpy arrays in all_dffs to make one big matrix
-        ydim = np.sum([len(x[:, 0]) for x in all_dffs])
-        xdim = np.max([len(x[0, :]) for x in all_dffs])
-        dffs = np.full((ydim, xdim), np.nan)
-        zscores = np.full((ydim, xdim), np.nan)
+                        phase_t = np.arange(0, td, interp_dt) + st
+                        dff_interp = np.array(dffinterp(phase_t))
+                        zscore_interp = np.array(zscinterp(phase_t))
 
-        ylen = 0
-        for i, (roi_dffs, roi_zscores) in enumerate(zip(all_dffs, all_zscores)):
-            dims = np.shape(roi_dffs)
-            dffs[ylen:ylen+dims[0], : dims[1]] = roi_dffs
-            zscores[ylen:ylen+dims[0], : dims[1]] = roi_zscores
-            ylen += dims[0]
+                        roi_dffs.append(dff_interp)
+                        roi_zscores.append(zscore_interp)
 
-        self.times = times
-        # self.dffs = dffs >>>>>>> TTHIS iS HThE ISSuE!!! <<<<<<<<<<<<<<<<<<<
-        self.dffs = zscores
-        self.index_rois = index_rois
-        self.index_recs = index_recs
-        self.metaindex = np.arange(len(self.dffs[:, 0]))
-        self.ang_periods = ang_period
-        self.ang_velocs = ang_veloc
-        self.rgb_1 = rgb_1
-        self.rgb_2 = rgb_2
+                    # check if all are same len now
+                    if len(np.unique([len(x) for x in roi_dffs])) != 1:
+                        raise Exception(
+                            'Dffs for all phases are not the same length!')
+                    else:
+                        rois_dffs.append(roi_dffs)
+                        rois_zscores.append(roi_zscores)
 
-    def stimulus_means(self):
+                all_dffs.extend(rois_dffs)
+                all_zscores.extend(rois_zscores)
 
-        recordings = np.unique(self.index_recs)
-        recordings_index = np.arange(len(recordings))
+            # convert to numpy arrays
+            self.red = np.array(self.red)
+            self.green = np.array(self.green)
+            self.ang_velocs = np.array(self.ang_velocs)
+            self.ang_periods = np.array(self.ang_periods)
+            self.target_durs = np.array(self.target_durs)
+            self.rois = np.array(self.rois)
+            self.recs = np.array(self.recs)
 
-        self.mean_dffs = []
-        self.mean_times = []
+            match = True
 
-        for i1 in tqdm(recordings_index, desc=f"{tc.succ('[ roimatrix.stimulus_means ]')} Computing means in phases ..."):
+            # check if all stimulus arrays between recordings contain same stim data
+            for i in range(len(self.red[0, :])):
+                if len(np.unique(self.red[:, i])) != 1:
+                    match = False
+                    print(tc.err('Check out reds!'))
 
-            start_times = self.start_times[i1]
-            stop_times = self.stop_times[i1]
-            snippet_indices = []
-            center_indices = []
+            for i in range(len(self.green[0, :])):
+                if len(np.unique(self.green[:, i])) != 1:
+                    match = False
+                    print(tc.err('Check out greens!'))
 
-            for st, end in zip(start_times, stop_times):
+            for i in range(len(self.ang_velocs[0, :])):
+                if len(np.unique(self.ang_velocs[:, i])) != 1:
+                    match = False
+                    print(tc.err('Check out ang_velocs!'))
 
-                start_inx = fs.find_on_time(self.times, st)
-                stop_inx = fs.find_on_time(self.times, end)
-                center_inx = fs.find_on_time(self.times, st + (end-st)/2)
-                center_indices.append(center_inx)
-                snippet_indices.append(np.arange(start_inx, stop_inx))
+            for i in range(len(self.ang_periods[0, :])):
+                if len(np.unique(self.ang_periods[:, i])) != 1:
+                    match = False
+                    print(tc.err('Check out ang_periods!'))
 
-            dff_idx = self.index_recs == recordings[i1]
+            for i in range(len(self.target_durs[0, :])):
+                if len(np.unique(self.target_durs[:, i])) != 1:
+                    match = False
+                    print(tc.err('Check out target durations!'))
 
-            for i2 in range(len(self.dffs[dff_idx, :])):
-                roi = self.dffs[dff_idx, :][i2, :]
-                mean_dff = np.array([np.mean(roi[snip])
-                                     for snip in snippet_indices])
-                self.mean_dffs.append(mean_dff)
+            # check if rois and recs match the number of dffs
+            if len(all_dffs) != len(self.rois):
+                match = False
+                print(tc.err('Dff matrix dimensions does not match number of rois!'))
 
-            self.mean_times.append(self.times[center_indices])
+            if len(all_dffs) != len(self.recs):
+                match = False
+                print(tc.err('Dff matrix dimensions does not match number of recs!'))
 
-        # convert to numpy array
-        self.mean_dffs = np.array(self.mean_dffs)
-        self.mean_times = np.mean(self.mean_times, axis=0)
+            if match:
+                self.red = self.red[0]
+                self.green = self.green[0]
+                self.ang_velocs = self.ang_velocs[0]
+                self.ang_periods = self.ang_periods[0]
+                self.target_durs = self.target_durs[0]
+            else:
+                raise Exception(
+                    f"{tc.err('ERROR')} The stimulus data does not match!")
 
-        # print("")
+            # make data arrays
+            self.times = np.arange(0, np.sum(self.target_durs), interp_dt)
+            self.dffs = np.array(all_dffs)
+            self.zscores = np.array(all_zscores)
 
-        # for i in tqdm(range(len(self.dffs[:, 0])), desc=f"{tc.succ('[ roimatrix.stimulus_means ]')} Computing means in phases ..."):
-        #     roi = self.dffs[i, :]
-        #     snippet_indices = meta_snippet_indices[rec_idx]
-        #     mean_dff = np.array([np.mean(roi[snip])
-        #                         for snip in snippet_indices])
-        #     self.mean_dffs[i, :] = mean_dff
+            # make start and stop times
+            self.start_times = np.cumsum(self.target_durs) - self.target_durs
+            self.stop_times = np.cumsum(self.target_durs)
+            self.pmean_times = self.stop_times-self.start_times
 
-        # self.mean_times = self.times[center_indices]
+            # compute dff and zscore means
+            self.pmean_dffs = np.array([np.array([np.mean(x) for x in roi_dff])
+                                       for roi_dff in self.dffs])
+
+            self.pmean_zscores = np.array([np.array([np.mean(x) for x in roi_zscore])
+                                          for roi_zscore in self.zscores])
+
+            # load all the data from files
+            np.save(self.dataroot + '/rec_nos.npy', self.rec_nos)
+            np.save(self.dataroot + '/dffs.npy', self.dffs)
+            np.save(self.dataroot + '/zscores.npy', self.zscores)
+            np.save(self.dataroot + '/pmean_dffs.npy', self.pmean_dffs)
+            np.save(self.dataroot + '/pmean_zscores.npy', self.pmean_zscores)
+            np.save(self.dataroot + '/rois.npy', self.rois)
+            np.save(self.dataroot + '/recs.npy', self.recs)
+            np.save(self.dataroot + '/start_times.npy', self.start_times)
+            np.save(self.dataroot + '/stop_times.npy', self.stop_times)
+            np.save(self.dataroot + '/pmean_times.npy', self.pmean_times)
+            np.save(self.dataroot + '/target_durs.npy', self.target_durs)
+            np.save(self.dataroot + '/ang_velocs.npy', self.ang_velocs)
+            np.save(self.dataroot + '/ang_periods.npy', self.ang_periods)
+            np.save(self.dataroot + '/red.npy', self.red)
+            np.save(self.dataroot + '/green.npy', self.green)
 
     def repeat_means(self):
 
@@ -178,11 +226,11 @@ class all_rois:
         print(
             f"{tc.succ('[ roimatrix.repeat_means ]')} Computing means across repeats...")
 
-        self.meanstack_mean_times, \
-            self.meanstack_mean_dffs = fs.meanstack(
-                self.mean_dffs, self.mean_times, self.inx_mean)
+        self.pmean_rmean_times, \
+            self.pmean_rmean_dffs = fs.meanstack(
+                self.pmean_dffs, self.pmean_times, self.inx_pmean)
 
-    def sort_means_by_corr(self):
+    def responding_rois(self):
 
         def sort_rois(mean_dffs, inx):
             """calculate all active ROIs with a threshold.
@@ -226,22 +274,7 @@ class all_rois:
             return active_rois_sorted
 
         # get indices for stimulus phase series repeats
-        inx_mean = fs.repeats(self.mean_dffs)
-        self.inx_mean = inx_mean
+        self.inx_pmean = fs.repeats(self.pmean_dffs)
 
         # compute correlation coefficient of ROIs
-        self.corrs = sort_rois(self.mean_dffs, self.inx_mean)
-
-        self.metaindex = self.corrs[:, 0]
-
-
-if __name__ == "__main__":
-
-    # import HDF5 file
-    f = SummaryFile(
-        '/mnt/archlinux/@home/weygoldt/Data/uni/neuro_gp/calciumimaging/data/Summary.hdf5')
-    num_rec = len(f.recordings())
-    rec_nos = np.arange(3, num_rec)
-    d = all_rois(f, rec_nos)
-    d.stimulus_means()
-    d.repeat_means()
+        self.corrs = sort_rois(self.pmean_dffs, self.inx_pmean)

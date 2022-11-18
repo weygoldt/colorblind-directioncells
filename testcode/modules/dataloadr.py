@@ -10,11 +10,12 @@ from . import functions as fs
 from .termcolors import TermColor as tc
 
 
-class all_rois:
+class SingleFish:
 
     def __init__(self, SummaryFile, recordings, overwrite=False):
 
         f = SummaryFile
+        self.fish_id = f.rois()[0].fish_id
         self.rec_nos = np.array(recordings)
         self.rec_nos_cached = np.array([])
         self.dataroot = os.path.dirname(f.file_path)
@@ -34,6 +35,9 @@ class all_rois:
             self.pmean_zscores = np.load(self.dataroot + '/pmean_zscores.npy')
             self.rois = np.load(self.dataroot + '/rois.npy')
             self.recs = np.load(self.dataroot + '/recs.npy')
+            self.fish = np.load(self.dataroot + '/fish.npy')
+            self.times = np.load(self.dataroot + '/times.npy')
+            self.pmean_times = np.load(self.dataroot + '/pmean_times.npy')
             self.start_times = np.load(self.dataroot + '/start_times.npy')
             self.stop_times = np.load(self.dataroot + '/stop_times.npy')
             self.pmean_times = np.load(self.dataroot + '/pmean_times.npy')
@@ -53,6 +57,7 @@ class all_rois:
 
             self.rois = []
             self.recs = []
+            self.fish = []
             self.start_times = []
             self.stop_times = []
             self.target_durs = []
@@ -94,6 +99,7 @@ class all_rois:
 
                     self.rois.append(i)
                     self.recs.append(rec_no)
+                    self.fish.append(self.fish_id)
 
                     # get rois from dataset
                     dff = roi.dff
@@ -194,7 +200,7 @@ class all_rois:
             # make start and stop times
             self.start_times = np.cumsum(self.target_durs) - self.target_durs
             self.stop_times = np.cumsum(self.target_durs)
-            self.pmean_times = self.stop_times-self.start_times
+            self.pmean_times = self.stop_times-self.target_durs/2
 
             # compute dff and zscore means
             self.pmean_dffs = np.array([np.array([np.mean(x) for x in roi_dff])
@@ -211,6 +217,9 @@ class all_rois:
             np.save(self.dataroot + '/pmean_zscores.npy', self.pmean_zscores)
             np.save(self.dataroot + '/rois.npy', self.rois)
             np.save(self.dataroot + '/recs.npy', self.recs)
+            np.save(self.dataroot + '/fish.npy', self.fish)
+            np.save(self.dataroot + '/times.npy', self.times)
+            np.save(self.dataroot + '/pmean_times.npy', self.pmean_times)
             np.save(self.dataroot + '/start_times.npy', self.start_times)
             np.save(self.dataroot + '/stop_times.npy', self.stop_times)
             np.save(self.dataroot + '/pmean_times.npy', self.pmean_times)
@@ -278,3 +287,120 @@ class all_rois:
 
         # compute correlation coefficient of ROIs
         self.corrs = sort_rois(self.pmean_dffs, self.inx_pmean)
+
+
+class MultiFish:
+    def __init__(self, fishes):
+
+        # stim data should be the same
+        self.times = fishes[0].times
+        self.pmean_times = fishes[0].pmean_times
+        self.start_times = fishes[0].start_times
+        self.stop_times = fishes[0].stop_times
+        self.target_durs = fishes[0].target_durs
+        self.ang_velocs = fishes[0].ang_velocs
+        self.ang_periods = fishes[0].ang_periods
+        self.red = fishes[0].red
+        self.green = fishes[0].green
+
+        # get roi data
+        self.rois = np.array(fs.flatten([x.rois for x in fishes]))
+        self.recs = np.array(fs.flatten([x.recs for x in fishes]))
+        self.fish = np.array(fs.flatten([x.fish for x in fishes]))
+
+        # get data
+        all_dffs = [fish.dffs for fish in fishes]
+        all_zscores = [fish.zscores for fish in fishes]
+        all_pmean_dffs = [fish.pmean_dffs for fish in fishes]
+        all_pmean_zscores = [fish.pmean_zscores for fish in fishes]
+
+        self.dffs = np.concatenate(all_dffs)
+        self.zscores = np.concatenate(all_zscores)
+        self.pmean_dffs = np.concatenate(all_pmean_dffs)
+        self.pmean_zscores = np.concatenate(all_pmean_zscores)
+
+    def repeat_means(self):
+
+        print("")
+        print(
+            f"{tc.succ('[ roimatrix.repeat_means ]')} Computing means across repeats...")
+
+        self.pmean_rmean_times, \
+            self.pmean_rmean_dffs = fs.meanstack(
+                self.pmean_dffs, self.pmean_times, self.inx_pmean)
+
+    def responding_rois(self):
+
+        def sorter(mean_dffs, inx):
+            """calculate all active ROIs with a threshold.
+            ROIs who have a high correlation with themselfs over time, are active rois
+            Parameters
+            ----------
+            one_recording : list of vxtools.summarize.structure.Roi
+                hdf5 SummaryFile with all rois of the same recording id
+
+            inx : tupel
+                index tupel, where the repeats of one recording starts and stops
+
+            threshold : float, optional
+                threshold of the correlation factor, by default 0.6
+
+            Returns
+            -------
+            2d array
+                1.dimension are the index fot the ROIs
+                2.dimension are sorted correlation factors
+            """
+
+            spearmeans = []
+            print("")
+            for i in tqdm(range(len(mean_dffs[:, 0])), desc=f"{tc.succ('[ roimatrix.sort_means_by_corr ]')} Computing autocorrelation for every dff ..."):
+
+                # start_time = time.time()
+                means = mean_dffs[i, :]
+
+                # start_time = time.time()
+                spear_mean = fs.corr_repeats(means, inx)
+
+                spearmeans.append(spear_mean)
+
+            result = np.empty((len(mean_dffs[:, 0]), 2))
+            result[:, 0] = np.arange(len(mean_dffs[:, 0]))
+            result[:, 1] = spearmeans
+            active_rois_sorted = np.array(
+                sorted(result, key=lambda x: x[1], reverse=True))
+
+            return active_rois_sorted
+
+        # get indices for stimulus phase series repeats
+        self.inx_pmean = fs.repeats(self.pmean_dffs)
+
+        # compute correlation coefficient of ROIs
+        self.corrs = sorter(self.pmean_dffs, self.inx_pmean)
+
+    def sort_rois(self, sortindex):
+
+        self.dffs = self.dffs[sortindex]
+        self.zscores = self.zscores[sortindex]
+        self.pmean_dffs = self.pmean_dffs[sortindex]
+        self.pmean_zscores = self.pmean_zscores[sortindex]
+        self.rois = self.rois[sortindex]
+        self.recs = self.recs[sortindex]
+        self.fish = self.fish[sortindex]
+
+    def sort_phases(self, sortindex):
+
+        # sort stimulus
+        self.ang_velocs = self.ang_velocs[sortindex]
+        self.ang_periods = self.ang_periods[sortindex]
+        self.red = self.red[sortindex]
+        self.green = self.green[sortindex]
+
+        # sort data
+        self.dffs = self.dffs[:, sortindex]
+        self.zscores = self.zscores[:, sortindex]
+        self.pmean_dffs = self.pmean_dffs[:, sortindex]
+        self.pmean_zscores = self.pmean_zscores[:, sortindex]
+
+    def filter(self, index):
+        pass

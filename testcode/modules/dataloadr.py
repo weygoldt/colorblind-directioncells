@@ -12,7 +12,7 @@ from .termcolors import TermColor as tc
 
 class all_rois:
 
-    def __init__(self, SummaryFile, recordings, recalc=False):
+    def __init__(self, SummaryFile, recordings, overwrite=False):
 
         f = SummaryFile
         self.rec_nos = np.array(recordings)
@@ -24,7 +24,7 @@ class all_rois:
             self.rec_nos_cached = np.load(self.dataroot+'/rec_nos.npy')
 
         # check if the supplied recordings are already processed on disk
-        if np.array_equal(self.rec_nos, self.rec_nos_cached) & (recalc == False):
+        if np.array_equal(self.rec_nos, self.rec_nos_cached) & (overwrite == False):
 
             # load all the data from files
             self.rec_nos = np.load(self.dataroot + '/rec_nos.npy')

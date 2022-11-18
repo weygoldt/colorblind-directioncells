@@ -49,42 +49,22 @@ f = SummaryFile(dataroot + 'Summary.hdf5')
 
 # now select the recordings that were good
 good_recs1 = [5,8,9,10,11,13,14]
-good_recs2_tec = [0,1,2,4,5]
-good_recs2_pretec = [6,9]
 good_recs_all = np.arange(len(f.recordings()))
 
 good_recs = good_recs1
 
 # load matrix of all rois of all layers with good rois
-d = all_rois(f, good_recs)
+d = all_rois(f, good_recs, overwrite=True)
 ```
 
-As described in the [loading_data](loading_data.qmd) notebook, we can now compute the means for all dff time series in each stimulation window.
-
-```{python}
-#| output: false
-
-dataname = "mean_dffs.npy"
-timename = "mean_times.npy"
-
-if os.path.exists(dataroot+dataname) == False:
-    d.stimulus_means()
-    np.save(dataroot+dataname, d.mean_dffs)
-    np.save(dataroot+timename, d.mean_times)
-else:
-    d.mean_dffs = np.load(dataroot+dataname)
-    d.mean_times = np.load(dataroot+timename)
-```
-
-To get an overview, we plot all mean dffs in a heatmap.
+As described in the [loading_data](loading_data.qmd) notebook, we can now compute the means for all dff time series in each stimulation window.To get an overview, we plot all mean dffs in a heatmap.
 
 ```{python}
 #| code-fold: true
 
 fig, ax = plt.subplots(figsize=(20*ps.cm, 12*ps.cm))
-
-extent = (np.min(d.times), np.max(d.times), 0, len(d.mean_dffs[:,0]))
-ax.imshow(d.mean_dffs, aspect='auto', extent=extent, origin='upper')
+extent = (np.min(d.times), np.max(d.times), 0, len(d.pmean_dffs[:,0]))
+ax.imshow(d.pmean_dffs, aspect='auto', extent=extent, origin='upper')
 ax.set_xlabel('Time [s]')
 ax.set_ylabel('ROI')
 ```
@@ -96,7 +76,7 @@ Now we can compute the autocorrelation of each time series to quantify how well 
 ```{python}
 #| output: false
 
-d.sort_means_by_corr()
+d.responding_rois()
 ```
 
 Now that we have the correlation coefficients, we can sort all ROIs in out dataset (i.e. all dffs) by their correlation coefficient.
@@ -192,16 +172,16 @@ d.thresh_mean_rois = fs.thresh_correlations(d.corrs, thresh)
 d.repeat_means()
 
 # get the phase and repeat mean dffs
-d.active_meanmean_dffs = np.array([d.meanstack_mean_dffs[int(roi), :] for roi in d.thresh_mean_rois[:,0]])
+d.active_meanmean_dffs = np.array([d.pmean_rmean_dffs[int(roi), :] for roi in d.thresh_mean_rois[:,0]])
 
 # get the phase mean dff
-d.active_mean_dffs = np.array([d.mean_dffs[int(roi), :] for roi in d.thresh_mean_rois[:,0]])
+d.active_pmean_dffs = np.array([d.pmean_dffs[int(roi), :] for roi in d.thresh_mean_rois[:,0]])
 
 # get their rois as well
-d.active_mean_rois = np.array([d.index_rois[int(roi)] for roi in d.thresh_mean_rois[:,0]])
+d.active_pmean_rois = np.array([d.rois[int(roi)] for roi in d.thresh_mean_rois[:,0]])
 
 # ... and the recording they came from
-d.active_mean_recs = np.array([d.index_recs[int(roi)] for roi in d.thresh_mean_rois[:,0]])
+d.active_pmean_recs = np.array([d.recs[int(roi)] for roi in d.thresh_mean_rois[:,0]])
 ```
 
 Now lets plot a raster plot of our thresholded data.
@@ -210,19 +190,19 @@ Now lets plot a raster plot of our thresholded data.
 #| code-fold: true
 
 # take only first repeat
-idx = np.arange(d.inx_mean[0][0], d.inx_mean[0][1])
+idx = np.arange(d.inx_pmean[0][0], d.inx_pmean[0][1])
 
 # encode the stimulus
 
 # luminance contrast: max(all)_stripe1 - max(all)_stripe2
 stripe1 = np.array([np.max(x) for x in d.rgb_1])
 stripe2 = np.array([np.max(x) for x in d.rgb_2])
-lum_contr = abs(stripe1-stripe2)[d.inx_mean[0][0]:d.inx_mean[0][1]]
+lum_contr = abs(stripe1-stripe2)[d.inx_pmean[0][0]:d.inx_pmean[0][1]]
 
 # color contrast: red_stripe1 - red_stripe2 (for red and green)
 red = np.array(
     [abs(x[0]-y[0]) for x, y in zip(d.rgb_1, d.rgb_2)]
-)[d.inx_mean[0][0]:d.inx_mean[0][1]]
+)[d.inx_mean[0][0]:d.inx_pmean[0][1]]
 
 reds = np.empty((len(d.active_meanmean_dffs[:, 0]), len(red)))
 for i in range(len(reds[:, 0])):
@@ -230,14 +210,14 @@ for i in range(len(reds[:, 0])):
 
 green = np.array(
     [abs(x[1]-y[1]) for x, y in zip(d.rgb_1, d.rgb_2)]
-)[d.inx_mean[0][0]:d.inx_mean[0][1]]
+)[d.inx_pmean[0][0]:d.inx_pmean[0][1]]
 
 greens = np.empty((len(d.active_meanmean_dffs[:, 0]), len(green)))
 for i in range(len(greens[:, 0])):
     greens[i, :] = green
 
 # make no rot = 0, counterclock = -1, clockwise = 1
-ang_veloc = d.ang_velocs[1:-1][d.inx_mean[0][0]:d.inx_mean[0][1]]
+ang_veloc = d.ang_velocs[1:-1][d.inx_pmean[0][0]:d.inx_pmean[0][1]]
 norots = np.full(len(d.ang_velocs), np.nan)
 leftrots = np.full(len(d.ang_velocs), np.nan)
 rightrots = np.full(len(d.ang_velocs), np.nan)
@@ -261,7 +241,7 @@ fig, ax = plt.subplots(5, 1,
                        sharex=True,
                        )
 
-extent = (np.min(d.meanstack_mean_times), np.max(d.meanstack_mean_times), 0, len(d.active_meanmean_dffs))
+extent = (np.min(d.pmean_rmean_times), np.max(d.meanstack_mean_times), 0, len(d.active_meanmean_dffs))
 
 ax[0].imshow(d.active_meanmean_dffs, aspect="auto", extent=extent, origin="upper", interpolation="none")
 

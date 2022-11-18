@@ -1,4 +1,4 @@
-﻿# Created by https://www.toptal.com/developers/gitignore/api/python,visualstudiocode
+# Created by https://www.toptal.com/developers/gitignore/api/python,visualstudiocode
 # Edit at https://www.toptal.com/developers/gitignore?templates=python,visualstudiocode
 
 # Own stuff
@@ -14,7 +14,8 @@ trash
 *_files
 *.html
 data_new
-data3
+data3 
+*.hdf5
 
 # Mac Stuff 
 *.DS_Store

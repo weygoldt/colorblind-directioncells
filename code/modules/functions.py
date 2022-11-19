@@ -12,6 +12,11 @@ from tqdm.autonotebook import tqdm
 from .termcolors import TermColor as tc
 
 
+def doublesave(title):
+    plt.savefig(f"{title}.pdf")
+    plt.savefig(f"{title}.svg")
+
+
 def highpass_filter(data, rate, cutoff, order=2):
     """
     highpass filter

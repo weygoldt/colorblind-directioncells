@@ -2,6 +2,7 @@ import cmocean
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
+import plottools.colors as c
 from matplotlib.colors import ListedColormap
 
 
@@ -12,19 +13,22 @@ def PlotStyle():
         cm = 1 / 2.54
         mm = 1 / 25.4
 
+        colors = c.colors_muted
+
         # standard colors
         black = "#1d1d1d"
         darkblue = "#264653"
         blue = "#2A7494"
         green = "#8AB17D"
         yellow = "#E9C46A"
-        orange = "#F4A261"
-        red = "#E86051"
+
+        orange = c.lighter(colors["orange"], 0.75)
+        red = c.lighter(colors["red"], 0.75)
 
         # gradient blue
-        gblue1 = "#1a5b92"
-        gblue2 = "#04a6c2"
-        gblue3 = "#3fc1c0"
+        c1 = "#7D96B0"
+        c2 = "#8CB78D"
+        c3 = "#94C0C0"
 
         # linear colormap
         lightcmap = cmocean.tools.lighten(cmocean.cm.haline, 0.8)
@@ -248,9 +252,9 @@ def PlotStyle():
         pass
 
     # rcparams text setup
-    SMALL_SIZE = 10
-    MEDIUM_SIZE = 12
-    BIGGER_SIZE = 14
+    SMALL_SIZE = 12
+    MEDIUM_SIZE = 14
+    BIGGER_SIZE = 16
 
     # rcparams
     plt.rc("font", size=MEDIUM_SIZE)  # controls default text sizes

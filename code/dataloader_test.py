@@ -3,7 +3,7 @@ import numpy as np
 from vxtools.summarize.structure import SummaryFile
 
 import modules.functions as fs
-from modules.dataloadr import MultiFish, SingleFish
+from modules.dataloader import MultiFish, SingleFish
 
 # now load the data
 DATAROOT2 = '../data/data2/'

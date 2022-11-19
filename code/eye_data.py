@@ -1,15 +1,18 @@
 # load essential packages
 import os
+
+import h5py
 import matplotlib.pyplot as plt
 import numpy as np
-import modules.functions as fs
-from vxtools.summarize.structure import SummaryFile
 from IPython import embed
-from modules.plotstyle import PlotStyle
-import h5py
-from scipy import signal as fp
 from matplotlib.patches import Rectangle
 from scipy import interpolate
+from scipy import signal as fp
+from vxtools.summarize.structure import SummaryFile
+
+import modules.functions as fs
+from modules.plotstyle import PlotStyle
+
 ps = PlotStyle()
 f = SummaryFile('../data2/Summary.hdf5')
 
@@ -53,10 +56,10 @@ for i in sacc:
     elif diff_right[i] < 0:
         negative_peaks.append(ri_time[i])
 
-# plotting stimulus and eye tracking data only from the right eye 
+# plotting stimulus and eye tracking data only from the right eye
 fig, ax = plt.subplots()
 ax.set_xlim(4227.5, 4249.9)
-ax.set_xticks(np.arange(start_time[100], 4250 , 4.07))
+ax.set_xticks(np.arange(start_time[100], 4250, 4.07))
 ax.plot(ri_time, ri_pos)
 ax.set_xlabel('Time in [s]')
 ax.set_ylabel('Deflection in [mm]')
@@ -73,17 +76,17 @@ for i in range(len(start_time)):
 plt.show()
 
 
-## removing saccades from the velocity of the eye movement to calculate the mean velocity 
+# removing saccades from the velocity of the eye movement to calculate the mean velocity
 interp = 0.1
 einterp = interpolate.interp1d(ri_time, ri_pos)
 
 velo_right = np.diff(ri_pos)
-# getting rid of the saccades 
+# getting rid of the saccades
 velo_right[sacc-1] = 0
 velo_right[sacc+1] = 0
-velo_right[sacc]   = 0 
+velo_right[sacc] = 0
 
-## check for saccads to be dealt with 
+# check for saccads to be dealt with
 """
 fig, ax = plt.subplots()
 #ax.set_xlim(4227.5, 4249.9)
@@ -103,11 +106,11 @@ for i in range(len(start_time)):
 plt.show()
 """
 
-# interplotate to the right time 
+# interplotate to the right time
 
 
 int_eye = []
-# calculate the the pmean for the velocity 
+# calculate the the pmean for the velocity
 for st, td in zip(start_time[1:-1], target_dur[1:-1]):
     phase = np.arange(0, td, interp) + st
     eye_interp = np.array(einterp(phase))
@@ -137,8 +140,9 @@ green_clock_stim = green_contr*clock_stim
 red_cclock_stim = red_contr*cclock_stim
 green_cclock_stim = green_contr*cclock_stim
 
+
 class rg_acivity:
-    def __init__(self, mean_eye, red_stim, green_stim): 
+    def __init__(self, mean_eye, red_stim, green_stim):
         inx_red = np.arange(len(red_stim))
         self.contr1_index = np.unique(red_stim[~np.isnan(red_stim)])
         contr2 = np.unique(green_stim[~np.isnan(green_stim)])
@@ -157,11 +161,13 @@ class rg_acivity:
         self.contr1_index = np.array(self.contr1_index)
         self.contr2_index = np.array(self.contr2_index)
         self.contr1 = red_stim
-    
+
+
 rg_clock_data = rg_acivity(mean_vel, red_clock_stim, green_clock_stim)
 rg_cclock_data = rg_acivity(mean_vel, red_cclock_stim, green_cclock_stim)
 
-fig, ax = plt.subplots(2,3, sharex=True, sharey=True, figsize=(20*ps.cm, 20*ps.cm))
+fig, ax = plt.subplots(2, 3, sharex=True, sharey=True,
+                       figsize=(20*ps.cm, 20*ps.cm))
 ax = fs.flatten(ax)
 
 colors = [ps.orange, ps.red]

@@ -9,6 +9,7 @@ from modules.plotstyle import PlotStyle
 import h5py
 from scipy import signal as fp
 from matplotlib.patches import Rectangle
+from scipy import interpolate
 
 f = SummaryFile('../data2/Summary.hdf5')
 
@@ -34,7 +35,7 @@ def read_hdf5_file(file):
 
 
 one_rec = fs.data_one_rec_id(f, 0)
-start_time, stop_time, test,  ang_veloc, ang_period, rgb_1, rgb_2 = fs.get_attributes(
+start_time, stop_time, target_dur,  ang_veloc, ang_period, rgb_1, rgb_2 = fs.get_attributes(
     one_rec)
 ri_pos, ri_time, le_pos, le_time = read_hdf5_file(camera_file)
 
@@ -71,12 +72,46 @@ plt.show()
 
 
 ## removing saccades from the velocity of the eye movement to calculate the mean velocity 
+interp = 0.1
+einterp = interpolate.interp1d(ri_time, ri_pos)
+
 velo_right = np.diff(ri_pos)
 # getting rid of the saccades 
 velo_right[sacc-1] = 0
 velo_right[sacc+1] = 0
 velo_right[sacc]   = 0 
-    
+
+## check for saccads to be dealt with 
+"""
+fig, ax = plt.subplots()
+#ax.set_xlim(4227.5, 4249.9)
+#ax.set_xticks(np.arange(start_time[100], 4250 , 4.07))
+ax.plot(ri_time[:-1], velo_right)
+ax.plot(ri_time[:-1], np.diff(ri_pos))
+for i in range(len(start_time)):
+    ax.vlines(start_time[i], -20, 10, linestyles='dashed', colors='k')
+    ax.text(start_time[i] + ((stop_time[i]-start_time[i])/2) -
+            0.5, 10, f"{ang_veloc[i]}", clip_on=True)
+    red = Rectangle(
+        (start_time[i], -20), ((stop_time[i]-start_time[i])/2), 4, facecolor=(rgb_1[i], 0, 0))
+    green = Rectangle((start_time[i] + (stop_time[i]-start_time[i])/2, -20),
+                      ((stop_time[i]-start_time[i])/2), 4, facecolor=(0, rgb_2[i], 0))
+    ax.add_patch(red)
+    ax.add_patch(green)
+plt.show()
+"""
+
+# interplotate to the right time 
+
+
+int_eye = []
+# calculate the the pmean for the velocity 
+for st, td in zip(start_time[1:-1], target_dur[1:-1]):
+    phase = np.arange(0, td, interp) + st
+    eye_interp = np.array(einterp(phase))
+    int_eye.append(eye_interp)
+
+
 
 
 embed()

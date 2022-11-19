@@ -544,7 +544,7 @@ def thresh_correlations(sorted_rois, threshold):
         The remaining ROIs and their correlation coefficients.
     """
     index = np.arange(len(sorted_rois[:, 0]))
-    thresh_index = index[abs(sorted_rois[:, 1]) > threshold]
+    thresh_index = index[sorted_rois[:, 1] > threshold]
     thresh_rois = sorted_rois[thresh_index, :]
 
     return thresh_rois

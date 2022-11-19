@@ -10,14 +10,16 @@ from . import functions as fs
 from .termcolors import TermColor as tc
 
 
-class all_rois:
+class SingleFish:
 
     def __init__(self, SummaryFile, recordings, overwrite=False):
 
         f = SummaryFile
+        self.fish_id = f.rois()[0].fish_id
         self.rec_nos = np.array(recordings)
         self.rec_nos_cached = np.array([])
         self.dataroot = os.path.dirname(f.file_path)
+        self.type = ["raw", ]
 
         # check if recordings in file are the same
         if os.path.exists(self.dataroot+'/rec_nos.npy'):
@@ -30,13 +32,12 @@ class all_rois:
             self.rec_nos = np.load(self.dataroot + '/rec_nos.npy')
             self.dffs = np.load(self.dataroot + '/dffs.npy')
             self.zscores = np.load(self.dataroot + '/zscores.npy')
-            self.pmean_dffs = np.load(self.dataroot + '/pmean_dffs.npy')
-            self.pmean_zscores = np.load(self.dataroot + '/pmean_zscores.npy')
             self.rois = np.load(self.dataroot + '/rois.npy')
             self.recs = np.load(self.dataroot + '/recs.npy')
+            self.fish = np.load(self.dataroot + '/fish.npy')
+            self.times = np.load(self.dataroot + '/times.npy')
             self.start_times = np.load(self.dataroot + '/start_times.npy')
             self.stop_times = np.load(self.dataroot + '/stop_times.npy')
-            self.pmean_times = np.load(self.dataroot + '/pmean_times.npy')
             self.target_durs = np.load(self.dataroot + '/target_durs.npy')
             self.ang_velocs = np.load(self.dataroot + '/ang_velocs.npy')
             self.ang_periods = np.load(self.dataroot + '/ang_periods.npy')
@@ -53,6 +54,7 @@ class all_rois:
 
             self.rois = []
             self.recs = []
+            self.fish = []
             self.start_times = []
             self.stop_times = []
             self.target_durs = []
@@ -94,6 +96,7 @@ class all_rois:
 
                     self.rois.append(i)
                     self.recs.append(rec_no)
+                    self.fish.append(self.fish_id)
 
                     # get rois from dataset
                     dff = roi.dff
@@ -193,46 +196,117 @@ class all_rois:
 
             # make start and stop times
             self.start_times = np.cumsum(self.target_durs) - self.target_durs
-            self.stop_times = np.cumsum(self.target_durs)
-            self.pmean_times = self.stop_times-self.start_times
-
-            # compute dff and zscore means
-            self.pmean_dffs = np.array([np.array([np.mean(x) for x in roi_dff])
-                                       for roi_dff in self.dffs])
-
-            self.pmean_zscores = np.array([np.array([np.mean(x) for x in roi_zscore])
-                                          for roi_zscore in self.zscores])
+            self.stop_times = np.cumsum(self.target_durs) - interp_dt
 
             # load all the data from files
             np.save(self.dataroot + '/rec_nos.npy', self.rec_nos)
             np.save(self.dataroot + '/dffs.npy', self.dffs)
             np.save(self.dataroot + '/zscores.npy', self.zscores)
-            np.save(self.dataroot + '/pmean_dffs.npy', self.pmean_dffs)
-            np.save(self.dataroot + '/pmean_zscores.npy', self.pmean_zscores)
             np.save(self.dataroot + '/rois.npy', self.rois)
             np.save(self.dataroot + '/recs.npy', self.recs)
+            np.save(self.dataroot + '/fish.npy', self.fish)
+            np.save(self.dataroot + '/times.npy', self.times)
             np.save(self.dataroot + '/start_times.npy', self.start_times)
             np.save(self.dataroot + '/stop_times.npy', self.stop_times)
-            np.save(self.dataroot + '/pmean_times.npy', self.pmean_times)
             np.save(self.dataroot + '/target_durs.npy', self.target_durs)
             np.save(self.dataroot + '/ang_velocs.npy', self.ang_velocs)
             np.save(self.dataroot + '/ang_periods.npy', self.ang_periods)
             np.save(self.dataroot + '/red.npy', self.red)
             np.save(self.dataroot + '/green.npy', self.green)
 
-    def repeat_means(self):
+
+class MultiFish:
+    def __init__(self, fishes):
+
+        # track class operations here
+        self.type = ["raw"]
+
+        # stim data should be the same
+        self.times = fishes[0].times
+        self.start_times = fishes[0].start_times
+        self.stop_times = fishes[0].stop_times
+        self.target_durs = fishes[0].target_durs
+        self.ang_velocs = fishes[0].ang_velocs
+        self.ang_periods = fishes[0].ang_periods
+        self.red = fishes[0].red
+        self.green = fishes[0].green
+
+        # get roi data
+        self.rois = np.array(fs.flatten([x.rois for x in fishes]))
+        self.recs = np.array(fs.flatten([x.recs for x in fishes]))
+        self.fish = np.array(fs.flatten([x.fish for x in fishes]))
+
+        # get data
+        all_dffs = [fish.dffs for fish in fishes]
+        all_zscores = [fish.zscores for fish in fishes]
+
+        self.dffs = np.concatenate(all_dffs)
+        self.zscores = np.concatenate(all_zscores)
+
+    def phase_means(self):
 
         print("")
         print(
-            f"{tc.succ('[ roimatrix.repeat_means ]')} Computing means across repeats...")
+            f"{tc.succ('[ MutliFish.phase_means ]')} Computing means across phases ...")
 
-        self.pmean_rmean_times, \
-            self.pmean_rmean_dffs = fs.meanstack(
-                self.pmean_dffs, self.pmean_times, self.inx_pmean)
+        # make new time
+        self.times = self.stop_times-self.target_durs/2
 
-    def responding_rois(self):
+        # make new dffs
+        self.dffs = np.asarray([np.array([np.mean(x) for x in roi_dff])
+                                for roi_dff in self.dffs])
 
-        def sort_rois(mean_dffs, inx):
+        # make new zscores
+        self.zscores = np.asarray([np.array([np.mean(x) for x in roi_zscore])
+                                   for roi_zscore in self.zscores])
+
+        self.type.append("phase_means")
+
+    def repeat_means(self, nrepeats):
+
+        print("")
+        print(
+            f"{tc.succ('[ MultiFish.repeat_means ]')} Computing means across repeats ...")
+
+        repeats_on_time, repeats_on_stim = self.__repeat_indices(nrepeats)
+
+        rindex = repeats_on_time
+        start_idxs = [x[0] for x in repeats_on_stim]
+        stop_idxs = [x[1] for x in repeats_on_stim]
+
+        # make actual repeat stack
+        newtimes = self.times[rindex[0][0]: rindex[0][1]]
+        newdffs = []
+        newzscores = []
+
+        for roi in range(len(self.dffs[:, 0])):
+
+            # extract single dff track
+            dff = self.dffs[roi, :]
+            zscore = self.zscores[roi, :]
+
+            # split into 3 repeats
+            split_dff = np.asarray([dff[x:y+1]
+                                   for x, y in zip(start_idxs, stop_idxs)])
+            split_zscore = np.asarray([zscore[x:y+1]
+                                       for x, y in zip(start_idxs, stop_idxs)])
+
+            # compute mean of repeats
+            mean_dff = np.mean(split_dff, axis=0)
+            mean_zscore = np.mean(split_zscore, axis=0)
+
+            # append into nan matrix
+            newdffs.append(mean_dff)
+            newzscores.append(mean_zscore)
+
+        self.dffs = np.asanyarray(newdffs)
+        self.zscores = np.asarray(newzscores)
+        self.times = newtimes
+        self.type.append("repeat_means")
+
+    def responding_rois(self, dffs, nrepeats=3):
+
+        def sorter(mean_dffs, inx):
             """calculate all active ROIs with a threshold.
             ROIs who have a high correlation with themselfs over time, are active rois
             Parameters
@@ -255,8 +329,7 @@ class all_rois:
 
             spearmeans = []
             print("")
-            for i in tqdm(range(len(mean_dffs[:, 0])), desc=f"{tc.succ('[ roimatrix.sort_means_by_corr ]')} Computing autocorrelation for every dff ..."):
-
+            for i in range(len(mean_dffs[:, 0])):
                 # start_time = time.time()
                 means = mean_dffs[i, :]
 
@@ -273,8 +346,70 @@ class all_rois:
 
             return active_rois_sorted
 
-        # get indices for stimulus phase series repeats
-        self.inx_pmean = fs.repeats(self.pmean_dffs)
+        repeats_on_time, repeats_on_stim = self.__repeat_indices(nrepeats)
 
         # compute correlation coefficient of ROIs
-        self.corrs = sort_rois(self.pmean_dffs, self.inx_pmean)
+        result = sorter(dffs, repeats_on_stim)
+        indices = np.asarray(result[:, 0], dtype=int)
+        corrs = np.asarray(result[:, 1], dtype=float)
+
+        return indices, corrs
+
+    def filter_rois(self, sortindex):
+
+        self.dffs = self.dffs[sortindex]
+        self.zscores = self.zscores[sortindex]
+        self.rois = self.rois[sortindex]
+        self.recs = self.recs[sortindex]
+        self.fish = self.fish[sortindex]
+
+        self.type.append("filter_rois")
+
+    def filter_phases(self, sortindex):
+
+        # sort stimulus
+        self.ang_velocs = self.ang_velocs[sortindex]
+        self.ang_periods = self.ang_periods[sortindex]
+        self.red = self.red[sortindex]
+        self.green = self.green[sortindex]
+
+        # sort data
+        self.dffs = self.dffs[:, sortindex]
+        self.zscores = self.zscores[:, sortindex]
+
+        self.type.append("filter_phases")
+
+    def __repeat_indices(self, nrepeats):
+        indices = np.arange(len(self.start_times))
+        frac = len(indices)/nrepeats
+
+        # check if array lengths are dividable by nrepeats
+        if frac % 1 != 0:
+            raise ValueError(
+                f'{tc.err("ERROR")} [ functions.repeats ] Cant divide by {nrepeats}!')
+
+        # get starts and stops indices timestamps
+        start_idxs = np.full(nrepeats, 0, dtype=int)
+        stop_idxs = np.full(nrepeats, 0, dtype=int)
+        start_ts = np.full(nrepeats, np.nan)
+        stop_ts = np.full(nrepeats, np.nan)
+
+        # get starts and stops timestamps from class start and stop times
+        for i in range(nrepeats):
+            start_idxs[i] = int(i*frac)
+            stop_idxs[i] = int(np.arange(i*frac, i*frac+frac)[-1])
+            start_ts[i] = self.start_times[start_idxs[i]]
+            stop_ts[i] = self.stop_times[stop_idxs[i]]
+
+        # find on time
+        rindex = []
+        for x, y in zip(start_ts, stop_ts):
+            rindex.append([
+                fs.find_on_time(self.times, x),
+                fs.find_on_time(self.times, y)])
+
+        repeats_on_time = rindex
+        repeats_on_stim = [[x, y]
+                           for x, y in zip(start_idxs, stop_idxs)]
+
+        return repeats_on_time, repeats_on_stim

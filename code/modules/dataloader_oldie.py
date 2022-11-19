@@ -34,7 +34,7 @@ class all_rois:
             one_rec = fs.data_one_rec_id(f, rec_no)  # extract one recording
             times = one_rec[0].times  # get the time axis
 
-            start_time, stop_time, ang_veloc, ang_period, rgb_1, rgb_2 = fs.get_attributes(
+            start_time, stop_time,target,  ang_veloc, ang_period, rgb_1, rgb_2 = fs.get_attributes(
                 one_rec)
 
             # reformat time arrays

@@ -30,7 +30,7 @@ from dataclasses import dataclass
 from vxtools.summarize.structure import SummaryFile
 from sklearn.metrics import auc
 from scipy.stats import pearsonr
-from modules.dataloader import all_rois
+from modules.dataloader_oldie import all_rois
 from modules.plotstyle import PlotStyle
 
 ps = PlotStyle()
@@ -44,7 +44,7 @@ To filter all ROIs for the ones that reacted to our stimulus, we first have to l
 #| output: false
 
 # now load the data
-dataroot = '../data_new/'
+dataroot = '../data2/'
 f = SummaryFile(dataroot + 'Summary.hdf5')
 
 # now select the recordings that were good

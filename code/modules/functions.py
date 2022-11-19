@@ -285,9 +285,9 @@ def get_attributes(one_recording):
         angular velocitiy used in the stimulus with nans for first and last entrance 
     angul_pre list()
         angular period used for the stimulus with nans for first and last entrance 
-    rgb1 np.array of arrays with 3 colors
+    red np.array of arrays with reds
         colors used for the first stripe with nans for first and last entrance 
-    rgb2 np.array of arrays with 3 colors
+    green np.array of arrays with greens
         colors used for the second stripe with nans for first and last entrance 
     """
 

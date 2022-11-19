@@ -10,7 +10,7 @@ import h5py
 from scipy import signal as fp
 from matplotlib.patches import Rectangle
 from scipy import interpolate
-
+ps = PlotStyle()
 f = SummaryFile('../data2/Summary.hdf5')
 
 camera_file = '../data2/Camera.hdf5'
@@ -58,6 +58,8 @@ fig, ax = plt.subplots()
 ax.set_xlim(4227.5, 4249.9)
 ax.set_xticks(np.arange(start_time[100], 4250 , 4.07))
 ax.plot(ri_time, ri_pos)
+ax.set_xlabel('Time in [s]')
+ax.set_ylabel('Deflection in [mm]')
 for i in range(len(start_time)):
     ax.vlines(start_time[i], -20, 10, linestyles='dashed', colors='k')
     ax.text(start_time[i] + ((stop_time[i]-start_time[i])/2) -
@@ -112,7 +114,59 @@ for st, td in zip(start_time[1:-1], target_dur[1:-1]):
     int_eye.append(eye_interp)
 
 
+mean_vel = np.asarray([np.mean(x) for x in int_eye])
 
+red_unique = np.unique(np.array(rgb_1)[~np.isnan(np.array(rgb_1))])
 
+clock = np.array([1 if x > 0 else 0 for x in ang_veloc])
+# counterclockwise motion regressor
+cclock = np.array([1 if x < 0 else 0 for x in ang_veloc])
+clock_stim = np.array(clock, dtype=float)
+cclock_stim = np.array(cclock, dtype=float)
+clock_stim[clock_stim == 0] = np.nan
+cclock_stim[cclock_stim == 0] = np.nan
+
+red_contr = np.array(rgb_1)
+green_contr = np.array(rgb_2)
+
+red_clock_stim = red_contr*clock_stim
+green_clock_stim = green_contr*clock_stim
+
+red_cclock_stim = red_contr*cclock_stim
+green_cclock_stim = green_contr*cclock_stim
+
+class rg_acivity:
+    def __init__(self, mean_eye, red_stim, green_stim): 
+        inx_red = np.arange(len(red_stim))
+        self.contr1_index = np.unique(red_stim[~np.isnan(red_stim)])
+        contr2 = np.unique(green_stim[~np.isnan(green_stim)])
+
+        index_contrast1 = np.arange(len(red_stim[1:-1]))
+        self.contr2_index = []
+        pmean_eye_contrast = []
+
+        for c in self.contr1_index:
+            idx = index_contrast1[red_stim[1:-1] == c]
+            pmean_contrast = mean_eye[idx]
+            self.contr2_index.append(green_stim[idx])
+            pmean_eye_contrast.append(pmean_contrast)
+
+        self.pepmean_eye_contrast = np.array(pmean_eye_contrast)
+        self.contr1_index = np.array(self.contr1_index)
+        self.contr2_index = np.array(self.contr2_index)
+        self.contr1 = red_stim
+    
+rg_clock_data = rg_acivity(mean_vel, red_clock_stim, green_clock_stim)
+rg_cclock_data = rg_acivity(mean_vel, red_cclock_stim, green_cclock_stim)
+
+fig, ax = plt.subplots(2,3, sharex=True, sharey=True, figsize=(20*ps.cm, 20*ps.cm))
+ax = fs.flatten(ax)
+
+colors = [ps.orange, ps.red]
+labels = ['clockwise-selective cells', 'countercl.-selective cells']
+
+for lab, color, rg_clock in zip(labels, colors, [rg_clock_data, rg_cclock_data]):
+
+    pass
 embed()
 exit()

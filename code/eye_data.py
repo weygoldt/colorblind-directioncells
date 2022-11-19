@@ -121,8 +121,10 @@ red_unique = np.unique(np.array(rgb_1)[~np.isnan(np.array(rgb_1))])
 clock = np.array([1 if x > 0 else 0 for x in ang_veloc])
 # counterclockwise motion regressor
 cclock = np.array([1 if x < 0 else 0 for x in ang_veloc])
+
 clock_stim = np.array(clock, dtype=float)
 cclock_stim = np.array(cclock, dtype=float)
+
 clock_stim[clock_stim == 0] = np.nan
 cclock_stim[cclock_stim == 0] = np.nan
 

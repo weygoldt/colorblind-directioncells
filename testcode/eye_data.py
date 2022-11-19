@@ -32,13 +32,13 @@ def read_hdf5_file(file):
     return r_eye_pos[0], r_eye_time[0], l_eye_pos[0], l_eye_time[0]
 
 one_rec = fs.data_one_rec_id(f, 0)
-start_time, stop_time, ang_veloc, ang_period, rgb_1, rgb_2 = fs.get_attributes(one_rec)
+start_time, stop_time, test,  ang_veloc, ang_period, rgb_1, rgb_2 = fs.get_attributes(one_rec)
 ri_pos, ri_time, le_pos, le_time = read_hdf5_file(camera_file)
 #plt.plot(ri_time[:-1], np.diff(ri_pos))
 
 # take the absute value:
 ri_pos_abs = np.abs(np.diff(ri_pos))
-#plt.plot(ri_time[:-1], ri_pos_abs)
+plt.plot(ri_time[:-1], ri_pos_abs)
 
 sacc = fp.find_peaks(ri_pos_abs, height=1.5)[0]
 postive_peaks = []
@@ -54,11 +54,11 @@ for i in sacc:
 fig, ax = plt.subplots()
 
 ax.plot(ri_time, ri_pos)
-#ax.scatter(postive_peaks, np.ones_like(postive_peaks))
-#ax.scatter(negative_peaks, np.ones_like(negative_peaks)*-1)
+ax.scatter(postive_peaks, np.ones_like(postive_peaks))
+ax.scatter(negative_peaks, np.ones_like(negative_peaks)*-1)
 for i in range(len(start_time)):
     ax.axvspan (start_time[i], stop_time[i], color ='b', alpha=0.6)
-    ax.text(start_time[i]+stop_time[i]/2, 10, f"{ang_veloc}")
+    #ax.text(start_time[i]+stop_time[i]/2, 10, f"{ang_veloc}")
 
 plt.show()
 

@@ -328,7 +328,7 @@ class MultiFish:
             """
 
             spearmeans = []
-            print("")
+
             for i in range(len(mean_dffs[:, 0])):
                 # start_time = time.time()
                 means = mean_dffs[i, :]
@@ -349,7 +349,7 @@ class MultiFish:
         repeats_on_time, repeats_on_stim = self.__repeat_indices(nrepeats)
 
         # compute correlation coefficient of ROIs
-        result = sorter(dffs, repeats_on_stim)
+        result = sorter(dffs, repeats_on_time)
         indices = np.asarray(result[:, 0], dtype=int)
         corrs = np.asarray(result[:, 1], dtype=float)
 
@@ -380,6 +380,7 @@ class MultiFish:
         self.type.append("filter_phases")
 
     def __repeat_indices(self, nrepeats):
+
         indices = np.arange(len(self.start_times))
         frac = len(indices)/nrepeats
 
@@ -397,7 +398,7 @@ class MultiFish:
         # get starts and stops timestamps from class start and stop times
         for i in range(nrepeats):
             start_idxs[i] = int(i*frac)
-            stop_idxs[i] = int(np.arange(i*frac, i*frac+frac)[-1])
+            stop_idxs[i] = int(np.arange(i*frac, i*frac+frac)[-1])-1
             start_ts[i] = self.start_times[start_idxs[i]]
             stop_ts[i] = self.stop_times[stop_idxs[i]]
 

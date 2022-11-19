@@ -1,17 +1,19 @@
 # load essential packages
 import os
+
+import h5py
 import matplotlib.pyplot as plt
 import numpy as np
-import modules.functions as fs
-from vxtools.summarize.structure import SummaryFile
 from IPython import embed
-from modules.plotstyle import PlotStyle
-import h5py 
 from scipy import signal as fp
+from vxtools.summarize.structure import SummaryFile
 
-f = SummaryFile('../data2/Summary.hdf5')
+import modules.functions as fs
+from modules.plotstyle import PlotStyle
 
-camera_file = '../data2/Camera.hdf5'
+f = SummaryFile('../data/data2/Summary.hdf5')
+
+camera_file = '/mnt/archlinux/@home/weygoldt/Data/uni/neuro_gp/calciumimaging/data/data2/2022-11-16_fish2_rec0_60um'
 
 def read_hdf5_file(file):
 
@@ -32,7 +34,7 @@ def read_hdf5_file(file):
     return r_eye_pos[0], r_eye_time[0], l_eye_pos[0], l_eye_time[0]
 
 one_rec = fs.data_one_rec_id(f, 0)
-start_time, stop_time, ang_veloc, ang_period, rgb_1, rgb_2 = fs.get_attributes(one_rec)
+start_time, stop_time, target_dur, ang_veloc, ang_period, rgb_1, rgb_2 = fs.get_attributes(one_rec)
 ri_pos, ri_time, le_pos, le_time = read_hdf5_file(camera_file)
 #plt.plot(ri_time[:-1], np.diff(ri_pos))
 

@@ -54,8 +54,7 @@ class rg_activity:
         self.recs = self.__rois.recs
         
         for c1 in self.contr1:
-            embed()
-            exit()
+
             self.contr1_index.append(c1)
             idx = self.__index[self.__contr1 == c1]
             cat_zscores = self.__rois.zscores[:,idx]

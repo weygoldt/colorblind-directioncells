@@ -54,7 +54,8 @@ class rg_activity:
         self.recs = self.__rois.recs
         
         for c1 in self.contr1:
-
+            embed()
+            exit()
             self.contr1_index.append(c1)
             idx = self.__index[self.__contr1 == c1]
             cat_zscores = self.__rois.zscores[:,idx]
@@ -112,7 +113,7 @@ for lab, color, rg_clock in zip(labels, colors, [rg_clock_data, rg_cclock_data])
         contr = []
         for dff in np.array(rg_clock.zscores)[rg_clock.contr1 == rds]:
             for i in range(len(dff[:,0])):
-
+                
                 # the data
                 roi_dff = dff[i,:]
                 contrsts2 = np.array(rg_clock.contr2_index)[rg_clock.contr1 == rds][0]

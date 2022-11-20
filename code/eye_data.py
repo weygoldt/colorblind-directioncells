@@ -138,18 +138,15 @@ class rg_activity:
         # self.mean_dffs = []
         self.contr1_index = []
         self.contr2_index = []
-        self.pmean_eye_contrast = [] 
+        self.eye_dff = [] 
         
         for c1 in self.contr1:
-            embed()
-            exit()
-
             self.contr1_index.append(c1)
             idx = self.__index[self.__contr1 == c1]
-            pmean_contrast = mean_eye[:, idx]
+            pmean_contrast = np.array(mean_eye)[:, idx]
             # mean_dffs = np.mean(cat_dffs, axis=1)
             self.contr2_index.append(self.__contr2[idx])
-            self.pmean_eye_contrast.append(pmean_contrast)
+            self.eye_dff.append(pmean_contrast)
             # self.mean_dffs.append(mean_dffs)
 
         # self.mean_dffs = np.array(self.mean_dffs)
@@ -186,7 +183,7 @@ for lab, color, rg_clock in zip(labels, colors, [rg_clock_data, rg_cclock_data])
     for i1, rds in enumerate(rg_clock.contr1):
         zscores = []
         contr = []
-        for dff in np.array(rg_clock.pmean_eye_contrast)[rg_clock.contr1 == rds]:
+        for dff in np.array(rg_clock.eye_dff)[rg_clock.contr1 == rds]:
             for i in range(len(dff[:,0])):
                 eye_dff = dff[i,:]
                 # the data
@@ -222,7 +219,7 @@ for lab, color, gr_clock in zip(labels, colors, [gr_clock_data, gr_cclock_data])
     for i1, rds in enumerate(gr_clock.contr1):
         zscores = []
         contr = []
-        for dff in np.array(gr_clock.pmean_eye_contrast)[gr_clock.contr1 == rds]:
+        for dff in np.array(gr_clock.eye_dff)[gr_clock.contr1 == rds]:
             for i in range(len(dff[:,0])):
                 eye_dff = dff[i,:]
                 # the data

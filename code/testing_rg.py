@@ -1,155 +1,66 @@
-import os
-
-import h5py
-import matplotlib.pyplot as plt
 import numpy as np
-from IPython import embed
-from matplotlib.patches import Rectangle
-from scipy import interpolate
-from scipy import signal as fp
-from vxtools.summarize.structure import SummaryFile
-import matplotlib.gridspec as gridspec
+import matplotlib.pyplot as plt
 import modules.functions as fs
+import matplotlib.gridspec as gridspec
+from IPython import embed
+from copy import deepcopy
+from vxtools.summarize.structure import SummaryFile
+from modules.dataloader import MultiFish, SingleFish
 from modules.plotstyle import PlotStyle
-from pathlib import Path
-
+from sklearn.metrics import auc
+from scipy.stats import pearsonr
+from modules.contrast import selective_rois_trash, rg_activity_trash, phase_activity
 ps = PlotStyle()
-p = Path('../data/data2')
-folder_names =  np.sort([x.name for x in p.iterdir() if x.is_dir()])
-folder_id = np.char.split(folder_names, '_')
-recs = [int(i[2][3]) for i in folder_id]
-camera_files = sorted(p.glob('*/Camera.hdf5'))
 
-f = SummaryFile('../data/data2/Summary.hdf5')
+# now load the data
+data1 = '../data/data1/'
+data2 = '../data/data2/'
+data3 = '../data/data3/'
 
+f1 = SummaryFile(data1 + 'Summary.hdf5')
+f2 = SummaryFile(data2 + 'Summary.hdf5')
+f3 = SummaryFile(data3 + 'Summary.hdf5')
 
-def read_hdf5_file(file):
-    r_eye_pos = []
-    r_eye_time = []
-    l_eye_pos = []
-    l_eye_time = []
-    with h5py.File(file, 'r') as f:
-        right_eye_pos = f['eyepos_ang_re_pos_0']
-        right_eye_time = f['eyepos_ang_re_pos_0_attr_time']
-        left_eye_pos = f['eyepos_ang_le_pos_0']
-        left_eye_time = f['eyepos_ang_le_pos_0_attr_time']
-        r_eye_pos.append(np.ravel(right_eye_pos))
-        r_eye_time.append(np.ravel(right_eye_time))
-        l_eye_pos.append(np.ravel(left_eye_pos))
-        l_eye_time.append(np.ravel(left_eye_time))
+good_recs1 = np.arange(3,15)
+good_recs2 = [0, 1, 2, 4, 5]
+good_recs3 = [0, 1, 2, 3, 4]
 
-    return r_eye_pos[0], r_eye_time[0], l_eye_pos[0], l_eye_time[0]
+# load matrix of all rois of all layers with good rois
+d1 = SingleFish(f1, good_recs1, overwrite=False)
+d2 = SingleFish(f2, good_recs2, overwrite=False)
+d3 = SingleFish(f3, good_recs3, overwrite=False)
 
-pmean_recs = []
-rec_phases = []
-for file in range(len(camera_files)):
-    one_rec = fs.data_one_rec_id(f, recs[file])
-    start_time, stop_time, target_dur,  ang_veloc, ang_period, rgb_1, rgb_2 = fs.get_attributes(
-        one_rec)
-    ri_pos, ri_time, le_pos, le_time = read_hdf5_file(camera_files[file])
-
-    ri_pos_abs = np.abs(np.diff(ri_pos))
-
-    q75, q25 = np.percentile(ri_pos_abs, [75 ,25])
-    iqr = q75 - q25
-    saccade_cut_off = q75+4*iqr
-    sacc = fp.find_peaks(ri_pos_abs, height=saccade_cut_off)[0]
-    
-    # check for saccade filte is doing his job
-    """    plt.plot(ri_time[:-1], ri_pos_abs)
-    plt.hlines(saccade_cut_off, xmin=ri_time[1], xmax=ri_time[-1])
-"""
-    
-    # removing saccades from the velocity of the eye movement to calculate the mean velocity
-    interp = 0.1
-    einterp = interpolate.interp1d(ri_time, ri_pos)
-
-    velo_right = np.diff(ri_pos)
-    # getting rid of the saccades
-    velo_right[sacc-1] = 0
-    velo_right[sacc+1] = 0
-    velo_right[sacc] = 0
-
-    # check for saccads to be dealt with
-    """
-    fig, ax = plt.subplots()
-    #ax.set_xlim(4227.5, 4249.9)
-    #ax.set_xticks(np.arange(start_time[100], 4250 , 4.07))
-    ax.plot(ri_time[:-1], velo_right)
-    ax.plot(ri_time[:-1], np.diff(ri_pos))
-    for i in range(len(start_time)):
-        ax.vlines(start_time[i], -20, 10, linestyles='dashed', colors='k')
-        ax.text(start_time[i] + ((stop_time[i]-start_time[i])/2) -
-                0.5, 10, f"{ang_veloc[i]}", clip_on=True)
-        red = Rectangle(
-            (start_time[i], -20), ((stop_time[i]-start_time[i])/2), 4, facecolor=(rgb_1[i], 0, 0))
-        green = Rectangle((start_time[i] + (stop_time[i]-start_time[i])/2, -20),
-                        ((stop_time[i]-start_time[i])/2), 4, facecolor=(0, rgb_2[i], 0))
-        ax.add_patch(red)
-        ax.add_patch(green)
-    plt.show()
-    """
-
-    # interplotate to the right time
-
-
-    int_eye = []
-    # calculate the the pmean for the velocity
-    for st, td in zip(start_time[1:-1], target_dur[1:-1]):
-        phase = np.arange(0, td, interp) + st
-        eye_interp = np.array(einterp(phase))
-        int_eye.append(eye_interp)
-
-    rec_phases.append(int_eye)
-    mean_vel = np.asarray([np.mean(x) for x in int_eye])
-    pmean_recs.append(mean_vel)
-
-pmean_recs = np.asarray(pmean_recs)
-red_unique = np.unique(np.array(rgb_1)[~np.isnan(np.array(rgb_1))])
-
-clock = np.array([1 if x > 0 else 0 for x in ang_veloc])
-# counterclockwise motion regressor
-cclock = np.array([1 if x < 0 else 0 for x in ang_veloc])
-
-clock_stim = np.array(clock, dtype=float)
-cclock_stim = np.array(cclock, dtype=float)
-
-clock_stim[clock_stim == 0] = np.nan
-cclock_stim[cclock_stim == 0] = np.nan
-
-red_contr = np.array(rgb_1)
-green_contr = np.array(rgb_2)
-
-red_clock_stim = red_contr*clock_stim
-green_clock_stim = green_contr*clock_stim
-
-red_cclock_stim = red_contr*cclock_stim
-green_cclock_stim = green_contr*cclock_stim
-
+# load all fish in multifish class
+mf = MultiFish([
+    d1, 
+    d2, 
+    d3
+])
 
 class rg_activity:
-    def __init__(self, mean_eye, contr1, contr2):
+    def __init__(self, selective_rois, contr1, contr2):
 
+        self.__rois = selective_rois
         self.__contr1 = contr1
         self.__contr2 = contr2
         self.__index = np.arange(len(self.__contr1))
         self.contr1 = np.unique(self.__contr1[~np.isnan(self.__contr1)])
         self.contr2 = np.unique(self.__contr2[~np.isnan(self.__contr2)])
+        self.zscores = []
         # self.mean_dffs = []
         self.contr1_index = []
         self.contr2_index = []
-        self.pmean_eye_contrast = [] 
+        self.rois = self.__rois.rois
+        self.recs = self.__rois.recs
         
         for c1 in self.contr1:
-            embed()
-            exit()
 
             self.contr1_index.append(c1)
             idx = self.__index[self.__contr1 == c1]
-            pmean_contrast = mean_eye[:, idx]
+            cat_zscores = self.__rois.zscores[:,idx]
             # mean_dffs = np.mean(cat_dffs, axis=1)
             self.contr2_index.append(self.__contr2[idx])
-            self.pmean_eye_contrast.append(pmean_contrast)
+            self.zscores.append(cat_zscores)
             # self.mean_dffs.append(mean_dffs)
 
         # self.mean_dffs = np.array(self.mean_dffs)
@@ -157,15 +68,28 @@ class rg_activity:
         self.contr2_index = np.array(self.contr2_index)
 
 
-rg_clock_data = rg_activity(rec_phases, red_clock_stim[1:-1], green_clock_stim[1:-1])
-rg_cclock_data = rg_activity(rec_phases, red_cclock_stim[1:-1], green_cclock_stim[1:-1])
-
-gr_clock_data = rg_activity(rec_phases,green_clock_stim[1:-1], red_clock_stim[1:-1],)
-gr_cclock_data = rg_activity(rec_phases,green_cclock_stim[1:-1], red_cclock_stim[1:-1],)
+clock = np.array([1 if x > 0 else 0 for x in mf.ang_velocs])
+# counterclockwise motion regressor
+cclock = np.array([1 if x < 0 else 0 for x in mf.ang_velocs])
 
 
 
-# remove axes on right and top of plots
+mfclock = deepcopy(mf)
+mfcclock = deepcopy(mf)
+
+clock = np.asarray([np.nan if x==0 else x for x in clock])
+cclock = np.asarray([np.nan if x==0 else x for x in cclock])
+red_clock = clock * mf.red
+green_clock = clock * mf.green
+red_cclock = cclock * mf.red
+green_cclock = cclock * mf.green
+
+rg_clock_data = rg_activity(mfclock, red_clock, green_clock)
+rg_cclock_data = rg_activity(mfcclock, red_cclock, green_cclock)
+gr_clock_data = rg_activity(mfclock, green_clock, red_clock)
+gr_cclock_data = rg_activity(mfcclock, green_cclock, red_cclock)
+
+
 #| code-fold: true
 
 fig = plt.figure(figsize=(30*ps.cm, 20*ps.cm))
@@ -186,14 +110,15 @@ for lab, color, rg_clock in zip(labels, colors, [rg_clock_data, rg_cclock_data])
     for i1, rds in enumerate(rg_clock.contr1):
         zscores = []
         contr = []
-        for dff in np.array(rg_clock.pmean_eye_contrast)[rg_clock.contr1 == rds]:
+        for dff in np.array(rg_clock.zscores)[rg_clock.contr1 == rds]:
             for i in range(len(dff[:,0])):
-                eye_dff = dff[i,:]
+
                 # the data
+                roi_dff = dff[i,:]
                 contrsts2 = np.array(rg_clock.contr2_index)[rg_clock.contr1 == rds][0]
 
                 # sort the data
-                sort_roi_zscores = eye_dff[np.argsort(contrsts2)]
+                sort_roi_zscores = roi_dff[np.argsort(contrsts2)]
                 sort_contrsts2 = contrsts2[np.argsort(contrsts2)]
 
                 zscores.append(sort_roi_zscores)
@@ -222,14 +147,15 @@ for lab, color, gr_clock in zip(labels, colors, [gr_clock_data, gr_cclock_data])
     for i1, rds in enumerate(gr_clock.contr1):
         zscores = []
         contr = []
-        for dff in np.array(gr_clock.pmean_eye_contrast)[gr_clock.contr1 == rds]:
+        for dff in np.array(gr_clock.zscores)[gr_clock.contr1 == rds]:
             for i in range(len(dff[:,0])):
-                eye_dff = dff[i,:]
+                
                 # the data
-                contrsts2 = np.array(rg_clock.contr2_index)[rg_clock.contr1 == rds][0]
+                roi_dff = dff[i,:]
+                contrsts2 = np.array(gr_clock.contr2_index)[gr_clock.contr1 == rds][0]
 
                 # sort the data
-                sort_roi_zscores = eye_dff[np.argsort(contrsts2)]
+                sort_roi_zscores = roi_dff[np.argsort(contrsts2)]
                 sort_contrsts2 = contrsts2[np.argsort(contrsts2)]
 
                 zscores.append(sort_roi_zscores)
@@ -272,20 +198,20 @@ xaxes_off = [0,1,2]
 [x.spines["bottom"].set_visible(False) for x in np.asarray(stim_axs2)[xaxes_off]]
 
 # set all axes to same tick ranges
-#x_range = np.arange(0,1.5,0.5)
-#y_range = np.arange(-1,2.1,1)
-#[x.set_yticks(y_range) for x in np.asarray(stim_axs1)]
-#[x.set_xticks(x_range) for x in np.asarray(stim_axs1)]
-#[x.set_yticks(y_range) for x in np.asarray(stim_axs2)]
-#[x.set_xticks(x_range) for x in np.asarray(stim_axs2)]
+x_range = np.arange(0,1.5,0.5)
+y_range = np.arange(-1,2.1,1)
+[x.set_yticks(y_range) for x in np.asarray(stim_axs1)]
+[x.set_xticks(x_range) for x in np.asarray(stim_axs1)]
+[x.set_yticks(y_range) for x in np.asarray(stim_axs2)]
+[x.set_xticks(x_range) for x in np.asarray(stim_axs2)]
 
 # set bounds to make axes nicer
-#x_bounds = (0,1)
-#y_bounds = (-1,2)
-#[x.spines.left.set_bounds(y_bounds) for x in np.asarray(stim_axs1)]
-#[x.spines.bottom.set_bounds(x_bounds) for x in np.asarray(stim_axs1)]
-#[x.spines.left.set_bounds(y_bounds) for x in np.asarray(stim_axs2)]
-#[x.spines.bottom.set_bounds(x_bounds) for x in np.asarray(stim_axs2)]
+x_bounds = (0,1)
+y_bounds = (-1,2)
+[x.spines.left.set_bounds(y_bounds) for x in np.asarray(stim_axs1)]
+[x.spines.bottom.set_bounds(x_bounds) for x in np.asarray(stim_axs1)]
+[x.spines.left.set_bounds(y_bounds) for x in np.asarray(stim_axs2)]
+[x.spines.bottom.set_bounds(x_bounds) for x in np.asarray(stim_axs2)]
 
 # make axes shared
 stim_axs1[0].get_shared_x_axes().join(stim_axs1[0], *stim_axs1)

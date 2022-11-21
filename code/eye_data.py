@@ -15,13 +15,13 @@ import modules.functions as fs
 from modules.plotstyle import PlotStyle
 
 ps = PlotStyle()
-p = Path('../data/data3')
+p = Path('../data/data2')
 folder_names = np.sort([x.name for x in p.iterdir() if x.is_dir()])
 folder_id = np.char.split(folder_names, '_')
 recs = [int(i[2][3]) for i in folder_id]
-camera_files = sorted(p.glob('*/Camera.hdf5'))[:5]
-recs = [0, 1, 2, 3, 4]
-f = SummaryFile('../data/data3/Summary.hdf5')
+camera_files = sorted(p.glob('*/Camera.hdf5'))[:]
+#recs = [0,1,2,3,4]
+f = SummaryFile('../data/data2/Summary.hdf5')
 
 
 def read_hdf5_file(file):
@@ -58,13 +58,13 @@ for file, _ in enumerate(camera_files):
 
     saccade_cut_off = q75+1.5*iqr
     sacc = fp.find_peaks(ri_pos_abs, height=saccade_cut_off)[0]
-
+    """
     # check for saccade filte is doing his job
     # plt.plot(ri_time[:-1], ri_pos_abs)
     # plt.hlines(saccade_cut_off, xmin=ri_time[1], xmax=ri_time[-1])
-
+    """
     # removing saccades from the velocity of the eye movement to calculate the mean velocity
-    interp = 0.1
+    interp = 0.2
     einterp = interpolate.interp1d(ri_time, ri_pos)
 
     velo_right = np.diff(ri_pos)
@@ -80,21 +80,13 @@ for file, _ in enumerate(camera_files):
     # #ax.set_xticks(np.arange(start_time[100], 4250 , 4.07))
     # ax.plot(ri_time[:-1], np.diff(ri_pos))
     # ax.plot(ri_time[:-1], velo_right)
-    # # for i in range(len(start_time)):
-    # #     ax.vlines(start_time[i], -20, 10, linestyles='dashed', colors='k')
-    # #     ax.text(start_time[i] + ((stop_time[i]-start_time[i])/2) -
-    # #             0.5, 10, f"{ang_veloc[i]}", clip_on=True)
-    # #     red = Rectangle(
-    # #         (start_time[i], -20), ((stop_time[i]-start_time[i])/2), 4, facecolor=(rgb_1[i], 0, 0))
-    # #     green = Rectangle((start_time[i] + (stop_time[i]-start_time[i])/2, -20),
-    # #                     ((stop_time[i]-start_time[i])/2), 4, facecolor=(0, rgb_2[i], 0))
-    # #     ax.add_patch(red)
-    # #     ax.add_patch(green)
-    # plt.show()
+    # ax.plot(ri_time, ri_pos)
+    # ax.scatter(ri_time[sacc], np.ones_like(velo_right[sacc])*-3)
 
     # interplotate to the right time
-
+    times = []
     int_eye = []
+    velos = []
     # calculate the the pmean for the velocity
     for st, td in zip(start_time[1:-1], target_dur[1:-1]):
         phase = np.arange(0, td, interp) + st
@@ -102,18 +94,62 @@ for file, _ in enumerate(camera_files):
             eye_interp = np.array(einterp(phase))
         except:
             embed()
+        v = fs.velocity1d(phase, eye_interp)
         int_eye.append(eye_interp)
+        times.append(phase)
+        velos.append(v)
 
     rec_phases.append(int_eye)
-    mean_vel = np.asarray([np.sum(x) for x in int_eye])
+    mean_vel = np.asarray([np.nanmean(x)for x in velos])
     pmean_recs.append(mean_vel)
 
+
+
 pmean_recs = np.asarray(pmean_recs)
-red_unique = np.unique(np.array(rgb_1)[~np.isnan(np.array(rgb_1))])
 
 motion = np.asarray([1 if x != 0 else 0 for x in ang_veloc], dtype=float)
-
 motion[motion == 0] = np.nan
+
+red_contr_chroma = []
+green_contr_chroma = []
+#iterate across channels and append chromatic contrasts
+for rgb1, rgb2 in zip(rgb_1[1:-1], rgb_2[1:-1]):
+    if rgb2 == 0:
+        red_contr_chroma.append(rgb1)
+    else:
+        red_contr_chroma.append(np.nan)
+    if rgb1 == 0:
+        green_contr_chroma.append(rgb2)
+    else:
+        green_contr_chroma.append(np.nan)
+
+red_contr_chroma = np.array(red_contr_chroma)
+green_contr_chroma = np.array(green_contr_chroma)
+uniq_conr = np.unique(green_contr_chroma[~np.isnan(green_contr_chroma)]) 
+
+inx_green = np.arange(len(green_contr_chroma))
+inx_green = inx_green[~np.isnan(green_contr_chroma)]
+
+
+eye_mean = []
+for c in uniq_conr:
+    contrast = []
+    for i in range(len(pmean_recs[:, 0])):
+        x = pmean_recs[i,:][green_contr_chroma==c]
+        contrast.append(x)
+    eye_mean.append(contrast)
+
+eye_mean_mean = np.mean(eye_mean, axis=1)
+
+for i in range(len(uniq_conr)):
+    plt.scatter( np.ones_like(eye_mean_mean[i])*uniq_conr[i],  eye_mean_mean[i] )
+
+plt.show()
+
+
+
+
+
 
 red_contr = np.array(rgb_1)
 green_contr = np.array(rgb_2)
@@ -130,7 +166,6 @@ class rg_activity:
         self.__index = np.arange(len(self.__contr1))
         self.contr1 = np.unique(self.__contr1[~np.isnan(self.__contr1)])
         self.contr2 = np.unique(self.__contr2[~np.isnan(self.__contr2)])
-        # self.mean_dffs = []
         self.contr1_index = []
         self.contr2_index = []
         self.eye_dff = []
@@ -145,13 +180,11 @@ class rg_activity:
         self.contr1_index = np.array(self.contr1_index)
         self.contr2_index = np.array(self.contr2_index)
 
-
 rg_motion_data = rg_activity(
     pmean_recs, red_motion_stim[1:-1], green_motion_stim[1:-1])
 
 gr_motion_data = rg_activity(
     pmean_recs, green_motion_stim[1:-1], red_motion_stim[1:-1],)
-
 
 # ------------------------- THE PLOT -----------------------------------#
 
@@ -168,13 +201,13 @@ stim_axs2 = [subfig_r.add_subplot(i) for i in gs1]
 
 # plot the left side of the plot
 colors = [ps.red]
-labels = ['eye-velocity']
 
-for lab, color, rg_clock in zip(labels, colors, [rg_motion_data]):
+for color, rg_clock in zip(colors, [rg_motion_data]):
     for i1, rds in enumerate(rg_clock.contr1):
         zscores = []
         contr = []
         for dff in np.array(rg_clock.eye_dff)[rg_clock.contr1 == rds]:
+
             for i in range(len(dff[:, 0])):
                 eye_dff = dff[i, :]
                 # the data
@@ -202,7 +235,7 @@ for lab, color, rg_clock in zip(labels, colors, [rg_motion_data]):
         stdzscore = np.asarray(stdzscore)
 
         stim_axs1[i1].axhline(0, color="darkgray", lw=1, ls="dashed")
-        stim_axs1[i1].plot(contrs, meanzscore, label=lab,
+        stim_axs1[i1].plot(contrs, meanzscore,
                            c=color, lw=2.5, zorder=100)
         stim_axs1[i1].fill_between(
             contrs, meanzscore-stdzscore, meanzscore+stdzscore, color=color, lw=1, alpha=0.2, label="_")
@@ -210,8 +243,7 @@ for lab, color, rg_clock in zip(labels, colors, [rg_motion_data]):
 
 # plot the right side of the plot
 colors = [ps.green]
-labels = ['clockw.-selective']
-for lab, color, gr_clock in zip(labels, colors, [gr_motion_data]):
+for color, gr_clock in zip(colors, [gr_motion_data]):
     for i1, rds in enumerate(gr_clock.contr1):
         zscores = []
         contr = []
@@ -243,7 +275,7 @@ for lab, color, gr_clock in zip(labels, colors, [gr_motion_data]):
         stdzscore = np.asarray(stdzscore)
 
         stim_axs2[i1].axhline(0, color="darkgray", lw=1, ls="dashed")
-        stim_axs2[i1].plot(contrs, meanzscore, label=lab,
+        stim_axs2[i1].plot(contrs, meanzscore, 
                            c=color, lw=2.5, zorder=100)
         stim_axs2[i1].fill_between(
             contrs, meanzscore-stdzscore, meanzscore+stdzscore, color=color, lw=1, alpha=0.2, label="_")
@@ -272,20 +304,20 @@ xaxes_off = [0, 1, 2]
  for x in np.asarray(stim_axs2)[xaxes_off]]
 
 # set all axes to same tick ranges
-#x_range = np.arange(0,1.5,0.5)
+x_range = np.arange(0,1.5,0.5)
 #y_range = np.arange(-1,2.1,1)
 #[x.set_yticks(y_range) for x in np.asarray(stim_axs1)]
-#[x.set_xticks(x_range) for x in np.asarray(stim_axs1)]
+[x.set_xticks(x_range) for x in np.asarray(stim_axs1)]
 #[x.set_yticks(y_range) for x in np.asarray(stim_axs2)]
-#[x.set_xticks(x_range) for x in np.asarray(stim_axs2)]
+[x.set_xticks(x_range) for x in np.asarray(stim_axs2)]
 
 # set bounds to make axes nicer
-#x_bounds = (0,1)
+x_bounds = (0,1)
 #y_bounds = (-1,2)
 #[x.spines.left.set_bounds(y_bounds) for x in np.asarray(stim_axs1)]
-#[x.spines.bottom.set_bounds(x_bounds) for x in np.asarray(stim_axs1)]
+[x.spines.bottom.set_bounds(x_bounds) for x in np.asarray(stim_axs1)]
 #[x.spines.left.set_bounds(y_bounds) for x in np.asarray(stim_axs2)]
-#[x.spines.bottom.set_bounds(x_bounds) for x in np.asarray(stim_axs2)]
+[x.spines.bottom.set_bounds(x_bounds) for x in np.asarray(stim_axs2)]
 
 # make axes shared
 stim_axs1[0].get_shared_x_axes().join(stim_axs1[0], *stim_axs1)

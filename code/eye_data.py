@@ -63,7 +63,7 @@ for file, _ in enumerate(camera_files):
     # check for saccade filte is doing his job
     # plt.plot(ri_time[:-1], ri_pos_abs)
     # plt.hlines(saccade_cut_off, xmin=ri_time[1], xmax=ri_time[-1])
-
+    """
     # removing saccades from the velocity of the eye movement to calculate the mean velocity
     interp = 0.1
     einterp = interpolate.interp1d(ri_time, ri_pos)

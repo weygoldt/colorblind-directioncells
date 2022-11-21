@@ -1,6 +1,8 @@
 import os
+from pathlib import Path
 
 import h5py
+import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 import numpy as np
 from IPython import embed
@@ -8,10 +10,9 @@ from matplotlib.patches import Rectangle
 from scipy import interpolate
 from scipy import signal as fp
 from vxtools.summarize.structure import SummaryFile
-import matplotlib.gridspec as gridspec
+
 import modules.functions as fs
 from modules.plotstyle import PlotStyle
-from pathlib import Path
 
 ps = PlotStyle()
 p = Path('../data/data3')
@@ -19,50 +20,48 @@ folder_names = np.sort([x.name for x in p.iterdir() if x.is_dir()])
 folder_id = np.char.split(folder_names, '_')
 recs = [int(i[2][3]) for i in folder_id]
 camera_files = sorted(p.glob('*/Camera.hdf5'))[:5]
-recs = [0,1,2,3,4]
+recs = [0, 1, 2, 3, 4]
 f = SummaryFile('../data/data3/Summary.hdf5')
 
 
 def read_hdf5_file(file):
-    r_eye_pos = []
-    r_eye_time = []
-    l_eye_pos = []
-    l_eye_time = []
+
     with h5py.File(file, 'r') as f:
         right_eye_pos = f['eyepos_ang_re_pos_0']
         right_eye_time = f['eyepos_ang_re_pos_0_attr_time']
         left_eye_pos = f['eyepos_ang_le_pos_0']
         left_eye_time = f['eyepos_ang_le_pos_0_attr_time']
-        r_eye_pos.append(np.ravel(right_eye_pos))
-        r_eye_time.append(np.ravel(right_eye_time))
-        l_eye_pos.append(np.ravel(left_eye_pos))
-        l_eye_time.append(np.ravel(left_eye_time))
 
-    return r_eye_pos[0], r_eye_time[0], l_eye_pos[0], l_eye_time[0]
+        r_eye_pos = np.ravel(right_eye_pos)
+        r_eye_time = np.ravel(right_eye_time)
+        l_eye_pos = np.ravel(left_eye_pos)
+        l_eye_time = np.ravel(left_eye_time)
+
+    return r_eye_pos, r_eye_time, l_eye_pos, l_eye_time
 
 
 pmean_recs = []
 rec_phases = []
-for file in range(len(camera_files)):
+
+for file, _ in enumerate(camera_files):
+
     one_rec = fs.data_one_rec_id(f, recs[file])
     start_time, stop_time, target_dur,  ang_veloc, ang_period, rgb_1, rgb_2 = fs.get_attributes(
         one_rec)
     ri_pos, ri_time, le_pos, le_time = read_hdf5_file(camera_files[file])
 
-    ri_time = le_time
-    ri_pos = le_pos
-
     ri_pos_abs = np.abs(np.diff(ri_pos))
 
     q75, q25 = np.percentile(ri_pos_abs, [75, 25])
+
     iqr = q75 - q25
+
     saccade_cut_off = q75+1.5*iqr
     sacc = fp.find_peaks(ri_pos_abs, height=saccade_cut_off)[0]
 
     # check for saccade filte is doing his job
-    """    plt.plot(ri_time[:-1], ri_pos_abs)
-    plt.hlines(saccade_cut_off, xmin=ri_time[1], xmax=ri_time[-1])
-"""
+    # plt.plot(ri_time[:-1], ri_pos_abs)
+    # plt.hlines(saccade_cut_off, xmin=ri_time[1], xmax=ri_time[-1])
 
     # removing saccades from the velocity of the eye movement to calculate the mean velocity
     interp = 0.1
@@ -75,24 +74,23 @@ for file in range(len(camera_files)):
     velo_right[sacc] = 0
 
     # check for saccads to be dealt with
-    """
-    fig, ax = plt.subplots()
-    #ax.set_xlim(4227.5, 4249.9)
-    #ax.set_xticks(np.arange(start_time[100], 4250 , 4.07))
-    ax.plot(ri_time[:-1], velo_right)
-    ax.plot(ri_time[:-1], np.diff(ri_pos))
-    for i in range(len(start_time)):
-        ax.vlines(start_time[i], -20, 10, linestyles='dashed', colors='k')
-        ax.text(start_time[i] + ((stop_time[i]-start_time[i])/2) -
-                0.5, 10, f"{ang_veloc[i]}", clip_on=True)
-        red = Rectangle(
-            (start_time[i], -20), ((stop_time[i]-start_time[i])/2), 4, facecolor=(rgb_1[i], 0, 0))
-        green = Rectangle((start_time[i] + (stop_time[i]-start_time[i])/2, -20),
-                        ((stop_time[i]-start_time[i])/2), 4, facecolor=(0, rgb_2[i], 0))
-        ax.add_patch(red)
-        ax.add_patch(green)
-    plt.show()
-    """
+
+    # fig, ax = plt.subplots()
+    # #ax.set_xlim(4227.5, 4249.9)
+    # #ax.set_xticks(np.arange(start_time[100], 4250 , 4.07))
+    # ax.plot(ri_time[:-1], np.diff(ri_pos))
+    # ax.plot(ri_time[:-1], velo_right)
+    # # for i in range(len(start_time)):
+    # #     ax.vlines(start_time[i], -20, 10, linestyles='dashed', colors='k')
+    # #     ax.text(start_time[i] + ((stop_time[i]-start_time[i])/2) -
+    # #             0.5, 10, f"{ang_veloc[i]}", clip_on=True)
+    # #     red = Rectangle(
+    # #         (start_time[i], -20), ((stop_time[i]-start_time[i])/2), 4, facecolor=(rgb_1[i], 0, 0))
+    # #     green = Rectangle((start_time[i] + (stop_time[i]-start_time[i])/2, -20),
+    # #                     ((stop_time[i]-start_time[i])/2), 4, facecolor=(0, rgb_2[i], 0))
+    # #     ax.add_patch(red)
+    # #     ax.add_patch(green)
+    # plt.show()
 
     # interplotate to the right time
 
@@ -100,34 +98,28 @@ for file in range(len(camera_files)):
     # calculate the the pmean for the velocity
     for st, td in zip(start_time[1:-1], target_dur[1:-1]):
         phase = np.arange(0, td, interp) + st
-        eye_interp = np.array(einterp(phase))
+        try:
+            eye_interp = np.array(einterp(phase))
+        except:
+            embed()
         int_eye.append(eye_interp)
 
     rec_phases.append(int_eye)
-    mean_vel = np.asarray([np.mean(x) for x in int_eye])
+    mean_vel = np.asarray([np.sum(x) for x in int_eye])
     pmean_recs.append(mean_vel)
 
 pmean_recs = np.asarray(pmean_recs)
 red_unique = np.unique(np.array(rgb_1)[~np.isnan(np.array(rgb_1))])
 
-clock = np.array([1 if x > 0 else 0 for x in ang_veloc])
-# counterclockwise motion regressor
-cclock = np.array([1 if x < 0 else 0 for x in ang_veloc])
+motion = np.asarray([1 if x != 0 else 0 for x in ang_veloc], dtype=float)
 
-clock_stim = np.array(clock, dtype=float)
-cclock_stim = np.array(cclock, dtype=float)
-
-clock_stim[clock_stim == 0] = np.nan
-cclock_stim[cclock_stim == 0] = np.nan
+motion[motion == 0] = np.nan
 
 red_contr = np.array(rgb_1)
 green_contr = np.array(rgb_2)
 
-red_clock_stim = red_contr*clock_stim
-green_clock_stim = green_contr*clock_stim
-
-red_cclock_stim = red_contr*cclock_stim
-green_cclock_stim = green_contr*cclock_stim
+red_motion_stim = red_contr * motion
+green_motion_stim = green_contr * motion
 
 
 class rg_activity:
@@ -150,22 +142,18 @@ class rg_activity:
             self.contr2_index.append(self.__contr2[idx])
             self.eye_dff.append(pmean_contrast)
 
-
         self.contr1_index = np.array(self.contr1_index)
         self.contr2_index = np.array(self.contr2_index)
 
 
-rg_clock_data = rg_activity(
-    rec_phases, red_clock_stim[1:-1], green_clock_stim[1:-1])
-rg_cclock_data = rg_activity(
-    rec_phases, red_cclock_stim[1:-1], green_cclock_stim[1:-1])
+rg_motion_data = rg_activity(
+    pmean_recs, red_motion_stim[1:-1], green_motion_stim[1:-1])
 
-gr_clock_data = rg_activity(
-    rec_phases, green_clock_stim[1:-1], red_clock_stim[1:-1],)
-gr_cclock_data = rg_activity(
-    rec_phases, green_cclock_stim[1:-1], red_cclock_stim[1:-1],)
+gr_motion_data = rg_activity(
+    pmean_recs, green_motion_stim[1:-1], red_motion_stim[1:-1],)
 
-#------------------------- THE PLOT -----------------------------------#
+
+# ------------------------- THE PLOT -----------------------------------#
 
 fig = plt.figure(figsize=(30*ps.cm, 20*ps.cm))
 
@@ -179,9 +167,10 @@ gs1 = gridspec.GridSpec(2, 3, figure=subfig_r)
 stim_axs2 = [subfig_r.add_subplot(i) for i in gs1]
 
 # plot the left side of the plot
-colors = [ps.orange, ps.red]
-labels = ['clockw.-selective', 'countercl.-selective']
-for lab, color, rg_clock in zip(labels, colors, [rg_clock_data, rg_cclock_data]):
+colors = [ps.red]
+labels = ['eye-velocity']
+
+for lab, color, rg_clock in zip(labels, colors, [rg_motion_data]):
     for i1, rds in enumerate(rg_clock.contr1):
         zscores = []
         contr = []
@@ -220,9 +209,9 @@ for lab, color, rg_clock in zip(labels, colors, [rg_clock_data, rg_cclock_data])
         stim_axs1[i1].set_title(f"red: {np.round(rds,2)}")
 
 # plot the right side of the plot
-colors = [ps.green, ps.blue]
-labels = ['clockw.-selective', 'countercl.-selective']
-for lab, color, gr_clock in zip(labels, colors, [gr_clock_data, gr_cclock_data]):
+colors = [ps.green]
+labels = ['clockw.-selective']
+for lab, color, gr_clock in zip(labels, colors, [gr_motion_data]):
     for i1, rds in enumerate(gr_clock.contr1):
         zscores = []
         contr = []

@@ -14,13 +14,14 @@ from modules.plotstyle import PlotStyle
 from pathlib import Path
 
 ps = PlotStyle()
-p = Path('../data/data3')
+p = Path('../data/data2')
 folder_names = np.sort([x.name for x in p.iterdir() if x.is_dir()])
 folder_id = np.char.split(folder_names, '_')
 recs = [int(i[2][3]) for i in folder_id]
-camera_files = sorted(p.glob('*/Camera.hdf5'))[:5]
-recs = [0,1,2,3,4]
-f = SummaryFile('../data/data3/Summary.hdf5')
+camera_files = sorted(p.glob('*/Camera.hdf5'))[:]
+#recs = [0,1,2,3,4]
+f = SummaryFile('../data/data2/Summary.hdf5')
+
 
 
 def read_hdf5_file(file):
@@ -49,20 +50,17 @@ for file in range(len(camera_files)):
         one_rec)
     ri_pos, ri_time, le_pos, le_time = read_hdf5_file(camera_files[file])
 
-    ri_time = le_time
-    ri_pos = le_pos
-
     ri_pos_abs = np.abs(np.diff(ri_pos))
 
     q75, q25 = np.percentile(ri_pos_abs, [75, 25])
     iqr = q75 - q25
     saccade_cut_off = q75+1.5*iqr
     sacc = fp.find_peaks(ri_pos_abs, height=saccade_cut_off)[0]
-
+    """
     # check for saccade filte is doing his job
-    """    plt.plot(ri_time[:-1], ri_pos_abs)
+    plt.plot(ri_time[:-1], ri_pos_abs)
     plt.hlines(saccade_cut_off, xmin=ri_time[1], xmax=ri_time[-1])
-"""
+    """
 
     # removing saccades from the velocity of the eye movement to calculate the mean velocity
     interp = 0.1
@@ -150,7 +148,6 @@ class rg_activity:
             self.contr2_index.append(self.__contr2[idx])
             self.eye_dff.append(pmean_contrast)
 
-
         self.contr1_index = np.array(self.contr1_index)
         self.contr2_index = np.array(self.contr2_index)
 
@@ -165,7 +162,7 @@ gr_clock_data = rg_activity(
 gr_cclock_data = rg_activity(
     rec_phases, green_cclock_stim[1:-1], red_cclock_stim[1:-1],)
 
-#------------------------- THE PLOT -----------------------------------#
+# ------------------------- THE PLOT -----------------------------------#
 
 fig = plt.figure(figsize=(30*ps.cm, 20*ps.cm))
 

@@ -20,7 +20,6 @@ f = SummaryFile('../data/data2/Summary.hdf5')
 camera_file = '../data/data2/Camera.hdf5'
 
 
-
 def read_hdf5_file(file):
     r_eye_pos = []
     r_eye_time = []
@@ -59,22 +58,25 @@ for i in sacc:
         negative_peaks.append(ri_time[i])
 
 # plotting stimulus and eye tracking data only from the right eye
-fig, ax = plt.subplots()
+fig, ax = plt.subplots(figsize=(22*ps.cm, 15*ps.cm))
 ax.set_xlim(4227.5, 4249.9)
 ax.set_xticks(np.arange(start_time[100], 4250, 4.07))
-ax.plot(ri_time, ri_pos)
+ax.plot(ri_time, ri_pos, clip_on=True)
 ax.set_xlabel('Time in [s]')
 ax.set_ylabel('Deflection in [mm]')
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
 for i in range(len(start_time)):
-    ax.vlines(start_time[i], -20, 10, linestyles='dashed', colors='k')
+    ax.vlines(start_time[i], -20, 10, linestyles='dashed', colors='k', clip_on=True)
     ax.text(start_time[i] + ((stop_time[i]-start_time[i])/2) -
             0.5, 10, f"{ang_veloc[i]}", clip_on=True)
     red = Rectangle(
-        (start_time[i], -20), ((stop_time[i]-start_time[i])/2), 4, facecolor=(rgb_1[i], 0, 0))
+        (start_time[i], -20), ((stop_time[i]-start_time[i])/2), 4, facecolor=(rgb_1[i], 0, 0), clip_on=True)
     green = Rectangle((start_time[i] + (stop_time[i]-start_time[i])/2, -20),
-                      ((stop_time[i]-start_time[i])/2), 4, facecolor=(0, rgb_2[i], 0))
+                      ((stop_time[i]-start_time[i])/2), 4, facecolor=(0, rgb_2[i], 0), clip_on=True)
     ax.add_patch(red)
     ax.add_patch(green)
-    
-plt.savefig('../figures/eyestimulus.pdf')
+
+
+fs.doublesave('../plots/eyestimulus.pdf')
 plt.show()

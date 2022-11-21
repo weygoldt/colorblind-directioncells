@@ -18,7 +18,7 @@ ps = PlotStyle()
 
 f = SummaryFile('../data/data2/Summary.hdf5')
 
-camera_file = '/mnt/archlinux/@home/weygoldt/Data/uni/neuro_gp/calciumimaging/data/data2/2022-11-16_fish2_rec0_60um/Camera.hdf5'
+camera_file = '../data/data2/Camera.hdf5'
 
 
 def read_hdf5_file(file):

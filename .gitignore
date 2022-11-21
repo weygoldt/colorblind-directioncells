@@ -17,6 +17,7 @@ data3
 data_new
 data3 
 *.hdf5
+plots
 
 # Mac Stuff 
 *.DS_Store

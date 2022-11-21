@@ -1,6 +1,8 @@
 import os
+from pathlib import Path
 
 import h5py
+import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 import numpy as np
 from IPython import embed
@@ -8,16 +10,15 @@ from matplotlib.patches import Rectangle
 from scipy import interpolate
 from scipy import signal as fp
 from vxtools.summarize.structure import SummaryFile
-import matplotlib.gridspec as gridspec
+
 import modules.functions as fs
 from modules.plotstyle import PlotStyle
-from pathlib import Path
 
 ps = PlotStyle()
 
 f = SummaryFile('../data/data2/Summary.hdf5')
 
-camera_file = '../data/data2/Camera.hdf5'
+camera_file = '/mnt/archlinux/@home/weygoldt/Data/uni/neuro_gp/calciumimaging/data/data2/2022-11-16_fish2_rec0_60um/Camera.hdf5'
 
 
 def read_hdf5_file(file):
@@ -68,7 +69,7 @@ ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
 for i in range(len(start_time)):
     ax.vlines(start_time[i], -20, 10, linestyles='dashed',
-              colors='k',)
+              colors='k', clip_on=True)
     ax.text(start_time[i] + ((stop_time[i]-start_time[i])/2) -
             0.5, 10, f"{ang_veloc[i]}", )
     red = Rectangle(
@@ -79,5 +80,5 @@ for i in range(len(start_time)):
     ax.add_patch(green)
 
 
-fs.doublesave('../plots/eyestimulus')
+# fs.doublesave('../plots/eyestimulus')
 plt.show()

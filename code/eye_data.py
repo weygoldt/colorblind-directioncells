@@ -147,12 +147,10 @@ class rg_activity:
             self.contr1_index.append(c1)
             idx = self.__index[self.__contr1 == c1]
             pmean_contrast = np.array(mean_eye)[:, idx]
-            # mean_dffs = np.mean(cat_dffs, axis=1)
             self.contr2_index.append(self.__contr2[idx])
             self.eye_dff.append(pmean_contrast)
-            # self.mean_dffs.append(mean_dffs)
 
-        # self.mean_dffs = np.array(self.mean_dffs)
+
         self.contr1_index = np.array(self.contr1_index)
         self.contr2_index = np.array(self.contr2_index)
 
@@ -167,9 +165,7 @@ gr_clock_data = rg_activity(
 gr_cclock_data = rg_activity(
     rec_phases, green_cclock_stim[1:-1], red_cclock_stim[1:-1],)
 
-
-# remove axes on right and top of plots
-# | code-fold: true
+#------------------------- THE PLOT -----------------------------------#
 
 fig = plt.figure(figsize=(30*ps.cm, 20*ps.cm))
 

@@ -78,5 +78,5 @@ for i in range(len(start_time)):
     ax.add_patch(green)
 
 
-fs.doublesave('../plots/eyestimulus.pdf')
+fs.doublesave('../plots/eyestimulus')
 plt.show()

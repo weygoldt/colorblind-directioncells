@@ -343,7 +343,10 @@ class MultiFish:
 
         self.dffs = np.concatenate(all_dffs)
         self.zscores = np.concatenate(all_zscores)
-        self.eye_velocs = np.concatenate(all_eye_velocs)
+        try:
+            self.eye_velocs = np.concatenate(all_eye_velocs)
+        except:
+            pass
 
     def phase_means(self):
 

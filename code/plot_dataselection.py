@@ -110,4 +110,11 @@ mfclock.filter_rois(index_clock)
 mfcclock.filter_rois(index_cclock)
 
 # remove pauses
-pause_index = np.arange(len(mf.ang_velocs))
+pause_index = np.arange(len(mf.ang_velocs))[mf.ang_velocs == 0]
+mf.filter_phases(pause_index)
+mfclock.filter_phases(pause_index)
+mfcclock.filter_phases(pause_index)
+
+# make sorter
+sorter = [(x, y, z) for x, y, z in zip(mf.ang_velocs, mf.red, mf.green)]
+sorter_indices = np.arange(len(mf.red))

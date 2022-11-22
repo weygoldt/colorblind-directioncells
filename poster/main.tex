@@ -22,7 +22,6 @@ blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default val
    to a grating of different colors, but little is known about the cortical structures conveing the
    \glqq color-motion\grqq{} perception. We wanted to the investigate the 
    optic tectum of the zebrafish larvae with calcium imaging. 
-
     \vspace{0.6cm}
     \begin{tikzfigure}[]
         \label{griddrawing}
@@ -30,24 +29,30 @@ blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default val
     \end{tikzfigure} 
 }
 
-\myblock[MyBlock]{Event detection}{
-    Detection of synchrony:
-    \begin{enumerate}
-        \setlength\itemsep{0.5em}
-        \item Extract pairwise EOD$f$ tracks (\textbf{A}).
-        \item Bandpass-filter on two time scales (\textbf{B}).
-        \item \textbf{Sliding-window cross-covariances} of filtered track-pairs, extract maxima across all lags (black line, \textbf{C}).
-        \item Detect peaks in covariances. Simultaneously co-occurring covariance peaks are "events" (\textbf{D}).
-        \item Manual validation of detected synchronous modulations using a minimalist GUI.
-    \end{enumerate}
-    Detection of physical interactions using proximity, velocity and relative angle of heading trajectories between fish.
-    \vspace{0.85cm}
+\myblock[MyBlock]{Preprocessing:}{
+    \textbf{1. Region of Interests (ROI):} corrosponds to neurons with 
+    genetically encoded caclium indicators. The lumiance $f$ of the calcium imaging is calculated from the change of luminance normalized to the average luminance $f = \frac{\Delta f}{f}$.   
+    
+    \vspace{0.6}
+    \begin{minipage}{0.07\textwidth}
     \begin{tikzfigure}[]
-        \label{detector}
-        \includegraphics[width=\linewidth]{figs/CovDetector_backend_ids_26788_26789_index_0.pdf}
+        \label{Rois}
+        \includegraphics[width=7cm]{figs/Screenshot 2022-11-17 at 19.05.14.png}
     \end{tikzfigure} 
-    \vspace{0cm}
-}
+    \end{minipage}
+    \begin{minipage}{.1\textwidth}
+    \begin{tikzfigure}[]
+        \label{Raw}
+        \includegraphics[width=16cm]{figs/raw2.pdf}
+    \end{tikzfigure} 
+    \end{minipage}
+
+    \vspace{0.6cm}
+    \textbf{2. Active ROIs:}
+    To get the active ROIs we computed the correlation within repeats.   
+
+
+    }
 
 \column{0.6666}
 \myblock[MyBlock]{Detected modulations}{

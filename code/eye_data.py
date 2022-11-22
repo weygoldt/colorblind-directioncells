@@ -56,7 +56,7 @@ for file, _ in enumerate(camera_files):
 
     iqr = q75 - q25
 
-    saccade_cut_off = q75+1.5*iqr
+    saccade_cut_off = q75+5*iqr
     sacc = fp.find_peaks(ri_pos_abs, height=saccade_cut_off)[0]
     """
     # check for saccade filte is doing his job
@@ -75,13 +75,13 @@ for file, _ in enumerate(camera_files):
 
     # check for saccads to be dealt with
 
-    # fig, ax = plt.subplots()
-    # #ax.set_xlim(4227.5, 4249.9)
-    # #ax.set_xticks(np.arange(start_time[100], 4250 , 4.07))
-    # ax.plot(ri_time[:-1], np.diff(ri_pos))
-    # ax.plot(ri_time[:-1], velo_right)
-    # ax.plot(ri_time, ri_pos)
-    # ax.scatter(ri_time[sacc], np.ones_like(velo_right[sacc])*-3)
+    fig, ax = plt.subplots()
+    #ax.set_xlim(4227.5, 4249.9)
+    #ax.set_xticks(np.arange(start_time[100], 4250 , 4.07))
+    ax.plot(ri_time[:-1], np.diff(ri_pos))
+    ax.plot(ri_time[:-1], velo_right)
+    ax.plot(ri_time, ri_pos)
+    ax.scatter(ri_time[sacc], np.ones_like(velo_right[sacc])*-3)
 
     # interplotate to the right time
     times = []
@@ -100,9 +100,8 @@ for file, _ in enumerate(camera_files):
         velos.append(v)
 
     rec_phases.append(int_eye)
-    mean_vel = np.asarray([np.nanmean(x)for x in velos])
+    mean_vel = np.asarray([abs(np.nanmean(x))for x in velos])
     pmean_recs.append(mean_vel)
-
 
 
 pmean_recs = np.asarray(pmean_recs)
@@ -127,15 +126,11 @@ red_contr_chroma = np.array(red_contr_chroma)
 green_contr_chroma = np.array(green_contr_chroma)
 uniq_conr = np.unique(green_contr_chroma[~np.isnan(green_contr_chroma)]) 
 
-inx_green = np.arange(len(green_contr_chroma))
-inx_green = inx_green[~np.isnan(green_contr_chroma)]
-
-
 eye_mean = []
 for c in uniq_conr:
     contrast = []
     for i in range(len(pmean_recs[:, 0])):
-        x = pmean_recs[i,:][green_contr_chroma==c]
+        x = pmean_recs[i,:][red_contr_chroma==c]
         contrast.append(x)
     eye_mean.append(contrast)
 
@@ -147,6 +142,29 @@ for i in range(len(uniq_conr)):
 plt.show()
 
 
+clock = np.array([1 if x > 0 else np.nan  for x in ang_veloc])
+cclock = np.array([1 if x < 0 else np.nan  for x in ang_veloc])
+acromatic_c = abs(np.array(rgb_1) - np.array(rgb_2)) [1:-1] * clock[1:-1]
+acromatic_cc = abs(np.array(rgb_1) - np.array(rgb_2)) [1:-1] * cclock[1:-1]
+
+uniq_acromatic = np.unique(acromatic_c)
+eye_mean = []
+for c in uniq_acromatic:
+    contrast = []
+    for i in range(len(pmean_recs[:, 0])):
+        x = pmean_recs[i,:][acromatic_c==c]
+        contrast.append(x)
+
+    eye_mean.append(contrast)
+
+eye_mean_mean = np.mean(np.array(eye_mean, dtype='object'), axis=1)
+
+for i in range(len(uniq_acromatic)):
+    plt.scatter( np.ones_like(eye_mean_mean[i])*uniq_acromatic[i],  eye_mean_mean[i] )
+
+plt.show()
+embed()
+exit()
 
 
 

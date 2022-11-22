@@ -28,9 +28,9 @@ good_recs2 = [0, 1, 2, 4, 5]
 good_recs3 = [0, 1, 2, 3, 4]
 
 # load matrix of all rois of all layers with good rois
-d1 = SingleFish(f1, good_recs1, overwrite=False, behav=False)
-d2 = SingleFish(f2, good_recs2, overwrite=False, behav=True)
-d3 = SingleFish(f3, good_recs3, overwrite=False, behav=True)
+d2 = SingleFish(f2, good_recs2, overwrite=False,)
+d1 = SingleFish(f1, good_recs1, overwrite=False,)
+d3 = SingleFish(f3, good_recs3, overwrite=False,)
 
 # load all fish in multifish class
 mf = MultiFish([
@@ -42,8 +42,24 @@ mf = MultiFish([
 
 extent = (mf.times.min(), mf.times.max(), 0, len(mf.zscores[:,0]))
 temp_zscores = np.asarray([fs.flatten(x) for x in mf.zscores])
-
-for i, roi in enumerate(range(500)):
+n = 10
+min = []
+max = []
+fig, ax = plt.subplots(figsize=(ps.cm*17, ps.cm*12))
+for i, roi in enumerate(range(n+1)):
     dff = temp_zscores[i, :]
-    plt.plot(i + (dff - dff.min()) / (dff.max() - dff.min()), color='black', linewidth='1.')
+    max.append(np.max(dff))
+    min.append(np.min(dff))
+
+for i, roi in enumerate(range(n+1)):
+    dff = temp_zscores[i, :]
+    ax.plot(i + (dff - np.min(min) ) / (np.max(max) - np.min(min)), color='black', linewidth='1.')
+    ax.set_xlabel("Time [s]")
+    ax.set_ylabel("ROIs")
+    ax.set_yticks(np.arange(0, n+0.1, 2))
+    ax.spines["right"].set_visible(False)
+    ax.spines["top"].set_visible(False)
+    ax.set_ylim(-1, n+1)
+
+fs.doublesave('../poster/figs/raw2')
 plt.show()

@@ -53,8 +53,9 @@ def velocity1d(t, d):
     v = dx / dt
 
     # add nans to make same dimension as input
-    v = nanpad(v, position="center", padlen=1)
-    return v 
+    # v = nanpad(v, position="center", padlen=1)
+    return v
+
 
 def doublesave(title):
     plt.savefig(f"{title}.pdf")

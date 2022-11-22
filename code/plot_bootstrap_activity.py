@@ -3,7 +3,6 @@ from copy import deepcopy
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 import numpy as np
-import scipy.stats
 from IPython import embed
 from scipy.stats import pearsonr
 from sklearn.metrics import auc
@@ -48,7 +47,7 @@ class rg_activity:
         self.contr2_index = np.array(self.contr2_index)
 
 
-class rg_activity_mating:
+class combine_rg_activities:
     def __init__(self, rg_activities):
 
         self.zscores = np.concatenate(
@@ -59,7 +58,7 @@ class rg_activity_mating:
         self.contr2 = [x.contr2 for x in rg_activities][0]
 
 
-def dataconverter(data, nresamples=10000, subsetsize_resampling=0.95):
+def dataconverter(data, nresamples=10000, subsetsize_resampling=0.9):
 
     contrast1 = []
     contrast2 = []
@@ -166,8 +165,8 @@ d3 = SingleFish(f3, good_recs3, overwrite=False)
 # load all fish in multifish class
 mf = MultiFish([
     d1,
-    # d2,
-    # d3
+    d2,
+    d3
 ])
 
 # compute the mean in each phase
@@ -207,7 +206,6 @@ corrs_thresh = corrs[corrs > thresh]
 
 # create the subset of the dataset for these indices
 mf.filter_rois(indices_thresh)
-
 print(f"Old number of indices: {len(indices)}")
 print(f"New number of indices: {len(indices_thresh)}")
 print(f"Number of ROIs after thresholding: {len(mf.dffs[:,0])}")
@@ -273,22 +271,22 @@ for i in range(len(bootstr_data_cclock.zscores[:, 0])):
     np.random.shuffle(cclock_data)
     bootstr_data_cclock.zscores[i, cclock_index] = cclock_data
 
+# make the bootstrap datasets
 rg_bootstr_clock = rg_activity(bootstr_data_clock, red_clock, green_clock)
 rg_bootstr_cclock = rg_activity(bootstr_data_cclock, red_cclock, green_cclock)
 gr_bootstr_clock = rg_activity(bootstr_data_clock, green_clock, red_clock)
 gr_bootstr_cclock = rg_activity(bootstr_data_cclock, green_cclock, red_cclock)
 
-rg_bootstr = rg_activity_mating([rg_bootstr_cclock, rg_bootstr_clock])
-gr_bootstr = rg_activity_mating([gr_bootstr_cclock, gr_bootstr_clock])
+# combine cells for both directions
+rg_bootstr = combine_rg_activities([rg_bootstr_cclock, rg_bootstr_clock])
+gr_bootstr = combine_rg_activities([gr_bootstr_cclock, gr_bootstr_clock])
 
 fig = plt.figure(figsize=(30*ps.cm, 20*ps.cm))
 
 # build the subfigures
 (subfig_l, subfig_r) = fig.subfigures(1, 2, hspace=0.05, width_ratios=[1, 1])
-
 gs0 = gridspec.GridSpec(2, 3, figure=subfig_l)
 stim_axs1 = [subfig_l.add_subplot(i) for i in gs0]
-
 gs1 = gridspec.GridSpec(2, 3, figure=subfig_r)
 stim_axs2 = [subfig_r.add_subplot(i) for i in gs1]
 
@@ -312,17 +310,20 @@ _, _, mean_zscores_brg, q025_zscores_brg, q975_zscores_brg = dataconverter(
 
 for i, ax in enumerate(stim_axs1):
 
+    # plot mean lines
     ax.plot(contrast2[i], mean_zscores_c[i], lw=2, c=ps.red)
     ax.plot(contrast2[i], mean_zscores_cc[i], lw=2, c=ps.orange)
-    ax.plot(contrast2[i], mean_zscores_brg[i], lw=2, c=ps.blue)
+    # ax.plot(contrast2[i], mean_zscores_brg[i], lw=2, c=ps.blue)
 
+    # plot bootstrapped confidence intervals
     ax.fill_between(contrast2[i], q025_zscores_c[i],
                     q975_zscores_c[i], alpha=0.2, color=ps.red)
     ax.fill_between(contrast2[i], q025_zscores_cc[i],
                     q975_zscores_cc[i], alpha=0.2, color=ps.orange)
-    ax.fill_between(contrast2[i], q025_zscores_brg[i],
-                    q975_zscores_brg[i], alpha=0.2, color=ps.blue)
+    # ax.fill_between(contrast2[i], q025_zscores_brg[i],
+    #                 q975_zscores_brg[i], alpha=0.2, color=ps.blue)
 
+    # plot zero line
     ax.axhline(0, lw=1, ls='dashed', c='darkgray')
 
 # plot the right side of the plot
@@ -339,17 +340,20 @@ _, _, mean_zscores_bgr, q025_zscores_bgr, q975_zscores_bgr = dataconverter(
 
 for i, ax in enumerate(stim_axs2):
 
-    ax.plot(contrast2[i], mean_zscores_c[i])
-    ax.plot(contrast2[i], mean_zscores_cc[i])
-    ax.plot(contrast2[i], mean_zscores_bgr[i])
+    # plot mean lines
+    ax.plot(contrast2[i], mean_zscores_c[i], color=ps.c1, lw=2)
+    ax.plot(contrast2[i], mean_zscores_cc[i], color=ps.c2, lw=2)
+    # ax.plot(contrast2[i], mean_zscores_bgr[i])
 
+    # plot bootstrapped confidence intervals
     ax.fill_between(contrast2[i], q025_zscores_c[i],
-                    q975_zscores_c[i], alpha=0.2)
+                    q975_zscores_c[i], alpha=0.2, color=ps.c1)
     ax.fill_between(contrast2[i], q025_zscores_cc[i],
-                    q975_zscores_cc[i], alpha=0.2)
-    ax.fill_between(contrast2[i], q025_zscores_bgr[i],
-                    q975_zscores_bgr[i], alpha=0.2)
+                    q975_zscores_cc[i], alpha=0.2, color=ps.c2)
+    # ax.fill_between(contrast2[i], q025_zscores_bgr[i],
+    #                 q975_zscores_bgr[i], alpha=0.2)
 
+    # plot zero line
     ax.axhline(0, lw=1, ls='dashed', c='darkgray')
 
 # remove axes on right and top of plots
@@ -376,7 +380,7 @@ xaxes_off = [0, 1, 2]
 
 # set all axes to same tick ranges
 x_range = np.arange(0, 1.5, 0.5)
-y_range = np.arange(-1, 2.1, 1)
+y_range = np.arange(-1, 3.1, 1)
 [x.set_yticks(y_range) for x in np.asarray(stim_axs1)]
 [x.set_xticks(x_range) for x in np.asarray(stim_axs1)]
 [x.set_yticks(y_range) for x in np.asarray(stim_axs2)]
@@ -384,7 +388,7 @@ y_range = np.arange(-1, 2.1, 1)
 
 # set bounds to make axes nicer
 x_bounds = (0, 1)
-y_bounds = (-1, 2)
+y_bounds = (-1, 3)
 [x.spines.left.set_bounds(y_bounds) for x in np.asarray(stim_axs1)]
 [x.spines.bottom.set_bounds(x_bounds) for x in np.asarray(stim_axs1)]
 [x.spines.left.set_bounds(y_bounds) for x in np.asarray(stim_axs2)]
@@ -413,5 +417,4 @@ subfig_r.legend(handles2, labels2, loc='upper center', ncol=2)
 plt.subplots_adjust(left=0.175, right=0.975, top=0.87,
                     bottom=0.1, hspace=0.17, wspace=0.15)
 fs.doublesave("../plots/contrast_curves")
-
 plt.show()

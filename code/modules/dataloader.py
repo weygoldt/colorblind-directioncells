@@ -363,9 +363,11 @@ class MultiFish:
         # make new zscores
         self.zscores = np.asarray([np.array([np.mean(x) for x in roi_zscore])
                                    for roi_zscore in self.zscores])
-
-        self.eye_velocs = np.asarray([np.array([np.max(x) for x in eye_v])
+        try:
+            self.eye_velocs = np.asarray([np.array([np.max(x) for x in eye_v])
                                       for eye_v in self.eye_velocs])
+        except:
+            pass
 
         self.type.append("phase_means")
 

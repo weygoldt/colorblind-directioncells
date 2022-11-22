@@ -347,6 +347,7 @@ class MultiFish:
             self.eye_velocs = np.concatenate(all_eye_velocs)
         except:
             pass
+
     def phase_means(self):
 
         print("")
@@ -397,9 +398,9 @@ class MultiFish:
             zscore = self.zscores[roi, :]
 
             # split into 3 repeats
-            split_dff = np.asarray([dff[x:y]
+            split_dff = np.asarray([dff[x:y+1]
                                     for x, y in zip(start_idxs, stop_idxs)])
-            split_zscore = np.asarray([zscore[x:y]
+            split_zscore = np.asarray([zscore[x:y+1]
                                        for x, y in zip(start_idxs, stop_idxs)])
 
             # compute mean of repeats
@@ -410,12 +411,13 @@ class MultiFish:
             newdffs.append(mean_dff)
             newzscores.append(mean_zscore)
 
-        self.red = self.red[repeats_on_stim[0][0]:repeats_on_stim[0][1]]
-        self.green = self.green[repeats_on_stim[0][0]:repeats_on_stim[0][1]]
+        self.red = self.red[repeats_on_stim[0][0]:repeats_on_stim[0][1] + 1]
+        self.green = self.green[repeats_on_stim[0]
+                                [0]:repeats_on_stim[0][1] + 1]
         self.ang_velocs = self.ang_velocs[repeats_on_stim[0]
-                                          [0]:repeats_on_stim[0][1]]
+                                          [0]:repeats_on_stim[0][1] + 1]
         self.ang_periods = self.ang_periods[repeats_on_stim[0]
-                                            [0]:repeats_on_stim[0][1]]
+                                            [0]:repeats_on_stim[0][1] + 1]
         self.dffs = np.asanyarray(newdffs)
         self.zscores = np.asarray(newzscores)
         self.times = newtimes

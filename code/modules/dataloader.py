@@ -17,6 +17,8 @@ class SingleFish:
 
     def __init__(self, SummaryFile, recordings, overwrite=False, behav=False):
 
+        self.behav = behav
+
         def read_hdf5_file(file):
             with h5py.File(file, 'r') as f:
                 right_eye_pos = f['eyepos_ang_re_pos_0']
@@ -62,7 +64,7 @@ class SingleFish:
             self.red = np.load(self.dataroot + '/red.npy')
             self.green = np.load(self.dataroot + '/green.npy')
             if behav == True:
-                self.eye_velos = np.load(self.dataroot + '/eye_velocs.npy')
+                self.eye_velocs = np.load(self.dataroot + '/eye_velocs.npy')
 
         # if not the case, recompute and save the stuff
         else:
@@ -77,7 +79,7 @@ class SingleFish:
                 recs = np.asarray([int(i[2][3]) for i in folder_id])
                 camera_files = np.array(sorted(p.glob('*/Camera.hdf5')))
 
-                self.rec_velos = []
+                rec_velos = []
 
                 # get the data
                 for file in range(len(camera_files)):
@@ -139,9 +141,9 @@ class SingleFish:
 
                     velos_norm = np.asarray(velos_norm)
 
-                    self.rec_velos.append(velos_norm)
+                    rec_velos.append(velos_norm)
 
-                self.eye_velocs = np.asarray(self.rec_velos)
+                self.eye_velocs = np.asarray(rec_velos)
 
             interp_dt = 0.1
 
@@ -337,7 +339,7 @@ class MultiFish:
         # get data
         all_dffs = [fish.dffs for fish in fishes]
         all_zscores = [fish.zscores for fish in fishes]
-        all_eye_velocs = [fish.eye_velos for fish in fishes]
+        all_eye_velocs = [fish.eye_velocs for fish in fishes if fish.behav]
 
         self.dffs = np.concatenate(all_dffs)
         self.zscores = np.concatenate(all_zscores)
@@ -371,7 +373,9 @@ class MultiFish:
         print(
             f"{tc.succ('[ MultiFish.repeat_means ]')} Computing means across repeats ...")
 
-        repeats_on_time, repeats_on_stim = self.__repeat_indices(nrepeats)
+        # embed()
+
+        repeats_on_time, repeats_on_stim = self.repeat_indices(nrepeats)
 
         rindex = repeats_on_time
         start_idxs = [x[0] for x in repeats_on_stim]
@@ -389,9 +393,9 @@ class MultiFish:
             zscore = self.zscores[roi, :]
 
             # split into 3 repeats
-            split_dff = np.asarray([dff[x:y+1]
+            split_dff = np.asarray([dff[x:y]
                                     for x, y in zip(start_idxs, stop_idxs)])
-            split_zscore = np.asarray([zscore[x:y+1]
+            split_zscore = np.asarray([zscore[x:y]
                                        for x, y in zip(start_idxs, stop_idxs)])
 
             # compute mean of repeats
@@ -402,6 +406,12 @@ class MultiFish:
             newdffs.append(mean_dff)
             newzscores.append(mean_zscore)
 
+        self.red = self.red[repeats_on_stim[0][0]:repeats_on_stim[0][1]]
+        self.green = self.green[repeats_on_stim[0][0]:repeats_on_stim[0][1]]
+        self.ang_velocs = self.ang_velocs[repeats_on_stim[0]
+                                          [0]:repeats_on_stim[0][1]]
+        self.ang_periods = self.ang_periods[repeats_on_stim[0]
+                                            [0]:repeats_on_stim[0][1]]
         self.dffs = np.asanyarray(newdffs)
         self.zscores = np.asarray(newzscores)
         self.times = newtimes
@@ -449,10 +459,15 @@ class MultiFish:
 
             return active_rois_sorted
 
-        repeats_on_time, repeats_on_stim = self.__repeat_indices(nrepeats)
+        repeats_on_time, repeats_on_stim = self.repeat_indices(nrepeats)
+
+        if 'phase_means' in self.type:
+            sort_indices = repeats_on_stim
+        else:
+            sort_indices = repeats_on_time
 
         # compute correlation coefficient of ROIs
-        result = sorter(dffs, repeats_on_time)
+        result = sorter(dffs, sort_indices)
         indices = np.asarray(result[:, 0], dtype=int)
         corrs = np.asarray(result[:, 1], dtype=float)
 
@@ -483,7 +498,9 @@ class MultiFish:
 
         self.type.append("filter_phases")
 
-    def __repeat_indices(self, nrepeats):
+    def repeat_indices(self, nrepeats):
+
+        # embed()
 
         indices = np.arange(len(self.start_times))
         frac = len(indices)/nrepeats
@@ -502,7 +519,7 @@ class MultiFish:
         # get starts and stops timestamps from class start and stop times
         for i in range(nrepeats):
             start_idxs[i] = int(i*frac)
-            stop_idxs[i] = int(np.arange(i*frac, i*frac+frac)[-1])-1
+            stop_idxs[i] = int(np.arange(i*frac, i*frac+frac)[-1])
             start_ts[i] = self.start_times[start_idxs[i]]
             stop_ts[i] = self.stop_times[stop_idxs[i]]
 

@@ -1,4 +1,4 @@
-#look at me 
+# look at me
 
 import os
 from pathlib import Path
@@ -24,6 +24,8 @@ recs = [int(i[2][3]) for i in folder_id]
 camera_files = sorted(p.glob('*/Camera.hdf5'))[:]
 #recs = [0,1,2,3,4]
 f = SummaryFile('../data/data2/Summary.hdf5')
+
+
 def read_hdf5_file(file):
 
     with h5py.File(file, 'r') as f:
@@ -44,9 +46,9 @@ r_eye_pos, r_eye_time, l_eye_pos, l_eye_time = read_hdf5_file(camera_files[0])
 
 one_rec = fs.data_one_rec_id(f, recs[0])
 start_time, stop_time, target_dur, ang_veloc, ang_period, rgb_1, rgb_2 = fs.get_attributes(
-        one_rec)
+    one_rec)
 
-interp = 0.05 
+interp = 0.05
 einterp = interpolate.interp1d(r_eye_time, r_eye_pos)
 int_eye = []
 times = []
@@ -60,10 +62,11 @@ for st, td in zip(start_time[1:-1], target_dur[1:-1]):
     times.append(phase)
     velos.append(v)
 
-# getting rid of the saccades 
+# getting rid of the saccades
+
 
 r_velos = np.ravel(np.abs(velos))
-q75, q25 = np.nanpercentile(r_velos, [75, 25])
+q75, q25 = np.percentile(r_velos, [75, 25])
 iqr = q75 - q25
 saccade_cut_off = q75+2*iqr
 sacc = fp.find_peaks(r_velos, height=saccade_cut_off)[0]
@@ -71,10 +74,11 @@ saccs_idx = [sacc-1, sacc, sacc+1]
 new_velo = np.delete(r_velos, saccs_idx)
 new_time = np.delete(np.ravel(times), saccs_idx)
 
-
+"""
 inter_vel = []
-interp = 0.05 
+interp = 0.05
 vinterp = interpolate.interp1d(new_time, new_velo)
+
 
 for st, td in zip(start_time[1:-1], target_dur[1:-1]):
     phase = np.arange(0, td, interp) + st
@@ -85,7 +89,8 @@ plt.plot(np.ravel(times), np.ravel(inter_vel))
 plt.plot(np.ravel(times), np.ravel(velos))
 plt.show()
 
-# second try 
+"""
+# second try
 velos1 = np.copy(velos)
 q75, q25 = np.nanpercentile(np.abs(velos1), [75, 25])
 iqr = q75 - q25
@@ -95,10 +100,10 @@ for v in range(len(velos1)):
     sacc = fp.find_peaks(np.abs(velos1[v]), height=saccade_cut_off)[0]
     velos1[v][sacc-1] = np.nanmean(velos1[v])
     velos1[v][sacc+1] = np.nanmean(velos1[v])
-    velos1[v][sacc]   = np.nanmean(velos1[v])
+    velos1[v][sacc] = np.nanmean(velos1[v])
 
 plt.plot(np.ravel(times), np.ravel(velos1))
 plt.plot(np.ravel(times), np.ravel(velos))
 plt.show()
-
-
+embed()
+exit()

@@ -28,9 +28,9 @@ good_recs2 = [0, 1, 2, 4, 5]
 good_recs3 = [0, 1, 2, 3, 4]
 
 # load matrix of all rois of all layers with good rois
-d1 = SingleFish(f1, good_recs1, overwrite=False)
-d2 = SingleFish(f2, good_recs2, overwrite=False)
-d3 = SingleFish(f3, good_recs3, overwrite=False)
+d1 = SingleFish(f1, good_recs1, overwrite=False, behav=False)
+d2 = SingleFish(f2, good_recs2, overwrite=False, behav=True)
+d3 = SingleFish(f3, good_recs3, overwrite=False, behav=True)
 
 # load all fish in multifish class
 mf = MultiFish([

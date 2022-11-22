@@ -10,7 +10,6 @@ from matplotlib.patches import Rectangle
 from scipy import interpolate
 from scipy import signal as fp
 from vxtools.summarize.structure import SummaryFile
-
 import modules.functions as fs
 from modules.plotstyle import PlotStyle
 
@@ -44,6 +43,8 @@ start_time, stop_time, target_dur,  ang_veloc, ang_period, rgb_1, rgb_2 = fs.get
     one_rec)
 ri_pos, ri_time, le_pos, le_time = read_hdf5_file(camera_file)
 
+embed()
+exit()
 # take the absute value:
 ri_pos_abs = np.abs(np.diff(ri_pos))
 
@@ -57,11 +58,27 @@ for i in sacc:
         postive_peaks.append(ri_time[i])
     elif diff_right[i] < 0:
         negative_peaks.append(ri_time[i])
+interp = 0.2
+einterp = interpolate.interp1d(ri_time, ri_pos)
+times = []
+int_eye = []
+velos = []
+# calculate the the pmean for the velocity
+for st, td in zip(start_time[1:-1], target_dur[1:-1]):
+    phase = np.arange(0, td, interp) + st
+    try:
+        eye_interp = np.array(einterp(phase))
+    except:
+        embed()
+    v = fs.velocity1d(phase, eye_interp)
+    int_eye.append(eye_interp)
+    times.append(phase)
+    velos.append(v)
 
 # plotting stimulus and eye tracking data only from the right eye
 fig, ax = plt.subplots(figsize=(22*ps.cm, 15*ps.cm))
 ax.set_xlim(4227.5, 4249.9)
-ax.set_xticks(np.arange(start_time[100], 4250, 4.07))
+ax.set_xticks(np.arange(start_time[100], 4250, 4))
 ax.plot(ri_time, ri_pos,)
 ax.set_xlabel('Time in [s]')
 ax.set_ylabel('Deflection in [mm]')
@@ -69,16 +86,18 @@ ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
 for i in range(len(start_time)):
     ax.vlines(start_time[i], -20, 10, linestyles='dashed',
-              colors='k', clip_on=True)
+              colors='k',)
     ax.text(start_time[i] + ((stop_time[i]-start_time[i])/2) -
-            0.5, 10, f"{ang_veloc[i]}", )
+            0.5, 10, f"{ang_veloc[i]}", clip_on = True )
     red = Rectangle(
         (start_time[i], -20), ((stop_time[i]-start_time[i])/2), 4, facecolor=(rgb_1[i], 0, 0))
     green = Rectangle((start_time[i] + (stop_time[i]-start_time[i])/2, -20),
                       ((stop_time[i]-start_time[i])/2), 4, facecolor=(0, rgb_2[i], 0), )
+    
+    ax.text(start_time[i] + 0.4, -22,  f"{rgb_1[i]:.2f}",  clip_on =True)
+    ax.text(stop_time[i] - 1.7,  -22,  f"{rgb_2[i]:.2f}" , clip_on =True)
     ax.add_patch(red)
     ax.add_patch(green)
-
 
 # fs.doublesave('../plots/eyestimulus')
 plt.show()

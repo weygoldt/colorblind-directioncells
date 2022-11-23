@@ -14,32 +14,6 @@ from sklearn.metrics import auc
 from scipy.stats import pearsonr
 from modules.contrast import selective_rois_trash, rg_activity_trash, phase_activity
 
-def plot_lineplot(ax, mf):
-    temp_zscores = np.asarray([fs.flatten(x) for x in mf.zscores])
-    n = 10
-    min = []
-    max = []
-    for i, roi in enumerate(np.arange(100, 100+n+1, 1)):
-        dff = temp_zscores[roi, :]
-        max.append(np.max(dff))
-        min.append(np.min(dff))
-
-    for i, roi in enumerate(range(100, 100+ n+1, 1)):
-        dff = temp_zscores[roi, :]
-        ax.plot(mf.times/60, i + (dff - np.min(min) ) / (np.max(max) - np.min(min)), color='black', linewidth='1.')
-    ax.set_xlabel("Time [min]", fontsize= 15)
-    ax.set_ylabel("ROIs",     fontsize= 15)
-    ax.set_yticks(np.arange(0.3, n+1.6, 2))
-    ax.set_xticks(np.round(np.arange((mf.times[0])/60, 30.1, 5), 1))
-    ax.vlines(9.631, -1, 11, ls='dashed', color='r')
-    ax.vlines(19.23, -1, 11, ls='dashed', color='r')
-    ax.set_yticklabels(np.arange(0, n+0.1, 2), fontsize=13)
-
-    ax.set_xticklabels(np.round(np.arange((mf.times[0])/60, 30.1, 5), 1), fontsize=13)
-    ax.spines["right"].set_visible(False)
-    ax.spines["top"].set_visible(False)
-    ax.set_ylim(-1, n+1)
-
 
 ps = PlotStyle()
 # now load the data
@@ -106,7 +80,39 @@ corrs_thresh = corrs[corrs > thresh]
 
 mfcopy.filter_rois(indices_thresh)
 
+
 fig, ax = plt.subplots(figsize=(ps.cm*17, ps.cm*12))
-plot_lineplot(ax, mfcopy)
+temp_zscores = np.asarray([fs.flatten(x) for x in mfcopy.zscores])
+temp_zscores1 = np.asarray([fs.flatten(x) for x in mfcopy1.zscores])
+x = np.concatenate((temp_zscores, temp_zscores1))
+n = 10
+min = []
+max = []
+for i, roi in enumerate(np.arange(100, 100+n+1, 1)):
+    dff = x[roi, :]
+    max.append(np.max(dff))
+    min.append(np.min(dff))
+
+for i, roi in enumerate(range(100, 100+ n+1, 1)):
+    dff = x[roi, :]
+    ax.plot(mfcopy.times/60, i + (dff - np.min(min) ) / (np.max(max) - np.min(min)), color='black', linewidth='1.')
+
+
+ax.set_xlabel("Time [min]", fontsize= 15)
+ax.set_ylabel("ROIs",     fontsize= 15)
+ax.set_yticks(np.arange(0.3, n+1.6, 2))
+ax.set_xticks(np.round(np.arange((mfcopy.times[0])/60, 30.1, 5), 1))
+ax.vlines(9.631, -1, 11, ls='dashed', color='r')
+ax.vlines(19.23, -1, 11, ls='dashed', color='r')
+ax.set_yticklabels(np.arange(0, n+0.1, 2), fontsize=13)
+
+ax.set_xticklabels(np.round(np.arange((mfcopy.times[0])/60, 30.1, 5), 1), fontsize=13)
+ax.spines["right"].set_visible(False)
+ax.spines["top"].set_visible(False)
+ax.set_ylim(-1, n+1)
+
+
+
+
+
 fs.doublesave('../poster/figs/autocorrelation')
-plt.show()

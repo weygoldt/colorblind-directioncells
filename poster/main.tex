@@ -30,16 +30,15 @@ blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default val
         \includegraphics[width=24cm]{figs/Setup_CAD.png}
     \end{tikzfigure} 
 }
-{
 \myblock[MyBlock]{Preprocessing:}{
     \textbf{1. Region of Interests (ROI):}
-    corrosponds to neurons with genetically. The lumiance $f$ of the calcium imaging is calculated from the change of luminance normalized to the average luminance $f = \frac{\Delta f}{f}$.
+    corrosponds to neurons with genetically. The lumiance $F$ of the calcium imaging is calculated from the change of luminance normalized to the average luminance $F = \frac{\Delta F}{F}$.
     
     \vspace{-2cm}
     
     \begin{tikzfigure}[]
         \label{Raw}
-        \includegraphics[width=24cm]{figs/raw2.pdf}
+        \includegraphics[width=24cm]{figs/autocorrelation.pdf}
     \end{tikzfigure} 
     \vspace{0.6cm}
     \textbf{2. Active ROIs:}
@@ -63,10 +62,9 @@ blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default val
 
     }
 \column{0.6666}
-\myblock[MyBlock]{Motion blindness calcium data vs behaviour}{
+\myblock[MyBlock]{Motion blindness calcium data vs behavior}{
         \begin{multicols*}{2}
-          \textbf{Calcium}
-          1. Stimulus
+          \textbf{Calcium:}
             \begin{tikzfigure}[]
             \label{Raw}
             \includegraphics[width=27cm]{figs/calcium_stim.pdf}
@@ -75,7 +73,7 @@ blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default val
           \vfill
           \null
           \columnbreak
-        \textbf{Bahviour}
+        \textbf{Bahvior:}
         \begin{tikzfigure}[]
             \label{Raw}
             \includegraphics[width=21cm]{figs/eyestimulus.pdf}
@@ -85,28 +83,22 @@ blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default val
 
         \begin{tikzfigure}[]
             \label{Raw}
-            \includegraphics[width=21cm]{figs/eyestimulus.pdf}
+            \includegraphics[width=50cm]{figs/contrast_curves.pdf}
         \end{tikzfigure}
 
-
+        \vspace{-1.2cm}
+        \begin{tikzfigure}[]
+            \label{modulations}
+            \includegraphics[width=\linewidth]{figs/testimg.pdf
+            }
+        \end{tikzfigure}
+        \vspace{-1cm}
 }
-
-\myblock[MyBlock]{Interactions at modulations}{
-    \vspace{-1.2cm}
-    \begin{tikzfigure}[]
-        \label{modulations}
-        \includegraphics[width=\linewidth]{figs/testimg.pdf
-        }
-    \end{tikzfigure}
-    \vspace{-1cm}
-}
-
 \myblock[MyBlock]{Conclusion}{
     \begin{itemize}
-        \setlength\itemsep{0.5em}
-        \item Our analysis is the first to indicate that \textit{A. leptorhynchus} uses long, diffuse and synchronized EOD$f$ signals to communicate in addition to chirps and rises.
-        \item The recorded fish do not exhibit jamming avoidance behavior while close during synchronous modulations.
-        \item Synchronous signals \textbf{initiate} spatio-temporal interactions.
+        \setlength\itemsep{0.5cm}
+        \item The optic tectum is mottion blind for various contrast levels 
+        
     \end{itemize}
     \vspace{0.2cm}
     }

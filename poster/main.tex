@@ -22,11 +22,12 @@ blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default val
    to a grating of different colors, but little is known about the cortical structures conveing the
    \glqq color-motion\grqq{} perception. We wanted to the investigate the 
    optic tectum of the zebrafish larvae with calcium imaging. 
-    \vspace{0.6cm}
-    \begin{tikzfigure}[]
-        \label{griddrawing}
-        \includegraphics[width=\linewidth]{figs/dsc_2193_02.jpg}
-    \end{tikzfigure} 
+    
+   \vspace{0.6cm}
+        \begin{tikzfigure}[]
+            \label{Rois}
+            \includegraphics[width=8cm]{figs/Screenshot 2022-11-17 at 19.05.14.png}
+        \end{tikzfigure} 
 }
 
 \myblock[MyBlock]{Preprocessing:}{
@@ -35,66 +36,70 @@ blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default val
     
     \vspace{0.6}
 
-    \begin{minipage}{.07\textwidth}
-    \begin{tikzfigure}[]
-        \label{Rois}
-        \includegraphics[width=8cm]{figs/Screenshot 2022-11-17 at 19.05.14.png}
-    \end{tikzfigure} 
-    \end{minipage}
-    \begin{minipage}{.26\textwidth}
     \begin{tikzfigure}[]
         \label{Raw}
-        \includegraphics[width=14cm]{figs/raw2.pdf}
+        \includegraphics[width=24cm]{figs/raw2.pdf}
     \end{tikzfigure} 
-    \end{minipage}
 
     \vspace{0.6cm}
     \textbf{2. Active ROIs:}
     To get the active ROIs we computed the correlation within 3 repeats of the same stimulus.  
     \vspace{0.6}
 
-    \begin{minipage}{0.07\textwidth}
+    \begin{minipage}{0.08\textwidth}
     \begin{tikzfigure}[]
         \label{Rois}
-        \includegraphics[width=10cm]{figs/}
+        \includegraphics[width=10cm]{figs/pcorrelation.pdf}
     \end{tikzfigure} 
     \end{minipage}
-    \begin{minipage}{.26\textwidth}
+    \begin{minipage}{0.24\textwidth}
     \begin{tikzfigure}[]
         \label{Raw}
         \includegraphics[width=14cm]{figs/autocorrelation.pdf}
     \end{tikzfigure} 
     \end{minipage} 
+    \vspace{0.6}
 
+    \textbf{2. Direction selective ROIs:} next Step was 
+    to search for ROIs that correlated with a direction selective regressor (1 for clockwise / counter, else is 0)
+    
+    \begin{minipage}{0.08\textwidth}
+        \begin{tikzfigure}[]
+            \label{Rois}
+            \includegraphics[width=10cm]{figs/directioncorrelation.pdf}
+        \end{tikzfigure} 
+        \end{minipage}
+        \begin{minipage}{0.24\textwidth}
+        \begin{tikzfigure}[]
+            \label{Raw}
+            \includegraphics[width=14cm]{figs/autocorrelation.pdf}
+        \end{tikzfigure} 
+        \end{minipage} 
 
     }
 
 \column{0.6666}
-\myblock[MyBlock]{Detected modulations}{
-    
-    We found phases of synchrony up to 50 Hz in $\Delta$EOD$f$ that lasted for over 10 minutes. 
-    Synchronous modulations ranged from clearly distinguishable and steep rises to smooth modulations with low EOD$f$ increases.
+\myblock[MyBlock]{Motion blindness calcium data vs behaviour}{
+        \begin{multicols*}{2}
+          \textbf{Calcium}
+          1. Stimulus
 
-    \vspace{0.4cm}
+          \vfill
+          \null
+          \columnbreak
+          \textbf{Bahviour}
+        \end{multicols*}
 
-    \begin{tikzfigure}[]
-        \label{modulations}
-        \includegraphics[width=\linewidth]{figs/selected_modulations.pdf}
-    \end{tikzfigure}
-    \vspace{0.2cm}
-    \begin{tikzfigure}[]
-        \label{eventpos}
-        \includegraphics[width=\linewidth]{figs/eventposition_2.pdf}
-    \end{tikzfigure} 
 
-    \noindent
+
 }
 
 \myblock[MyBlock]{Interactions at modulations}{
     \vspace{-1.2cm}
     \begin{tikzfigure}[]
-        \label{results}
-        \includegraphics[width=\linewidth]{figs/eventstats.pdf}
+        \label{modulations}
+        \includegraphics[width=\linewidth]{figs/testimg.pdf
+        }
     \end{tikzfigure}
 
     \begin{multicols}{2}

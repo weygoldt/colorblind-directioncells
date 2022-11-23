@@ -59,40 +59,43 @@ blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default val
         \label{Rois}
         \includegraphics[width=18cm]{figs/directioncorrelation.pdf}
     \end{tikzfigure} 
+}
 
-    }
 \column{0.6666}
-\myblock[MyBlock]{Motion blindness calcium data vs behavior}{
-        \begin{multicols*}{2}
-          \textbf{Calcium:}
-            \begin{tikzfigure}[]
-            \label{Raw}
-            \includegraphics[width=27cm]{figs/calcium_stim.pdf}
-            \end{tikzfigure} 
 
-          \vfill
-          \null
-          \columnbreak
-        \textbf{Bahvior:}
+\myblock[MyBlock]{Calcium imaging with two photon microscope}{
+        
+\vspace{-1.2cm}
         \begin{tikzfigure}[]
-            \label{Raw}
-            \includegraphics[width=21cm]{figs/eyestimulus.pdf}
-        \end{tikzfigure}
-        \end{multicols*}
-
-
-        \begin{tikzfigure}[]
-            \label{Raw}
-            \includegraphics[width=50cm]{figs/contrast_curves.pdf}
+        \label{modulations}
+        \includegraphics[width=40cm]{figs/testimg.pdf
+        }
         \end{tikzfigure}
 
-        \vspace{-1.2cm}
+        \begin{minipage}{.2\textwidth}
+          \begin{tikzfigure}[]
+          \label{Raw}
+          \includegraphics[width=27cm]{figs/calcium_stim.pdf}
+          \end{tikzfigure}   
+        \end{minipage}
+        \begin{minipage}{.2\textwidth}
         \begin{tikzfigure}[]
-            \label{modulations}
-            \includegraphics[width=\linewidth]{figs/testimg.pdf
-            }
+            \label{Raw}
+            \includegraphics[width=30cm]{figs/contrast_curves.pdf}
         \end{tikzfigure}
+    \end{minipage}
+
+
         \vspace{-1cm}
+}
+
+\myblock[Myblock]{Behavior}{
+    Hallo hier ist ein bloxj
+    \begin{tikzfigure}[]
+        \label{Raw}
+        \includegraphics[width=21cm]{figs/eyestimulus.pdf}
+    \end{tikzfigure}
+
 }
 \myblock[MyBlock]{Conclusion}{
     \begin{itemize}

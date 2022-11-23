@@ -145,44 +145,85 @@ mfcclock.filter_rois(index_cclock)
 
 temp_clock = mfcclock.zscores[:5]
 
-fig, ax = plt.subplots(figsize=(ps.cm*21, ps.cm*12))
-n = 10
-min = []
-max = []
-l = [2, 4]
-for i, roi in enumerate(l):
-    dff = temp_clock[roi, :]
-    max.append(np.max(dff))
-    min.append(np.min(dff))
+clock_acr = np.array(clock)
+cclock_acr = np.array(cclock)
 
-for i, roi in enumerate(l):
-    dff = temp_clock[roi, :]
-    ax.plot(mfclock.times, i + (dff - np.min(min)) /
-            (np.max(max) - np.min(min)), color='black', linewidth='1.')
+# correlate
+mf.filter_rois(indices_thresh)
+corr_clock_acr = np.array([pearsonr(clock_acr, x)[0] for x in mf.zscores])
+corr_cclock_acr = np.array([pearsonr(cclock_acr, x)[0] for x in mf.zscores])
 
-for i in range(len(mfclock.start_times[1:-1])):
-    ax.text((mfclock.start_times[i] + ((mfclock.stop_times[i]-mfclock.start_times[i])/2) -
-            0.5), 4, f"{clock[i]}", clip_on=True)
-    ax.axvspan(mfclock.start_times[i], mfclock.start_times[i]+np.round((mfclock.stop_times[i]-mfclock.start_times[i]) /
-               2, 1), ymax=0.2, ymin=0.1, facecolor=(mfclock.red[i], 0, 0), clip_on=True, )
-    ax.axvspan(mfclock.start_times[i] + np.round((mfclock.stop_times[i]-mfclock.start_times[i])/2),
-               mfclock.stop_times[i],  ymax=0.2, ymin=0.1, facecolor=(0, mfclock.green[i],  0), clip_on=True,)
+# make index vector
+index = np.arange(len(corr_clock_acr))
 
+# make threshold
+thresh = 0.3
 
-ax.set_xlim(0, 1700)
-ax.set_xlabel("Time [min]", fontsize=15)
-ax.set_ylabel("ROIs $\\frac{\Delta F}{F}$ ",     fontsize=15, rotation=90,)
-ax.set_yticks([])
-ax.set_ylim(0, 6)
-#ax.set_xticks(np.round(np.arange((mfcopy.times[0]), 30.1, 5), 1))
-#ax.vlines(9.631, -1, 6, ls='dashed', color='r')
-#ax.vlines(19.23, -1, 6, ls='dashed', color='r')
-#
-#
-#ax.set_xticklabels(np.round(np.arange((mfcopy.times[0]), 30.1, 5), 1), fontsize=13)
-ax.spines["right"].set_visible(False)
-ax.spines["top"].set_visible(False)
-ax.spines["left"].set_visible(False)
-plt.show()
+# use threshold to get index
+index_clock_acr = index[corr_clock_acr > thresh]
+index_cclock_acr = index[corr_cclock_acr > thresh]
+
+# use the index to get the dff data
+dffs_clock_acr = mf.zscores[index_clock_acr, :][:5]
+dffs_cclock_acr = mf.zscores[index_cclock_acr, :][:5]
+
 embed()
 exit()
+# plot them
+idx = np.arange(0, 121, 1)
+fig, ax = plt.subplots(2, 1, figsize=(20*ps.cm, 12*ps.cm),
+                       constrained_layout=True, sharex=True, sharey=True)
+
+ax[0].set_title('Clockwise', loc='left')
+ax[0].plot(mf.times[idx], clock_acr[idx], c='k',
+           label='stimulus', zorder=100, lw=1)
+
+for i in range(len(dffs_clock_acr[:, 0])):
+    clock_acr_dff = dffs_clock_acr[i]
+    ax[0].plot(mf.times[idx], clock_acr_dff[idx] -
+               clock_acr_dff[idx].min(), label='dff', alpha=0.6)
+
+ax[1].set_title('Counterclockwise', loc='left')
+ax[1].plot(mf.times[idx], cclock_acr[idx], c='k',
+           label='stimulus', zorder=100, lw=1)
+
+for i in range(len(dffs_cclock_acr[:, 0])):
+    cclock_acr_dff = dffs_cclock_acr[i]
+    ax[1].plot(mf.times[idx], cclock_acr_dff[idx] -
+               cclock_acr_dff[idx].min(), label='dff', alpha=0.6)
+
+ax[1].set_xticks(np.arange(0, mf.times[idx[-1]], 50))
+[x.spines["right"].set_visible(False) for x in ax]
+[x.spines["top"].set_visible(False) for x in ax]
+fig.supxlabel('Time [s]')
+fig.supylabel('Zscores')
+# plot them
+idx = np.arange(0, 121, 1)
+fig, ax = plt.subplots(2, 1, figsize=(20*ps.cm, 12*ps.cm),
+                       constrained_layout=True, sharex=True, sharey=True)
+
+ax[0].set_title('Clockwise', loc='left')
+ax[0].plot(mf.times[idx], clock_acr[idx], c='k',
+           label='stimulus', zorder=100, lw=1)
+
+for i in range(len(dffs_clock_acr[:, 0])):
+    clock_acr_dff = dffs_clock_acr[i]
+    ax[0].plot(mf.times[idx], clock_acr_dff[idx] -
+               clock_acr_dff[idx].min(), label='dff', alpha=0.6)
+
+ax[1].set_title('Counterclockwise', loc='left')
+ax[1].plot(mf.times[idx], cclock_acr[idx], c='k',
+           label='stimulus', zorder=100, lw=1)
+
+for i in range(len(dffs_cclock_acr[:, 0])):
+    cclock_acr_dff = dffs_cclock_acr[i]
+    ax[1].plot(mf.times[idx], cclock_acr_dff[idx] -
+               cclock_acr_dff[idx].min(), label='dff', alpha=0.6)
+
+ax[1].set_xticks(np.arange(0, mf.times[idx[-1]], 50))
+[x.spines["right"].set_visible(False) for x in ax]
+[x.spines["top"].set_visible(False) for x in ax]
+fig.supxlabel('Time [s]')
+fig.supylabel('Zscores')
+fs.doublesave('../poster/figs/regressor')
+plt.show()

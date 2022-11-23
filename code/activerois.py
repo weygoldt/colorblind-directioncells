@@ -31,8 +31,8 @@ def plot_lineplot(ax, mf):
     ax.set_ylabel("ROIs",     fontsize= 15)
     ax.set_yticks(np.arange(0.3, n+1.6, 2))
     ax.set_xticks(np.round(np.arange((mf.times[0])/60, 30.1, 5), 1))
-    #ax.vlines(9.631, -1, 11, ls='dashed', color='r')
-    #ax.vlines(19.23, -1, 11, ls='dashed', color='r')
+    ax.vlines(9.631, -1, 11, ls='dashed', color='r')
+    ax.vlines(19.23, -1, 11, ls='dashed', color='r')
     ax.set_yticklabels(np.arange(0, n+0.1, 2), fontsize=13)
 
     ax.set_xticklabels(np.round(np.arange((mf.times[0])/60, 30.1, 5), 1), fontsize=13)

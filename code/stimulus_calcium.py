@@ -1,18 +1,20 @@
 
-import numpy as np
-import matplotlib.pyplot as plt
-import modules.functions as fs
+from copy import deepcopy
+
 import matplotlib.gridspec as gridspec
+import matplotlib.pyplot as plt
+import numpy as np
 import scipy.stats
 from IPython import embed
-
-from copy import deepcopy
+from scipy.stats import pearsonr
+from sklearn.metrics import auc
 from vxtools.summarize.structure import SummaryFile
+
+import modules.functions as fs
+from modules.contrast import (phase_activity, rg_activity_trash,
+                              selective_rois_trash)
 from modules.dataloader import MultiFish, SingleFish
 from modules.plotstyle import PlotStyle
-from sklearn.metrics import auc
-from scipy.stats import pearsonr
-from modules.contrast import selective_rois_trash, rg_activity_trash, phase_activity
 
 ps = PlotStyle()
 # now load the data
@@ -24,7 +26,7 @@ f1 = SummaryFile(data1 + 'Summary.hdf5')
 f2 = SummaryFile(data2 + 'Summary.hdf5')
 f3 = SummaryFile(data3 + 'Summary.hdf5')
 
-good_recs1 = np.arange(3,15)
+good_recs1 = np.arange(3, 15)
 good_recs2 = [0, 1, 2, 4, 5]
 good_recs3 = [0, 1, 2, 3, 4]
 
@@ -35,13 +37,11 @@ d3 = SingleFish(f3, good_recs3, overwrite=False,)
 
 # load all fish in multifish class
 mf = MultiFish([
-    d1, 
-    d2, 
+    d1,
+    d2,
     d3
 ])
 
-mfcopy = deepcopy(mf)
-mfcopy1 = deepcopy(mf)
 mfclock = deepcopy(mf)
 mfcclock = deepcopy(mf)
 
@@ -90,33 +90,33 @@ for axis, rgbs in zip(np.array(stim_axs).flat, rgb_matrix_flat):
 # plot the heatmap
 # >>> DISCLAIMER this cell can probably be made much nicer but its half past 10 on a saturday
 
+
 def unique_combinations2d(list1, list2):
     """Combine elments of two lists uniquely."""
     return [(x, y) for x in list1 for y in list2]
+
 
 reds = np.unique(mf.red)
 greens = np.unique(mf.green)
 combs = unique_combinations2d(reds, greens)
 index = np.arange(len(mf.red))
-matrix = np.full((6,6), np.nan)
+matrix = np.full((6, 6), np.nan)
 
 signal1 = []
 signal2 = []
 for comb in combs:
-    
-    loc = index[(mf.red==comb[0]) & (mf.green==comb[1])]
-    
-    signal1.append(mfclock.zscores[:,loc])
-    signal2.append(mfcclock.zscores[:,loc])
+
+    loc = index[(mf.red == comb[0]) & (mf.green == comb[1])]
+
+    signal1.append(mfclock.zscores[:, loc])
+    signal2.append(mfcclock.zscores[:, loc])
 
 signal1 = np.mean(np.mean(signal1, axis=1), axis=1)
 signal2 = np.mean(np.mean(signal2, axis=1), axis=1)
 signal = np.mean(np.array([signal1, signal2]), axis=0)
 
-embed()
-exit()
 # put into matrix
-for i,s in enumerate(signal):
+for i, s in enumerate(signal):
     idx = np.unravel_index(i, np.shape(matrix))
     matrix[idx] = s
 
@@ -126,9 +126,7 @@ heatm_ax.set_ylabel('red contr.')
 
 cbar = fig.colorbar(hm, ax=heatm_ax, shrink=0.7)
 cbar.ax.set_ylabel('mean z-score')
-plt.subplots_adjust(left=0.015, right=0.945, top=0.960, bottom=0.045, hspace=0.250, wspace=0.200)
+plt.subplots_adjust(left=0.015, right=0.945, top=0.960,
+                    bottom=0.045, hspace=0.250, wspace=0.200)
 
 plt.show()
-
-embed()
-exit()

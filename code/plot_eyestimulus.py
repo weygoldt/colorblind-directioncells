@@ -62,6 +62,7 @@ einterp = interpolate.interp1d(ri_time, ri_pos)
 times = []
 int_eye = []
 velos = []
+
 # calculate the the pmean for the velocity
 for st, td in zip(start_time[1:-1], target_dur[1:-1]):
     phase = np.arange(0, td, interp) + st
@@ -75,31 +76,33 @@ for st, td in zip(start_time[1:-1], target_dur[1:-1]):
     velos.append(v)
 
 # plotting stimulus and eye tracking data only from the right eye
-fig, ax = plt.subplots(figsize=(22*ps.cm, 15*ps.cm))
+fig, ax = plt.subplots(figsize=(20*ps.cm, 15*ps.cm))
+rgb_1 = rgb_1[1:-1]
+rgb_2 = rgb_2[1:-1]
+start_time = start_time[1:-1]
+stop_time = stop_time[1:-1]
+ang_veloc = ang_veloc[1:-1]
+
 ax.set_xlim(4227.5, 4249.9)
+ax.set_ylim(-28, 13)
 ax.set_xticks(np.arange(start_time[100], 4250, 4))
-ax.plot(ri_time, ri_pos,)
-ax.set_xlabel('Time in [s]')
-ax.set_ylabel('Deflection in [mm]')
+ax.plot(ri_time, ri_pos, c='k', lw=2)
+ax.set_xlabel('Time in [s]'               , fontsize=15)
+ax.set_ylabel('Deflection in [$^\circ$C]', fontsize=15)
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
 for i in range(len(start_time)):
-    ax.vlines(start_time[i], -20, 10, linestyles='dashed',
+    ax.vlines(start_time[i], -28, 13, linestyles='dashed',
               colors='k',)
     ax.text(start_time[i] + ((stop_time[i]-start_time[i])/2) -
-            0.5, 10, f"{ang_veloc[i]}", clip_on = True )
-    ax.axvspan(start_time[i], (stop_time[i]-start_time[i])/2, ymin=-20, ymax=-16, facecolor=(rgb_1[i], 0, 0), clip_on = True)
-    ax.axvspan((stop_time[i]-start_time[i])/2, stop_time[i], ymin=-20, ymax=-16, facecolor=(rgb_2[i], 0, 0) , clip_on = True)
+            0.5, 10, f"{ang_veloc[i]}", clip_on=True)
+    ax.axvspan(start_time[i], start_time[i]+np.round((stop_time[i]-start_time[i]) /
+               2, 1), ymax=0.2, ymin=0.1, facecolor=(rgb_1[i], 0, 0), clip_on=True, )
+    ax.axvspan(start_time[i] + np.round((stop_time[i]-start_time[i])/2),
+               stop_time[i],  ymax=0.2, ymin=0.1, facecolor=(0, rgb_2[i],  0), clip_on=True,)
 
-    ax.text(start_time[i] + 0.4, -22,  f"{rgb_1[i]:.2f}",  clip_on =True)
-    ax.text(stop_time[i] - 1.7,  -22,  f"{rgb_2[i]:.2f}" , clip_on =True)
+    ax.text(start_time[i] + 0.4, -26,  f"{rgb_1[i]:.2f}",  clip_on=True)
+    ax.text(stop_time[i] - 1.7,  -26,  f"{rgb_2[i]:.2f}", clip_on=True)
 
-
-#red = Rectangle(
-#    (start_time[i], -20), ((stop_time[i]-start_time[i])/2), 4, facecolor=(rgb_1[i], 0, 0), clip_on = True )
-#green = Rectangle((start_time[i] + (stop_time[i]-start_time[i])/2, -20),
-#                    ((stop_time[i]-start_time[i])/2), 4, facecolor=(0, rgb_2[i], 0) )
-#ax.add_patch(red)
-#ax.add_patch(green) 
-#fs.doublesave('../poster/figs/eyestimulus')
+fs.doublesave('../poster/figs/eyestimulus')
 plt.show()

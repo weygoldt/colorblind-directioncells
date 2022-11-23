@@ -69,12 +69,16 @@ mf = MultiFish([
 
 mfcopy = deepcopy(mf)
 mfcopy1 = deepcopy(mf)
+# Raw data plot 
+"""
 #----------------------------RAW DATA PLOT ------------------------------#
 fig, ax = plt.subplots(figsize=(ps.cm*17, ps.cm*12))
 plot_lineplot(ax, mfcopy1)
 fs.doublesave('../poster/figs/raw2')
 plt.show()
 #----------------------------RAW DATA PLOT ------------------------------#
+"""
+
 mf.phase_means()
 target_auc = 0.2 # probability threshold
 
@@ -170,9 +174,6 @@ fig.supylabel("Count")
 fs.doublesave("../poster/figs/directioncorrelation")
 
 plt.show()
-
-
-
 
 #----------------Calcium Stimulus---------------# create copies of dataset
 mfclock = deepcopy(mf)

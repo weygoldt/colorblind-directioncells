@@ -80,7 +80,6 @@ corrs_thresh = corrs[corrs > thresh]
 
 mfcopy.filter_rois(indices_thresh)
 
-
 fig, ax = plt.subplots(figsize=(ps.cm*17, ps.cm*12))
 temp_zscores = np.asarray([fs.flatten(x) for x in mfcopy.zscores])
 temp_zscores1 = np.asarray([fs.flatten(x) for x in mfcopy1.zscores])

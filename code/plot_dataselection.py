@@ -89,6 +89,7 @@ mf.filter_rois(indices_thresh)
 mf_all.filter_rois(indices_thresh)
 
 # compute the mean in each phase
+# mf_thresh.repeat_means(3)
 mf.repeat_means(3)
 mf_all.repeat_means(3)
 
@@ -144,8 +145,11 @@ mf_all.filter_rois(remove_indices)
 # remove pauses
 pause_index = np.arange(len(mf.ang_velocs))[mf.ang_velocs != 0]
 mf.filter_phases(pause_index)
+pause_index = np.arange(len(mfclock.ang_velocs))[mfclock.ang_velocs != 0]
 mfclock.filter_phases(pause_index)
+pause_index = np.arange(len(mfcclock.ang_velocs))[mfcclock.ang_velocs != 0]
 mfcclock.filter_phases(pause_index)
+pause_index = np.arange(len(mf_all.ang_velocs))[mf_all.ang_velocs != 0]
 mf_all.filter_phases(pause_index)
 
 # make sorter
@@ -183,7 +187,7 @@ new_greens = np.ravel([new_greens, new_greens])
 
 extent = (np.min(newtime), np.max(newtime), 0, len(dffs[:, 0]))
 
-fig, ax = plt.subplots(2, 1, figsize=(30*ps.cm, 20*ps.cm),
+fig, ax = plt.subplots(2, 1, figsize=(30*ps.cm, 12*ps.cm),
                        height_ratios=[0.05, 1], sharex=True)
 
 
@@ -212,11 +216,11 @@ ax[1].set_xlabel('time [s]')
 
 plt.figtext(0.96, (0.72), 'Countercl.', rotation=90)
 plt.figtext(0.96, (0.55), 'Clockw.', rotation=90)
-plt.figtext(0.96, (0.32), 'Responding', rotation=90)
-plt.figtext(0.96, (0.085), 'Non-responding', rotation=90)
+plt.figtext(0.96, (0.32), 'Resp.', rotation=90)
+plt.figtext(0.96, (0.085), 'Non-resp.', rotation=90)
 
-plt.figtext(0.6, (0.9), 'Countercl. stim.', rotation=0)
-plt.figtext(0.8, (0.9), 'Clockw. stim.', rotation=0)
+plt.figtext(0.6, (0.9), 'Counter-clockwise stim.', rotation=0)
+plt.figtext(0.8, (0.9), 'Clockwise stim.', rotation=0)
 
 plt.subplots_adjust(left=0.065, right=0.940, top=0.900,
                     bottom=0.080, hspace=0.040, wspace=0.000)

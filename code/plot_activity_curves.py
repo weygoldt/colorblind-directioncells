@@ -587,7 +587,7 @@ def get_eye():
 rg_clock_data, rg_cclock_data, rg_bootstr = get_calcium()
 rg_eye = get_eye()
 
-fig = plt.figure(figsize=(30*ps.cm, 18*ps.cm))
+fig = plt.figure(figsize=(30*ps.cm, 14*ps.cm))
 
 # build the subfigures
 (subfig_l, subfig_r) = fig.subfigures(1, 2, hspace=0.05, width_ratios=[1, 1])

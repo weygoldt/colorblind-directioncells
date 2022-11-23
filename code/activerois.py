@@ -80,39 +80,106 @@ corrs_thresh = corrs[corrs > thresh]
 
 mfcopy.filter_rois(indices_thresh)
 
-
-fig, ax = plt.subplots(figsize=(ps.cm*17, ps.cm*12))
+fig, ax = plt.subplots(figsize=(ps.cm*21, ps.cm*12))
 temp_zscores = np.asarray([fs.flatten(x) for x in mfcopy.zscores])
 temp_zscores1 = np.asarray([fs.flatten(x) for x in mfcopy1.zscores])
-x = np.concatenate((temp_zscores, temp_zscores1))
+x = np.concatenate((temp_zscores[10:15], temp_zscores1[10:15]))
+
 n = 10
 min = []
 max = []
-for i, roi in enumerate(np.arange(100, 100+n+1, 1)):
+l = [1, 2, 3, 5, 9]
+for i, roi in enumerate(l):
     dff = x[roi, :]
     max.append(np.max(dff))
     min.append(np.min(dff))
 
-for i, roi in enumerate(range(100, 100+ n+1, 1)):
+for i, roi in enumerate(l):
     dff = x[roi, :]
     ax.plot(mfcopy.times/60, i + (dff - np.min(min) ) / (np.max(max) - np.min(min)), color='black', linewidth='1.')
 
 
 ax.set_xlabel("Time [min]", fontsize= 15)
-ax.set_ylabel("ROIs",     fontsize= 15)
-ax.set_yticks(np.arange(0.3, n+1.6, 2))
+ax.set_ylabel("ROIs $\\frac{\Delta F}{F}$ ",     fontsize= 15, rotation=90,)
+ax.set_yticks([])
+ax.set_ylim(0, 6)
 ax.set_xticks(np.round(np.arange((mfcopy.times[0])/60, 30.1, 5), 1))
-ax.vlines(9.631, -1, 11, ls='dashed', color='r')
-ax.vlines(19.23, -1, 11, ls='dashed', color='r')
-ax.set_yticklabels(np.arange(0, n+0.1, 2), fontsize=13)
+ax.vlines(9.631, -1, 6, ls='dashed', color='r')
+ax.vlines(19.23, -1, 6, ls='dashed', color='r')
+
 
 ax.set_xticklabels(np.round(np.arange((mfcopy.times[0])/60, 30.1, 5), 1), fontsize=13)
 ax.spines["right"].set_visible(False)
 ax.spines["top"].set_visible(False)
-ax.set_ylim(-1, n+1)
-
-
-
-
+ax.spines["left"].set_visible(False)
 
 fs.doublesave('../poster/figs/autocorrelation')
+
+
+# clockwise motion regressor
+clock = np.array([1 if x > 0 else 0 for x in mf.ang_velocs])
+corr_clock = np.array([pearsonr(x, clock)[0] for x in mf.dffs])
+
+# counterclockwise motion regressor
+cclock = np.array([1 if x < 0 else 0 for x in mf.ang_velocs])
+corr_cclock = np.array([pearsonr(x, cclock)[0] for x in mf.dffs])
+
+thresh = 0.3
+
+# get index of active ROIs for correlation threshold for clockwise and 
+# counterclockwise regressor correlations
+index_clock = np.arange(len(mf.dffs[:,0]))[corr_clock > thresh]
+index_cclock = np.arange(len(mf.dffs[:,0]))[corr_cclock > thresh]
+
+# create copies of dataset
+mfclock = deepcopy(mf)
+mfcclock = deepcopy(mf)
+
+# filter direction selective rois
+mfclock.filter_rois(index_clock)
+mfcclock.filter_rois(index_cclock)
+
+
+temp_clock = mfcclock.zscores[:5]
+
+fig, ax = plt.subplots(figsize=(ps.cm*21, ps.cm*12))
+n = 10
+min = []
+max = []
+l = [2,4]
+for i, roi in enumerate(l):
+    dff = temp_clock[roi, :]
+    max.append(np.max(dff))
+    min.append(np.min(dff))
+
+for i, roi in enumerate(l):
+    dff = temp_clock[roi, :]
+    ax.plot(mfclock.times, i + (dff - np.min(min) ) / (np.max(max) - np.min(min)), color='black', linewidth='1.')
+
+for i in range(len(mfclock.start_times[1:-1])):
+    ax.text((mfclock.start_times[i] + ((mfclock.stop_times[i]-mfclock.start_times[i])/2) -
+            0.5), 4, f"{clock[i]}", clip_on=True)
+    ax.axvspan(mfclock.start_times[i], mfclock.start_times[i]+np.round((mfclock.stop_times[i]-mfclock.start_times[i]) /
+               2, 1), ymax=0.2, ymin=0.1, facecolor=(mfclock.red[i], 0, 0), clip_on=True, )
+    ax.axvspan(mfclock.start_times[i] + np.round((mfclock.stop_times[i]-mfclock.start_times[i])/2),
+               mfclock.stop_times[i],  ymax=0.2, ymin=0.1, facecolor=(0, mfclock.green[i],  0), clip_on=True,)
+
+
+
+ax.set_xlim(0, 1700)
+ax.set_xlabel("Time [min]", fontsize= 15)
+ax.set_ylabel("ROIs $\\frac{\Delta F}{F}$ ",     fontsize= 15, rotation=90,)
+ax.set_yticks([])
+ax.set_ylim(0, 6)
+#ax.set_xticks(np.round(np.arange((mfcopy.times[0]), 30.1, 5), 1))
+#ax.vlines(9.631, -1, 6, ls='dashed', color='r')
+#ax.vlines(19.23, -1, 6, ls='dashed', color='r')
+#
+#
+#ax.set_xticklabels(np.round(np.arange((mfcopy.times[0]), 30.1, 5), 1), fontsize=13)
+ax.spines["right"].set_visible(False)
+ax.spines["top"].set_visible(False)
+ax.spines["left"].set_visible(False)
+plt.show()
+embed()
+exit()

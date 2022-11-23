@@ -1,19 +1,20 @@
 
-import numpy as np
-import matplotlib.pyplot as plt
-import modules.functions as fs
+from copy import deepcopy
+
 import matplotlib.gridspec as gridspec
+import matplotlib.pyplot as plt
+import numpy as np
 import scipy.stats
 from IPython import embed
-
-from copy import deepcopy
+from scipy.stats import pearsonr
+from sklearn.metrics import auc
 from vxtools.summarize.structure import SummaryFile
+
+import modules.functions as fs
+from modules.contrast import (phase_activity, rg_activity_trash,
+                              selective_rois_trash)
 from modules.dataloader import MultiFish, SingleFish
 from modules.plotstyle import PlotStyle
-from sklearn.metrics import auc
-from scipy.stats import pearsonr
-from modules.contrast import selective_rois_trash, rg_activity_trash, phase_activity
-
 
 ps = PlotStyle()
 # now load the data
@@ -25,7 +26,7 @@ f1 = SummaryFile(data1 + 'Summary.hdf5')
 f2 = SummaryFile(data2 + 'Summary.hdf5')
 f3 = SummaryFile(data3 + 'Summary.hdf5')
 
-good_recs1 = np.arange(3,15)
+good_recs1 = np.arange(3, 15)
 good_recs2 = [0, 1, 2, 4, 5]
 good_recs3 = [0, 1, 2, 3, 4]
 
@@ -36,8 +37,8 @@ d3 = SingleFish(f3, good_recs3, overwrite=False,)
 
 # load all fish in multifish class
 mf = MultiFish([
-    d1, 
-    d2, 
+    d1,
+    d2,
     d3
 ])
 
@@ -45,13 +46,13 @@ mfcopy = deepcopy(mf)
 mfcopy1 = deepcopy(mf)
 
 mf.phase_means()
-target_auc = 0.2 # probability threshold
+target_auc = 0.2  # probability threshold
 
 # compute the correlations and indices sorted by correlations
 indices, corrs = mf.responding_rois(mf.dffs, nrepeats=3)
 
 # make a histpgram
-counts, edges = np.histogram(corrs, bins=50, range=(-1,1), density=True)
+counts, edges = np.histogram(corrs, bins=50, range=(-1, 1), density=True)
 
 # compute a gaussian KDE
 xkde, kde = fs.kde1d(corrs, 0.02, xlims=[edges.min(), edges.max()])
@@ -80,38 +81,108 @@ corrs_thresh = corrs[corrs > thresh]
 
 mfcopy.filter_rois(indices_thresh)
 
-fig, ax = plt.subplots(figsize=(ps.cm*17, ps.cm*12))
+fig, ax = plt.subplots(figsize=(ps.cm*21, ps.cm*12))
 temp_zscores = np.asarray([fs.flatten(x) for x in mfcopy.zscores])
 temp_zscores1 = np.asarray([fs.flatten(x) for x in mfcopy1.zscores])
-x = np.concatenate((temp_zscores, temp_zscores1))
+x = np.concatenate((temp_zscores[10:15], temp_zscores1[10:15]))
+
 n = 10
 min = []
 max = []
-for i, roi in enumerate(np.arange(100, 100+n+1, 1)):
+l = [1, 2, 3, 5, 9]
+for i, roi in enumerate(l):
     dff = x[roi, :]
     max.append(np.max(dff))
     min.append(np.min(dff))
 
-for i, roi in enumerate(range(100, 100+ n+1, 1)):
+for i, roi in enumerate(l):
     dff = x[roi, :]
-    ax.plot(mfcopy.times/60, i + (dff - np.min(min) ) / (np.max(max) - np.min(min)), color='black', linewidth='1.')
+    ax.plot(mfcopy.times/60, i + (dff - np.min(min)) /
+            (np.max(max) - np.min(min)), color='black', linewidth='1.')
 
 
-ax.set_xlabel("Time [min]", fontsize= 15)
-ax.set_ylabel("ROIs",     fontsize= 15)
-ax.set_yticks(np.arange(0.3, n+1.6, 2))
+ax.set_xlabel("Time [min]", fontsize=15)
+ax.set_ylabel("ROIs $\\frac{\Delta F}{F}$ ",     fontsize=15, rotation=90,)
+ax.set_yticks([])
+ax.set_ylim(0, 6)
 ax.set_xticks(np.round(np.arange((mfcopy.times[0])/60, 30.1, 5), 1))
-ax.vlines(9.631, -1, 11, ls='dashed', color='r')
-ax.vlines(19.23, -1, 11, ls='dashed', color='r')
-ax.set_yticklabels(np.arange(0, n+0.1, 2), fontsize=13)
+ax.vlines(9.631, -1, 6, ls='dashed', color='r')
+ax.vlines(19.23, -1, 6, ls='dashed', color='r')
 
-ax.set_xticklabels(np.round(np.arange((mfcopy.times[0])/60, 30.1, 5), 1), fontsize=13)
+
+ax.set_xticklabels(
+    np.round(np.arange((mfcopy.times[0])/60, 30.1, 5), 1), fontsize=13)
 ax.spines["right"].set_visible(False)
 ax.spines["top"].set_visible(False)
-ax.set_ylim(-1, n+1)
-
-
-
-
+ax.spines["left"].set_visible(False)
 
 fs.doublesave('../poster/figs/autocorrelation')
+
+
+# clockwise motion regressor
+clock = np.array([1 if x > 0 else 0 for x in mf.ang_velocs])
+corr_clock = np.array([pearsonr(x, clock)[0] for x in mf.dffs])
+
+# counterclockwise motion regressor
+cclock = np.array([1 if x < 0 else 0 for x in mf.ang_velocs])
+corr_cclock = np.array([pearsonr(x, cclock)[0] for x in mf.dffs])
+
+thresh = 0.3
+
+# get index of active ROIs for correlation threshold for clockwise and
+# counterclockwise regressor correlations
+index_clock = np.arange(len(mf.dffs[:, 0]))[corr_clock > thresh]
+index_cclock = np.arange(len(mf.dffs[:, 0]))[corr_cclock > thresh]
+
+# create copies of dataset
+mfclock = deepcopy(mf)
+mfcclock = deepcopy(mf)
+
+# filter direction selective rois
+mfclock.filter_rois(index_clock)
+mfcclock.filter_rois(index_cclock)
+
+
+temp_clock = mfcclock.zscores[:5]
+
+fig, ax = plt.subplots(figsize=(ps.cm*21, ps.cm*12))
+n = 10
+min = []
+max = []
+l = [2, 4]
+for i, roi in enumerate(l):
+    dff = temp_clock[roi, :]
+    max.append(np.max(dff))
+    min.append(np.min(dff))
+
+for i, roi in enumerate(l):
+    dff = temp_clock[roi, :]
+    ax.plot(mfclock.times, i + (dff - np.min(min)) /
+            (np.max(max) - np.min(min)), color='black', linewidth='1.')
+
+for i in range(len(mfclock.start_times[1:-1])):
+    ax.text((mfclock.start_times[i] + ((mfclock.stop_times[i]-mfclock.start_times[i])/2) -
+            0.5), 4, f"{clock[i]}", clip_on=True)
+    ax.axvspan(mfclock.start_times[i], mfclock.start_times[i]+np.round((mfclock.stop_times[i]-mfclock.start_times[i]) /
+               2, 1), ymax=0.2, ymin=0.1, facecolor=(mfclock.red[i], 0, 0), clip_on=True, )
+    ax.axvspan(mfclock.start_times[i] + np.round((mfclock.stop_times[i]-mfclock.start_times[i])/2),
+               mfclock.stop_times[i],  ymax=0.2, ymin=0.1, facecolor=(0, mfclock.green[i],  0), clip_on=True,)
+
+
+ax.set_xlim(0, 1700)
+ax.set_xlabel("Time [min]", fontsize=15)
+ax.set_ylabel("ROIs $\\frac{\Delta F}{F}$ ",     fontsize=15, rotation=90,)
+ax.set_yticks([])
+ax.set_ylim(0, 6)
+#ax.set_xticks(np.round(np.arange((mfcopy.times[0]), 30.1, 5), 1))
+#ax.vlines(9.631, -1, 6, ls='dashed', color='r')
+#ax.vlines(19.23, -1, 6, ls='dashed', color='r')
+#
+#
+#ax.set_xticklabels(np.round(np.arange((mfcopy.times[0]), 30.1, 5), 1), fontsize=13)
+ax.spines["right"].set_visible(False)
+ax.spines["top"].set_visible(False)
+ax.spines["left"].set_visible(False)
+plt.show()
+embed()
+exit()

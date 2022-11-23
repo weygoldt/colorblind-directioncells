@@ -7,7 +7,7 @@ blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default val
 \begin{document}
  
 \renewcommand{\baselinestretch}{1} 
-\title{\parbox{1500pt}{Motion blindness induced by color in zebrafish larvea \textit{Danio rerio}}}
+\title{\parbox{1500pt}{Color-blindness of direction-selective units in the optic tectum}}
 \author{Alexander Wendt, Patrick Weygoldt}
 \institute{Systems Neurobiology, Department of Neurobiology, University of Tuebingen}
 \usetitlestyle[]{sampletitle}
@@ -61,38 +61,24 @@ blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default val
     \end{tikzfigure} 
 
     }
+
+
 \column{0.6666}
-\myblock[MyBlock]{Motion blindness calcium data vs behavior}{
-        \begin{multicols*}{2}
-          \textbf{Calcium:}
-            \begin{tikzfigure}[]
-            \label{Raw}
-            \includegraphics[width=27cm]{figs/calcium_stim.pdf}
-            \end{tikzfigure} 
+\myblock[MyBlock]{2-photon calcium imaging}{
+    \begin{tikzfigure}[]
+        \label{modulations}
+        \includegraphics[width=\linewidth]{figs/testimg.pdf
+        }
+    \end{tikzfigure}
 
-          \vfill
-          \null
-          \columnbreak
-        \textbf{Bahvior:}
-        \begin{tikzfigure}[]
-            \label{Raw}
-            \includegraphics[width=21cm]{figs/eyestimulus.pdf}
-        \end{tikzfigure}
-        \end{multicols*}
+    \begin{tikzfigure}[]
+        \label{Raw}
+        \includegraphics[width=50cm]{figs/contrast_curves_ca.pdf}
+    \end{tikzfigure}
+}
 
+\myblock[MyBlock]{Behavior}{
 
-        \begin{tikzfigure}[]
-            \label{Raw}
-            \includegraphics[width=50cm]{figs/contrast_curves.pdf}
-        \end{tikzfigure}
-
-        \vspace{-1.2cm}
-        \begin{tikzfigure}[]
-            \label{modulations}
-            \includegraphics[width=\linewidth]{figs/testimg.pdf
-            }
-        \end{tikzfigure}
-        \vspace{-1cm}
 }
 \myblock[MyBlock]{Conclusion}{
     \begin{itemize}

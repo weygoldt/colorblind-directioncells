@@ -187,7 +187,7 @@ new_greens = np.ravel([new_greens, new_greens])
 
 extent = (np.min(newtime), np.max(newtime), 0, len(dffs[:, 0]))
 
-fig, ax = plt.subplots(2, 1, figsize=(30*ps.cm, 15*ps.cm),
+fig, ax = plt.subplots(2, 1, figsize=(30*ps.cm, 12*ps.cm),
                        height_ratios=[0.05, 1], sharex=True)
 
 

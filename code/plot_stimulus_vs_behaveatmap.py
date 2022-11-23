@@ -39,8 +39,6 @@ mf = MultiFish([
     d2,
     d3
 ])
-mf.phase_means()
-
 
 clock = np.array([1 if x > 0 else 0 for x in mf.ang_velocs])
 corr_clock = np.array([pearsonr(x, clock)[0] for x in mf.dffs])
@@ -48,17 +46,6 @@ corr_clock = np.array([pearsonr(x, clock)[0] for x in mf.dffs])
 # counterclockwise motion regressor
 cclock = np.array([1 if x < 0 else 0 for x in mf.ang_velocs])
 corr_cclock = np.array([pearsonr(x, cclock)[0] for x in mf.dffs])
-thresh = 0.3
-
-# get index of active ROIs for correlation threshold for clockwise and
-# counterclockwise regressor correlations
-index_clock = np.arange(len(mf.dffs[:, 0]))[corr_clock > thresh]
-index_cclock = np.arange(len(mf.dffs[:, 0]))[corr_cclock > thresh]
-
-mfclock = deepcopy(mf)
-mfcclock = deepcopy(mf)
-mfclock.filter_rois(index_clock)
-mfcclock.filter_rois(index_cclock)
 
 # build the stimulus
 colors = c.colors_vivid
@@ -127,17 +114,15 @@ index = np.arange(len(mf.red))
 matrix = np.full((6, 6), np.nan)
 
 signal1 = []
-signal2 = []
 for comb in combs:
 
     loc = index[(mf.red == comb[0]) & (mf.green == comb[1])]
 
-    signal1.append(mfclock.zscores[:, loc])
-    signal2.append(mfcclock.zscores[:, loc])
+    signal1.append(mf.eye_velocs[:, loc])
+    #signal2.append(mfcclock.zscores[:, loc])
+np.shape(signal1)
 
-signal1 = np.mean(np.mean(signal1, axis=1), axis=1)
-signal2 = np.mean(np.mean(signal2, axis=1), axis=1)
-signal = np.mean(np.array([signal1, signal2]), axis=0)
+signal = np.mean(np.mean(np.mean(signal1, axis=1), axis=1), axis=1)
 
 
 # put into matrix
@@ -148,8 +133,8 @@ for i, s in enumerate(signal):
 hm = heatm_ax.imshow(
     matrix,
     interpolation="none",
-    vmin=-0.2,
-    vmax=0.2,
+    # vmin=-0.2,
+    # vmax=0.2,
     aspect='equal',
     extent=[-0.1, 1.1, -0.1, 1.1],
     origin='lower'
@@ -173,9 +158,9 @@ heatm_ax.set_ylabel('red contr.')
 # heatm_ax.plot(xvals, yvals, c='white')
 
 cbar = fig.colorbar(hm, cax=colorbar, shrink=0.7, pad=0)
-cbar.ax.set_ylabel('mean z-score')
+cbar.ax.set_ylabel('mean velocity [°/s]')
 
 plt.subplots_adjust(left=0.015, right=0.885, top=0.950,
                     bottom=0.170, hspace=0.250, wspace=0.1)
-fs.doublesave('../poster/figs/calcium_stim')
+fs.doublesave('../poster/figs/calcium_stim_behav')
 plt.show()

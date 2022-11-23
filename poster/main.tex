@@ -24,65 +24,53 @@ blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default val
    optic tectum of the zebrafish larvae with calcium imaging. 
     
    \vspace{0.6cm}
-        \begin{tikzfigure}[]
-            \label{Rois}
-            \includegraphics[width=8cm]{figs/Screenshot 2022-11-17 at 19.05.14.png}
-        \end{tikzfigure} 
+
+    \begin{tikzfigure}[]
+        \label{Rois}
+        \includegraphics[width=24cm]{figs/Setup_CAD.png}
+    \end{tikzfigure} 
 }
-
+{
 \myblock[MyBlock]{Preprocessing:}{
-    \textbf{1. Region of Interests (ROI):} corrosponds to neurons with 
-    genetically encoded caclium indicators. The lumiance $f$ of the calcium imaging is calculated from the change of luminance normalized to the average luminance $f = \frac{\Delta f}{f}$.   
+    \textbf{1. Region of Interests (ROI):}
+    corrosponds to neurons with genetically. The lumiance $f$ of the calcium imaging is calculated from the change of luminance normalized to the average luminance $f = \frac{\Delta f}{f}$.
     
-    \vspace{0.6}
-
+    \vspace{-2cm}
+    
     \begin{tikzfigure}[]
         \label{Raw}
         \includegraphics[width=24cm]{figs/raw2.pdf}
     \end{tikzfigure} 
-
     \vspace{0.6cm}
     \textbf{2. Active ROIs:}
     To get the active ROIs we computed the correlation within 3 repeats of the same stimulus.  
-    \vspace{0.6}
-
-    \begin{minipage}{0.08\textwidth}
+    \vspace{-2cm}
     \begin{tikzfigure}[]
         \label{Rois}
-        \includegraphics[width=10cm]{figs/pcorrelation.pdf}
+        \includegraphics[width=20cm]{figs/pcorrelation.pdf}
     \end{tikzfigure} 
-    \end{minipage}
-    \begin{minipage}{0.24\textwidth}
-    \begin{tikzfigure}[]
-        \label{Raw}
-        \includegraphics[width=14cm]{figs/autocorrelation.pdf}
-    \end{tikzfigure} 
-    \end{minipage} 
+
     \vspace{0.6}
 
     \textbf{2. Direction selective ROIs:} next Step was 
     to search for ROIs that correlated with a direction selective regressor (1 for clockwise / counter, else is 0)
     
-    \begin{minipage}{0.08\textwidth}
-        \begin{tikzfigure}[]
-            \label{Rois}
-            \includegraphics[width=10cm]{figs/directioncorrelation.pdf}
-        \end{tikzfigure} 
-        \end{minipage}
-        \begin{minipage}{0.24\textwidth}
-        \begin{tikzfigure}[]
-            \label{Raw}
-            \includegraphics[width=14cm]{figs/autocorrelation.pdf}
-        \end{tikzfigure} 
-        \end{minipage} 
+    \vspace{-0.7cm}
+    \begin{tikzfigure}[]
+        \label{Rois}
+        \includegraphics[width=18cm]{figs/directioncorrelation.pdf}
+    \end{tikzfigure} 
 
     }
-
 \column{0.6666}
 \myblock[MyBlock]{Motion blindness calcium data vs behaviour}{
         \begin{multicols*}{2}
           \textbf{Calcium}
           1. Stimulus
+            \begin{tikzfigure}[]
+            \label{Raw}
+            \includegraphics[width=27cm]{figs/calcium_stim.pdf}
+            \end{tikzfigure} 
 
           \vfill
           \null
@@ -90,10 +78,15 @@ blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default val
         \textbf{Bahviour}
         \begin{tikzfigure}[]
             \label{Raw}
-            \includegraphics[width=20cm]{figs/eyestimulus.pdf}
-        \end{tikzfigure} 
+            \includegraphics[width=21cm]{figs/eyestimulus.pdf}
+        \end{tikzfigure}
         \end{multicols*}
 
+
+        \begin{tikzfigure}[]
+            \label{Raw}
+            \includegraphics[width=21cm]{figs/eyestimulus.pdf}
+        \end{tikzfigure}
 
 
 }
@@ -105,19 +98,6 @@ blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default val
         \includegraphics[width=\linewidth]{figs/testimg.pdf
         }
     \end{tikzfigure}
-
-    \begin{multicols}{2}
-        \begin{itemize}
-            \setlength\itemsep{0.5em}
-            \item $\Delta$EOD$f$ does not appear to decrease during synchronous modulations (\textbf{A}).
-            \item Individuals that rise their EOD$f$ first appear to rise their frequency higher compared to reactors (\textbf{B}).
-            \vfill
-            \null
-            \columnbreak
-            \item Synchronized fish keep distances below 1 m (\textbf{C}) but distances over 3 m also occur (see \textbf{movie}).
-            \item Spatial interactions increase \textbf{after} the start of a synchronous modulation (\textbf{D}).
-        \end{itemize}
-    \end{multicols}
     \vspace{-1cm}
 }
 
@@ -132,6 +112,6 @@ blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default val
     }
 \end{columns}
 
-\node [above right, text=white, outer sep=45pt,minimum width=\paperwidth, align=center, draw, fill=unired, color=unired] at (-43.6,-61) { \textcolor{white}{\normalsize Contact: patrick.weygoldt@student.uni-tuebingen.de}};
+%\node [above right, text=white, outer sep=45pt,minimum width=\paperwidth, align=center, draw, fill=unired, color=unired] at (-43.6,-61) { \textcolor{white}{\normalsize Contact: patrick.weygoldt@student.uni-tuebingen.de}};
 
 \end{document}

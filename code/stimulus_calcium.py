@@ -39,12 +39,57 @@ mf = MultiFish([
     d2, 
     d3
 ])
+mf.phase_means()
+target_auc = 0.2 # probability threshold
 
-mfcopy = deepcopy(mf)
-mfcopy1 = deepcopy(mf)
+# compute the correlations and indices sorted by correlations
+indices, corrs = mf.responding_rois(mf.dffs, nrepeats=3)
+
+# make a histpgram
+counts, edges = np.histogram(corrs, bins=50, range=(-1,1), density=True)
+
+# compute a gaussian KDE
+xkde, kde = fs.kde1d(corrs, 0.02, xlims=[edges.min(), edges.max()])
+
+# create empty arrays for the gradient and index
+gradient = np.zeros_like(xkde[:-1])
+index = np.arange(len(xkde[:-1]))
+
+# compute the gradient between the target and actual auc
+for i in range(len(xkde[:-1])):
+    area = auc(xkde[i:], kde[i:])
+    gradient[i] = abs(area-target_auc)
+
+# find the index where the gradient is smallest
+idx = index[gradient == gradient.min()][0]
+
+# get the threshold for correlation coefficients here
+thresh = xkde[idx]
+print(f"{thresh=}")
+# only take the indices where correlation coefficients crossed the thresh
+indices_thresh = indices[corrs > thresh]
+corrs_thresh = corrs[corrs > thresh]
+
+# create the subset of the dataset for these indices
+mf.filter_rois(indices_thresh)
+
+clock = np.array([1 if x > 0 else 0 for x in mf.ang_velocs])
+corr_clock = np.array([pearsonr(x, clock)[0] for x in mf.dffs])
+
+# counterclockwise motion regressor
+cclock = np.array([1 if x < 0 else 0 for x in mf.ang_velocs])
+corr_cclock = np.array([pearsonr(x, cclock)[0] for x in mf.dffs])
+thresh = 0.3
+
+# get index of active ROIs for correlation threshold for clockwise and 
+# counterclockwise regressor correlations
+index_clock = np.arange(len(mf.dffs[:,0]))[corr_clock > thresh]
+index_cclock = np.arange(len(mf.dffs[:,0]))[corr_cclock > thresh]
+
 mfclock = deepcopy(mf)
 mfcclock = deepcopy(mf)
-
+mfclock.filter_rois(index_clock)
+mfcclock.filter_rois(index_cclock)
 
 # build the stimulus
 reds = np.round(np.geomspace(0.1, 1, 5), 2)
@@ -113,8 +158,7 @@ signal1 = np.mean(np.mean(signal1, axis=1), axis=1)
 signal2 = np.mean(np.mean(signal2, axis=1), axis=1)
 signal = np.mean(np.array([signal1, signal2]), axis=0)
 
-embed()
-exit()
+
 # put into matrix
 for i,s in enumerate(signal):
     idx = np.unravel_index(i, np.shape(matrix))
@@ -127,7 +171,7 @@ heatm_ax.set_ylabel('red contr.')
 cbar = fig.colorbar(hm, ax=heatm_ax, shrink=0.7)
 cbar.ax.set_ylabel('mean z-score')
 plt.subplots_adjust(left=0.015, right=0.945, top=0.960, bottom=0.045, hspace=0.250, wspace=0.200)
-
+fs.doublesave('../poster/figs/calcium_stim')
 plt.show()
 
 embed()

@@ -99,6 +99,46 @@ idx = index[gradient == gradient.min()][0]
 thresh = xkde[idx]
 print(f"{thresh=}")
 
+fig, ax = plt.subplots(figsize=(17*ps.cm, 12*ps.cm), constrained_layout=True)
+
+ax.plot(xkde, kde, c=ps.c1, lw=2)
+
+ax.bar(
+    edges[:-1], 
+    counts, 
+    width=np.diff(edges),
+    edgecolor="darkgray", 
+    facecolor="white", 
+    # alpha=0.2,
+    linewidth=1, 
+    align="edge", 
+    zorder=-20
+)
+
+ax.axvline([0], lw=1, ls="dashed", c="k")
+
+ax.fill_between(
+    xkde[idx:], 
+    np.zeros_like(xkde[idx:]), 
+    kde[idx:], 
+    zorder=-10, 
+    alpha=0.5, 
+    color=ps.c2
+)
+ax.set_xlim(-1.01, 1.01)
+#ax[1].plot(xkde[:-1], gradient, c=ps.c1, lw=2)
+#ax[1].scatter(xkde[idx], gradient[idx], zorder=10, color=ps.c2)
+#ax[1].axvline(thresh, lw=1, ls="dashed", c=ps.black)
+ax.spines["right"].set_visible(False)
+ax.spines["top"].set_visible(False)  
+ax.set_title("Area under PDF", fontsize=14)
+ax.set_ylabel("PDF"         , fontsize=14)
+#ax[1].set_title("Difference gradient")
+#ax[1].set_ylabel("AUC-thresh")
+
+fig.supxlabel("Pearson r")
+fs.doublesave('../poster/figs/pcorrelation')
+
 # only take the indices where correlation coefficients crossed the thresh
 indices_thresh = indices[corrs > thresh]
 corrs_thresh = corrs[corrs > thresh]
@@ -117,7 +157,7 @@ corr_cclock = np.array([pearsonr(x, cclock)[0] for x in mf.dffs])
 
 
 
-fig, ax = plt.subplots(1,2, figsize=(30*ps.cm, 10*ps.cm), sharex=True, sharey=True, constrained_layout=True)
+fig, ax = plt.subplots(1,2, figsize=(17*ps.cm, 12*ps.cm), sharex=True, sharey=True, constrained_layout=True)
 
 histr = (-0.55, 0.55)
 
@@ -125,23 +165,23 @@ histr = (-0.55, 0.55)
 #ax[0].plot([0,0], [0, 600], lw=1, linestyle='dashed', c=ps.black)
 
 ax[0].hist(corr_clock, bins=40, range=histr, fc=ps.c1)
-ax[0].plot([0,0], [0, 2500], lw=1, linestyle='dashed', c=ps.black)
+ax[0].plot([0,0], [0, 1500], lw=1, linestyle='dashed', c=ps.black)
 
 ax[1].hist(corr_cclock, bins=40, range=histr, fc=ps.c1)
-ax[1].plot([0,0], [0, 2500], lw=1, linestyle='dashed', c=ps.black)
-
+ax[1].plot([0,0], [0, 1500], lw=1, linestyle='dashed', c=ps.black)
+ax[0].set_ylim(0,1600)
+ax[1].set_ylim(0,1600)
 #ax[0].set_title("motion", y=0.9)
-ax[0].set_title("clockw.", y=0.9)
-ax[1].set_title("counterclockw.", y=0.9)
-
+ax[0].set_title("clockw.",        fontsize=14)
+ax[1].set_title("counterclockw.", fontsize=14)
 
 # remove upper and right axis
 [x.spines["right"].set_visible(False) for x in ax]
 [x.spines["top"].set_visible(False) for x in ax]
 
 # make axes nicer
-[x.set_yticks(np.arange(0, 2501, 200)) for x in ax]
-[x.spines.left.set_bounds((0, 2500)) for x in ax]
+[x.set_yticks(np.arange(0, 1500, 500)) for x in ax]
+[x.spines.left.set_bounds((0, 1500)) for x in ax]
 
 [x.set_xticks(np.arange(-0.6, 0.61, 0.3)) for x in ax]
 [x.spines.bottom.set_bounds((-0.6, 0.6)) for x in ax]
@@ -150,5 +190,6 @@ plt.subplots_adjust(left=0.15, right=1, top=0.92, bottom=0.14, hspace=0)
 fig.supxlabel("Pearson r")
 fig.supylabel("Count")
 fs.doublesave("../poster/figs/directioncorrelation")
-
+embed()
+exit()
 plt.show()

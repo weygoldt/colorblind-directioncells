@@ -115,7 +115,8 @@ class SingleFish:
                     times = np.asarray(np.ravel(times))
 
                     # find peaks (i.e. scaccades)
-                    sacc_test = fp.find_peaks(abs(full_velos), prominence=6)[0]
+                    sacc_test = fp.find_peaks(
+                        abs(full_velos), prominence=10)[0]
                     saccs_idx = np.array(fs.flatten([np.arange(x-2, x+2) if (x > 2) &
                                                     (x < sacc_test[-2]) else [x] for x in sacc_test]))
 
@@ -366,7 +367,7 @@ class MultiFish:
                                    for roi_zscore in self.zscores])
         try:
             self.eye_velocs = np.asarray([np.array([np.max(x) for x in eye_v])
-                                      for eye_v in self.eye_velocs])
+                                          for eye_v in self.eye_velocs])
         except:
             pass
 

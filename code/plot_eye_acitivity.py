@@ -144,14 +144,14 @@ good_recs2 = [0, 1, 2, 4, 5]
 good_recs3 = [0, 1, 2, 3, 4]
 
 # load matrix of all rois of all layers with good rois
-d2 = SingleFish(f2, good_recs2, overwrite=False, behav=True)
-d3 = SingleFish(f3, good_recs3, overwrite=False, behav=True)
+d2 = SingleFish(f2, good_recs2, overwrite=True, behav=True)
+d3 = SingleFish(f3, good_recs3, overwrite=True, behav=True)
 
 # test multifish class
 mf = MultiFish([d2, d3])
 
 for i in range(len(mf.eye_velocs[:, 0])):
-    plt.plot(medfilt(np.ravel(mf.eye_velocs[i, :])+i, 39))
+    plt.plot(medfilt(np.ravel(mf.eye_velocs[i, :])+i, 21))
 plt.show()
 
 filt_velocs = []
@@ -159,7 +159,7 @@ for rec in range(len(mf.eye_velocs[:, 0])):
 
     vels = mf.eye_velocs[rec, :]
     binlen = len(vels[0])
-    vels_medilt = medfilt(np.ravel(vels), 39)
+    vels_medilt = medfilt(np.ravel(vels), 45)
 
     totlen = len(vels_medilt)
     numwind = totlen / binlen
@@ -170,7 +170,7 @@ for rec in range(len(mf.eye_velocs[:, 0])):
                  for x in steps]
     filt_velocs.append(np.asarray(new_mvels))
 
-mf.eye_velocs = filt_velocs
+mf.eye_velocs = np.array(filt_velocs)
 
 # test phase mean computation
 mf.phase_means()
@@ -280,8 +280,8 @@ xaxes_off = [0, 1, 2]
 
 # add labels
 subfig_l.supylabel('z-score')
-subfig_l.supxlabel('green contrast')
-subfig_r.supxlabel('red contrast')
+subfig_l.supxlabel('red contrast')
+subfig_r.supxlabel('green contrast')
 
 # get legend handles
 handles1, labels1 = stim_axs1[i].get_legend_handles_labels()

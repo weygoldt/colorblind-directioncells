@@ -10,6 +10,7 @@ from matplotlib.patches import Rectangle
 from scipy import interpolate
 from scipy import signal as fp
 from vxtools.summarize.structure import SummaryFile
+
 import modules.functions as fs
 from modules.plotstyle import PlotStyle
 
@@ -17,7 +18,7 @@ ps = PlotStyle()
 
 f = SummaryFile('../data/data2/Summary.hdf5')
 
-camera_file = '../data/data2/Camera.hdf5'
+camera_file = '../data/data2//2022-11-16_fish2_rec0_60um/Camera.hdf5'
 
 
 def read_hdf5_file(file):
@@ -87,7 +88,7 @@ ax.set_xlim(4227.5, 4249.9)
 ax.set_ylim(-28, 13)
 ax.set_xticks(np.arange(start_time[100], 4250, 4))
 ax.plot(ri_time, ri_pos, c='k', lw=2)
-ax.set_xlabel('Time in [s]'               , fontsize=15)
+ax.set_xlabel('Time in [s]', fontsize=15)
 ax.set_ylabel('Deflection in [$^\circ$C]', fontsize=15)
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)

@@ -632,6 +632,8 @@ for i, ax in enumerate(stim_axs1):
 
     # plot zero line
     ax.axhline(0, lw=1, ls='dashed', c='darkgray', label='_')
+    ax.plot([np.round(rg_clock_data.contr1[i], 2), np.round(rg_clock_data.contr1[i], 2)], [-1, 2],
+            lw=1, ls='dashed', label='_', color='darkgray', zorder=1000)
     ax.set_title(f"green: {np.round(rg_clock_data.contr1[i], 2)}", loc='left')
 
 # plot the right side of the plot
@@ -665,6 +667,9 @@ for i, ax in enumerate(stim_axs2):
     # plot zero line
     # ax.axhline(0, lw=1, ls='dashed', c='darkgray')
     ax.set_title(f"green: {np.round(rg_clock_data.contr1[i], 2)}", loc='left')
+    ax.plot([np.round(rg_clock_data.contr1[i], 2), np.round(rg_clock_data.contr1[i], 2)], [0, 0.2],
+            lw=1, ls='dashed', label='_', color='darkgray', zorder=1000)
+    ax.axhline(0, lw=1, ls='dashed', c='darkgray', label='_')
 
 # remove axes on right and top of plots
 [x.spines["right"].set_visible(False) for x in np.asarray(stim_axs1)]

@@ -30,7 +30,11 @@ blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default val
    activity of direction-selective units in the optic tectum of zebrafish in response to gratings of various color contrasts using a combination of two-photon microscopy and calcium imaging. 
 }
 \myblock[MyBlock]{Preprocessing:}{
-    \textbf{1. Region of Interests (ROI):}
+    \textbf{1. Registration and Segmentation}
+
+
+
+    \textbf{2. Region of Interests (ROI):}
     corresponds to neurons with genetically encoded calcium indicators. The fluorescence $F$ of the calcium imaging is calculated from the change of luminance normalized to the average luminance $F = \frac{\Delta F}{\langle F \rangle}$.
     
     \vspace{0.5cm}
@@ -39,16 +43,15 @@ blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default val
         \includegraphics[width=22cm]{figs/autocorrelation.pdf}
     \end{tikzfigure} 
     \vspace{0.6cm}
-    \textbf{2. Active ROIs:} Strongly autocorrelated ROIs across stimulus repeats are \glqq responding\grqq{}
+    \textbf{3. Active and direction-selective ROIs:} Strongly autocorrelated ROIs across stimulus repeats are \glqq responding\grqq{}, and 
+    ROIs that correlated with a direction regressor (clockwise (CW) or counterclockwise (CCW)) are direction selective.
 
         \begin{tikzfigure}[]
             \label{Rois}
             \includegraphics[width=12cm]{figs/pcorrelation.pdf} 
         \end{tikzfigure}
-    
     \vspace{0.5}
-
-    \textbf{3. Direction-selective ROIs:} ROIs that correlated with a direction regressor (clockwise (CW) or counterclockwise (CCW)).
+    
     \vspace{-1.3cm}
     \begin{tikzfigure}[]
         \label{Rois}

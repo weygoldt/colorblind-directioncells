@@ -223,7 +223,7 @@ ax[1].set_xticks(np.arange(0, mf.times[idx[-1]], 50))
 [x.spines["right"].set_visible(False) for x in ax]
 [x.spines["top"].set_visible(False) for x in ax]
 
-fig.supxlabel('Time [s]')
-fig.supylabel('Zscores')
+fig.supxlabel('Time [s]', fontsize=15)
+fig.supylabel('Zscores' , fontsize=15)
 fs.doublesave('../poster/figs/regressor')
 plt.show()

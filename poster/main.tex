@@ -9,7 +9,7 @@ blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default val
 \renewcommand{\baselinestretch}{1} 
 \title{\parbox{1500pt}{Color-blindness of direction-selective units in the \\ zebrafish optic tectum}}
 \author{Alexander Wendt, Patrick Weygoldt}
-\institute{Supervisor: Aristides Arrenberg, Tim Hladnik, David Burkardt}
+\institute{Supervisor: Aristides Arrenberg, Tim Hladnik, David Burkhardt}
 \usetitlestyle[]{sampletitle}
 \maketitle
 \renewcommand{\baselinestretch}{1.4} 
@@ -17,25 +17,34 @@ blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default val
 \begin{columns}
 \column{0.3333}
 \myblock[MyBlock]{Introduction}{
-   Chromaticity has a big influence on motion vision in zebrafish. 
-   Orger and Baier (2004) used the optomotor response to show that combinations of green and red can be used to null the motion perception.
-   \vspace{0.7cm}
-   \begin{tikzfigure}[]
+    Orger and Baier (2004) demonstrated that chromaticity has a big influence on a zebrafishs ability to perceive motion. 
+    The optomotor response to gratings showed that combinations of different green and red contrasts can be used to null motion perception.
+    \vspace{0.7cm}
+    \begin{tikzfigure}[]
     \label{Raw}
     \includegraphics[width=17cm]{figs/omr.pdf}
     \end{tikzfigure} 
    
-   But little is known about the midbrain structures conveing the
-   \glqq color-motion\grqq{} perception. We investigated the 
-   activity of direction-selective units in the optic tectum of zebrafish in response to gratings of various color contrasts using a combination of two-photon microscopy and calcium imaging. 
+   Little is known about the sensitivity of direction selective (ds) units in the midbrain to chromatic contrast. We investigated the 
+   activity of ds units in the optic tectum of zebrafish in response to gratings of various color contrasts using a combination of two-photon microscopy and calcium imaging. 
 }
 \myblock[MyBlock]{Preprocessing:}{
     \textbf{1. Registration and Segmentation}
-    
+    \begin{tikzfigure}[]
+        \label{Rois}
+        \includegraphics[width=22cm]{figs/drawing.pdf} 
+    \end{tikzfigure}
 
+    \begin{itemize}
+        \item Alignment of images across time.
+        \item Detection and segmentations to regions of interests (ROIs).
+    \end{itemize}
 
     \textbf{2. Region of Interests (ROI):}
-    corresponds to neurons with genetically encoded calcium indicators. The fluorescence $F$ of the calcium imaging is calculated from the change of luminance normalized to the average luminance $F = \frac{\Delta F}{\langle F \rangle}$.
+    corresponds to cells with genetically encoded calcium indicators. 
+    Fluorescence increases with the release of calcium in a cell if excited by a IR-laser.
+    
+    % An ROIs fluorescence $F$ is calculated from the change of fluorescence normalized to the average fluorescence $F = \frac{F - \langle F \rangle}{\langle F \rangle}$.
     
     \vspace{0.5cm}
     \begin{tikzfigure}[]
@@ -43,23 +52,25 @@ blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default val
         \includegraphics[width=22cm]{figs/autocorrelation.pdf}
     \end{tikzfigure} 
     \vspace{0.6cm}
-    \textbf{3. Active and direction-selective ROIs:} Strongly autocorrelated ROIs across stimulus repeats are \glqq responding\grqq{}, and 
-    ROIs that correlated with a direction regressor (clockwise (CW) or counterclockwise (CCW)) are direction selective.
-
-        \begin{tikzfigure}[]
-            \label{Rois}
-            \includegraphics[width=12cm]{figs/pcorrelation.pdf} 
-        \end{tikzfigure}
-    \vspace{0.5}
-
-    \vspace{-1.3cm}
+    \textbf{3. Active and direction-selective ROIs:} 
+    \begin{itemize}
+        \item Strongly autocorrelated ROIs across stimulus repeats are \glqq responding\grqq{}.
+        \item ROIs that correlated with a direction regressor (clockwise cw or counterclockwise ccw) are ds.
+    \end{itemize}
     \begin{tikzfigure}[]
         \label{Rois}
-        \includegraphics[width=24cm]{figs/regressor.pdf}
+        \includegraphics[width=22cm]{figs/pcorrelation.pdf} 
     \end{tikzfigure}
+    \vspace{0.5}
+    
+    % \vspace{-1.3cm}
+    % \begin{tikzfigure}[]
+    %     \label{Rois}
+    %     \includegraphics[width=24cm]{figs/regressor.pdf}
+    % \end{tikzfigure}
 }  
 \column{0.6666}
-\myblock[MyBlock]{2-photon calcium imaging}{
+\myblock[MyBlock]{Results: 2-photon calcium imaging}{
     \vspace{-1.7cm}
     \begin{tikzfigure}[]
         \label{modulations}
@@ -73,31 +84,28 @@ blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default val
     \end{tikzfigure}
 
     \begin{itemize}
-        \item ROIs responded to moving gratings of red and green 
-        \item Both directions CW and CCW responded equally 
-        \item If both red and green had the same contrast the response was supressed indicating color blindness
-        \item A slight shift in the troughs of activity could be explained by a higher intensity of green compared to red.
+        \item ROIs responded to moving gratings of red and green and both populations (cw, ccw) responded similarly.
+        \item If both red and green had the same contrast the response was supressed indicating color blindness of direction selective units.
+        \item A slight shift in the troughs of activity could be due to by a higher intensity of the green stimulus compared to red.
     \end{itemize}
 }   
-\myblock[MyBlock]{Behavior}{
+\myblock[MyBlock]{Results: Behavior}{
     \vspace{-1.7cm}
     \begin{tikzfigure}[]
         \label{Raw}
         \includegraphics[width=50cm]{figs/contrast_curves_behav_test.pdf}
     \end{tikzfigure}
     \begin{itemize}
-        \item The behavioral response (OKR) reflect the pattern shown in calcium activity.
+        \item The behavioral response (OKR) reflects the pattern shown in calcium activity.
     \end{itemize}
 }
 \myblock[MyBlock]{Conclusion}{
-    \begin{itemize}
         \setlength\itemsep{0.5cm}
-        \item We observed that the optic tectum lack the response to red-green merged out-of-phase stimuli and is therefore color-blind
-    \end{itemize}
+        The ds neurons in the optic tectum show the lowest response to exclusively chromatic red-green contrast and might therefore be color blind to these contrasts.
     \vspace{0.2cm}
     }
 \end{columns}
 
-%\node [above right, text=white, outer sep=45pt,minimum width=\paperwidth, align=center, draw, fill=unired, color=unired] at (-43.6,-61) { \textcolor{white}{\normalsize Contact: patrick.weygoldt@student.uni-tuebingen.de}};
+\node [above right, text=white, outer sep=45pt,minimum width=\paperwidth, align=center, draw, fill=unired, color=unired] at (-43.6,-61) { \textcolor{white}{\normalsize Contact: surname.name@student.uni-tuebingen.de}};
 
 \end{document}

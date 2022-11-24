@@ -104,7 +104,7 @@ idx = index[gradient == gradient.min()][0]
 thresh = xkde[idx]
 print(f"{thresh=}")
 
-fig, ax = plt.subplots(figsize=(6*ps.cm, 6*ps.cm), constrained_layout=True)
+fig, ax = plt.subplots(figsize=(10*ps.cm, 10*ps.cm), constrained_layout=True)
 
 ax.plot(xkde, kde, c=ps.black, lw=2)
 

@@ -170,34 +170,39 @@ dffs_cclock_acr = mf.zscores[index_cclock_acr, :][:5]
 
 # plot them
 idx = np.arange(0, 121, 1)
-fig, ax = plt.subplots(2, 1, figsize=(20*ps.cm, 12*ps.cm),
+fig, ax = plt.subplots(figsize=(12*ps.cm, 10*ps.cm),
                        constrained_layout=True, sharex=True, sharey=True)
 
-ax[0].set_title('Clockwise', loc='left')
-ax[0].plot(mf.times[idx], clock_acr[idx], c='k',
-           label='stimulus', zorder=100, lw=2)
+# ax.set_title('Clockwise', loc='left')
+ax.plot(mf.times[idx], clock_acr[idx], c='k',
+        label='stimulus', zorder=100, lw=2)
 
 for i in range(len(dffs_clock_acr[:, 0])):
     clock_acr_dff = dffs_clock_acr[i]
-    ax[0].plot(mf.times[idx], clock_acr_dff[idx] -
-               clock_acr_dff[idx].min(), label='dff', alpha=1, color='darkgray')
+    ax.plot(mf.times[idx], clock_acr_dff[idx] -
+            clock_acr_dff[idx].min(), label='dff', alpha=1, color='darkgray')
 
-ax[1].set_title('Counterclockwise', loc='left')
-ax[1].plot(mf.times[idx], cclock_acr[idx], c='k',
-           label='stimulus', zorder=100, lw=2)
+# ax[1].set_title('Counterclockwise', loc='left')
+# ax[1].plot(mf.times[idx], cclock_acr[idx], c='k',
+#            label='stimulus', zorder=100, lw=2)
 
-for i in range(len(dffs_cclock_acr[:, 0])):
-    cclock_acr_dff = dffs_cclock_acr[i]
-    ax[1].plot(mf.times[idx], cclock_acr_dff[idx] -
-               cclock_acr_dff[idx].min(), label='dff', alpha=1, color='darkgray')
+# for i in range(len(dffs_cclock_acr[:, 0])):
+#     cclock_acr_dff = dffs_cclock_acr[i]
+#     ax[1].plot(mf.times[idx], cclock_acr_dff[idx] -
+#                cclock_acr_dff[idx].min(), label='dff', alpha=1, color='darkgray')
 
-ax[1].set_xticks(np.arange(0, mf.times[idx[-1]], 50))
-[x.spines["right"].set_visible(False) for x in ax]
-[x.spines["top"].set_visible(False) for x in ax]
-fig.supxlabel('Time [s]')
-fig.supylabel('Zscores')
+# ax[1].set_xticks(np.arange(0, mf.times[idx[-1]], 50))
+ax.set_xlim(0, 150)
+
+ax.spines["right"].set_visible(False)
+ax.spines["top"].set_visible(False)
+fig.supxlabel('Time [s]', fontsize=14)
+fig.supylabel('z-scores', fontsize=14)
+plt.show()
+
 # plot them
 idx = np.arange(0, 121, 1)
+
 fig, ax = plt.subplots(2, 1, figsize=(20*ps.cm, 12*ps.cm),
                        constrained_layout=True, sharex=True, sharey=True)
 
@@ -224,6 +229,6 @@ ax[1].set_xticks(np.arange(0, mf.times[idx[-1]], 50))
 [x.spines["top"].set_visible(False) for x in ax]
 
 fig.supxlabel('Time [s]', fontsize=15)
-fig.supylabel('Zscores' , fontsize=15)
+fig.supylabel('Zscores', fontsize=15)
 fs.doublesave('../poster/figs/regressor')
 plt.show()

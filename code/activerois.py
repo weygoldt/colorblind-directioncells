@@ -89,7 +89,7 @@ x = np.concatenate((temp_zscores[10:15], temp_zscores1[10:15]))
 n = 10
 min = []
 max = []
-l = [1, 2, 3, 5, 9]
+l = [1, 2, 3, 5]
 for i, roi in enumerate(l):
     dff = x[roi, :]
     max.append(np.max(dff))
@@ -99,12 +99,14 @@ for i, roi in enumerate(l):
     dff = x[roi, :]
     ax.plot(mfcopy.times/60, i + (dff - np.min(min)) /
             (np.max(max) - np.min(min)), color='black', linewidth='1.')
-
+dff = x[9,:]*0.3
+ax.plot(mfcopy.times/60, 4 + (dff - np.min(min)) /
+            (np.max(max) - np.min(min)), color='black', linewidth='1.')
 
 ax.set_xlabel("Time [min]", fontsize=15)
 ax.set_ylabel("ROIs $\\frac{\Delta F}{F}$ ",     fontsize=15, rotation=90,)
 ax.set_yticks([])
-ax.set_ylim(0, 6)
+ax.set_ylim(-0.5, 6)
 ax.set_xticks(np.round(np.arange((mfcopy.times[0])/60, 30.1, 5), 1))
 ax.vlines(9.631, -1, 6, ls='dashed', color='r')
 ax.vlines(19.23, -1, 6, ls='dashed', color='r')
@@ -115,9 +117,8 @@ ax.set_xticklabels(
 ax.spines["right"].set_visible(False)
 ax.spines["top"].set_visible(False)
 ax.spines["left"].set_visible(False)
-
 fs.doublesave('../poster/figs/autocorrelation')
-
+embed()
 
 # clockwise motion regressor
 clock = np.array([1 if x > 0 else 0 for x in mf.ang_velocs])

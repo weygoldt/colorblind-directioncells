@@ -17,21 +17,21 @@ blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default val
 \begin{columns}
 \column{0.3333}
 \myblock[MyBlock]{Introduction}{
-   Color has a big influence on motion vision in zebrafish. 
-   Orger and Baier (2004) used the optomotor response to show that motion blindness can be indueced to a grating of different colors in zebrafish. 
+   Chromaticity has a big influence on motion vision in zebrafish. 
+   Orger and Baier (2004) used the optomotor response to show that combinations of green and red can be used to null the motion perception.
    \vspace{0.7cm}
    \begin{tikzfigure}[]
     \label{Raw}
     \includegraphics[width=17cm]{figs/omr.pdf}
     \end{tikzfigure} 
    
-   But little is known about the cortical structures conveing the
+   But little is known about the midbrain structures conveing the
    \glqq color-motion\grqq{} perception. We investigated the 
    activity of direction-selective units in the optic tectum of zebrafish in response to gratings of various color contrasts using a combination of two-photon microscopy and calcium imaging. 
 }
 \myblock[MyBlock]{Preprocessing:}{
     \textbf{1. Region of Interests (ROI):}
-    corrosponds to neurons with genetically indueced calcium indicators. The lumiance $F$ of the calcium imaging is calculated from the change of luminance normalized to the average luminance $F = \frac{\Delta F}{\langle F \rangle}$.
+    corresponds to neurons with genetically encoded calcium indicators. The fluorescence $F$ of the calcium imaging is calculated from the change of luminance normalized to the average luminance $F = \frac{\Delta F}{\langle F \rangle}$.
     
     \vspace{0.5cm}
     \begin{tikzfigure}[]
@@ -40,7 +40,7 @@ blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default val
     \end{tikzfigure} 
     \vspace{0.6cm}
     \textbf{2. Active ROIs:}
-    Strongly autocorrelated ROIs across stimulus repeats are \glqq respoding\grqq{}.
+    Strongly autocorrelated ROIs across stimulus repeats are \glqq responding\grqq{}.
     \vspace{0cm}
     \begin{tikzfigure}[]
         \label{Rois}
@@ -48,7 +48,7 @@ blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default val
     \end{tikzfigure} 
     \vspace{0.5}
 
-    \textbf{3. Direction selective ROIs:} ROIs that correlated with a direction regressor (clockwise (CW) or counterclockwise (CCW)).
+    \textbf{3. Direction-selective ROIs:} ROIs that correlated with a direction regressor (clockwise (CW) or counterclockwise (CCW)).
     
     \vspace{-1.3cm}
     \begin{tikzfigure}[]
@@ -71,14 +71,15 @@ blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default val
     \end{tikzfigure}
 
     \begin{itemize}
+        \item Units responded to moving gratings of red and green 
+        \item If both red and green had the same contrast the response was supressed indicating color blindness
         \item Both directions CW and CCW responded equally 
-        \item Points of zero acromatic contrast may correspond to lowest calcium activity.
+        \item Points of zero achromatic contrast may correspond to lowest calcium activity.
         \item A slight shift in the troughs of activity could be explained by a higher intensity of green compared to red.
     \end{itemize}
 }   
-
 \myblock[MyBlock]{Behavior}{
-    \vspace{-1cm}
+    \vspace{-1.2cm}
     \begin{tikzfigure}[]
         \label{Raw}
         \includegraphics[width=50cm]{figs/contrast_curves_behav_test.pdf}
@@ -88,10 +89,10 @@ blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default val
     \end{itemize}
 }
 \myblock[MyBlock]{Conclusion}{
+    \vspace{-1.5cm}
     \begin{itemize}
         \setlength\itemsep{0.5cm}
-        \item We observed that the optic tectum of the zebrafish encodes for color directed motion stimuli.
-        \item The optic tectum is motion blind for various contrast levels 
+        \item We observed that the optic tectum lack the response to red-green merged out-of-phase stimuli and is therefore color-blind
     \end{itemize}
     \vspace{0.2cm}
     }

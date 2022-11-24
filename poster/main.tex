@@ -40,16 +40,17 @@ blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default val
     \end{tikzfigure} 
     \vspace{0.6cm}
     \textbf{2. Active ROIs:}
-    Strongly autocorrelated ROIs across stimulus repeats are \glqq responding\grqq{}.
-    \vspace{0cm}
+    Strongly autocorrelated ROIs across stimulus repeats are \glqq responding\grqq{}
+    \begin{wrapfigure}{R}{0.2cm}
     \begin{tikzfigure}[]
         \label{Rois}
-        \includegraphics[width=12cm]{figs/pcorrelation.pdf}
-    \end{tikzfigure} 
+        \includegraphics[width=8cm]{figs/pcorrelation.pdf} 
+    \end{tikzfigure}
+    \end{wrapfigure}
+    
     \vspace{0.5}
 
     \textbf{3. Direction-selective ROIs:} ROIs that correlated with a direction regressor (clockwise (CW) or counterclockwise (CCW)).
-    
     \vspace{-1.3cm}
     \begin{tikzfigure}[]
         \label{Rois}
@@ -58,7 +59,7 @@ blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default val
 }  
 \column{0.6666}
 \myblock[MyBlock]{2-photon calcium imaging}{
-    \vspace{-1cm}
+    \vspace{-1.7cm}
     \begin{tikzfigure}[]
         \label{modulations}
         \includegraphics[width=\linewidth]{figs/testimg.pdf
@@ -71,15 +72,14 @@ blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default val
     \end{tikzfigure}
 
     \begin{itemize}
-        \item Units responded to moving gratings of red and green 
-        \item If both red and green had the same contrast the response was supressed indicating color blindness
+        \item ROIs responded to moving gratings of red and green 
         \item Both directions CW and CCW responded equally 
-        \item Points of zero achromatic contrast may correspond to lowest calcium activity.
+        \item If both red and green had the same contrast the response was supressed indicating color blindness
         \item A slight shift in the troughs of activity could be explained by a higher intensity of green compared to red.
     \end{itemize}
 }   
 \myblock[MyBlock]{Behavior}{
-    \vspace{-1.2cm}
+    \vspace{-1.7cm}
     \begin{tikzfigure}[]
         \label{Raw}
         \includegraphics[width=50cm]{figs/contrast_curves_behav_test.pdf}
@@ -89,7 +89,6 @@ blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default val
     \end{itemize}
 }
 \myblock[MyBlock]{Conclusion}{
-    \vspace{-1.5cm}
     \begin{itemize}
         \setlength\itemsep{0.5cm}
         \item We observed that the optic tectum lack the response to red-green merged out-of-phase stimuli and is therefore color-blind

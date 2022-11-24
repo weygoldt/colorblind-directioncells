@@ -222,6 +222,7 @@ for i in range(len(dffs_cclock_acr[:, 0])):
 ax[1].set_xticks(np.arange(0, mf.times[idx[-1]], 50))
 [x.spines["right"].set_visible(False) for x in ax]
 [x.spines["top"].set_visible(False) for x in ax]
+
 fig.supxlabel('Time [s]')
 fig.supylabel('Zscores')
 fs.doublesave('../poster/figs/regressor')

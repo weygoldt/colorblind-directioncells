@@ -77,14 +77,14 @@ for st, td in zip(start_time[1:-1], target_dur[1:-1]):
     velos.append(v)
 
 # plotting stimulus and eye tracking data only from the right eye
-fig, ax = plt.subplots(figsize=(60*ps.cm, 15*ps.cm))
+fig, ax = plt.subplots(figsize=(80*ps.cm, 15*ps.cm))
 rgb_1 = rgb_1[1:-1]
 rgb_2 = rgb_2[1:-1]
 start_time = start_time[1:-1]
 stop_time = stop_time[1:-1]
 ang_veloc = ang_veloc[1:-1]
 
-ax.set_xlim(4200, 4300)
+ax.set_xlim(4100, 4500)
 ax.set_ylim(-28, 13)
 ax.set_xticks(np.arange(start_time[100], 4250, 4))
 ax.plot(ri_time, ri_pos, c='k', lw=2)

@@ -86,7 +86,7 @@ corrs_thresh = corrs[corrs > thresh]
 # create the subset of the dataset for these indices
 mf_thresh.filter_rois(indices_thresh)
 mf.filter_rois(indices_thresh)
-mf_all.filter_rois(indices_thresh)
+# mf_all.filter_rois(indices_thresh)
 
 # compute the mean in each phase
 # mf_thresh.repeat_means(3)
@@ -140,6 +140,12 @@ indices = np.arange(len(mf_all.rois))
 remove_indices = np.asarray(
     [i for i, tp in zip(indices, true_pairs) if tp not in remove_pairs])
 mf_all.filter_rois(remove_indices)
+
+
+print(f"Clockwise: {len(mfclock.dffs[:,0])}")
+print(f"CClockwise: {len(mfcclock.dffs[:,0])}")
+print(f"Reacting: {len(mf.dffs[:,0])}")
+print(f"Rest: {len(mf_all.dffs[:,0])}")
 
 
 # remove pauses
@@ -224,5 +230,5 @@ plt.figtext(0.8, (0.9), 'Clockwise stim.', rotation=0)
 
 plt.subplots_adjust(left=0.065, right=0.940, top=0.900,
                     bottom=0.080, hspace=0.040, wspace=0.000)
-fs.doublesave('../plots/testimg')
+# fs.doublesave('../plots/testimg')
 plt.show()

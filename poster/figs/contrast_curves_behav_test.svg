@@ -2027,8 +2027,8 @@
      inkscape:deskcolor="#d1d1d1"
      showgrid="false"
      inkscape:zoom="0.84938258"
-     inkscape:cx="636.34458"
-     inkscape:cy="353.78639"
+     inkscape:cx="684.61494"
+     inkscape:cy="203.0887"
      inkscape:window-width="1920"
      inkscape:window-height="1058"
      inkscape:window-x="0"
@@ -6655,6 +6655,18 @@
                sodipodi:role="line"
                id="tspan12292">red contrast</tspan></text>
         </g>
+        <text
+           xml:space="preserve"
+           style="font-size:12px;line-height:1.25;font-family:sans-serif;stroke-width:0.75"
+           x="327.75375"
+           y="-277.32092"
+           id="text2159"
+           transform="scale(1,-1)"><tspan
+             sodipodi:role="line"
+             id="tspan2157"
+             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'DejaVu Sans';-inkscape-font-specification:'DejaVu Sans';stroke-width:0.75"
+             x="327.75375"
+             y="-277.32092">n = 2</tspan></text>
       </g>
     </g>
     <g

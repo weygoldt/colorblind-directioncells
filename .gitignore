@@ -15,12 +15,15 @@ trash
 *.html
 data3
 data_new
-data3 
+data3
 *.hdf5
 plots
 Pics
-# Mac Stuff 
+# Mac Stuff
 *.DS_Store
+plottools
+vxpy-tools
+paper
 
 ### Python ###
 # Byte-compiled / optimized / DLL files

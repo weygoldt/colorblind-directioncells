@@ -1,0 +1,59 @@
+Our preprocessing pipeline successfully separated the direction-selective units from the population in the optic tectum. All units we analyzed were only active in their respective assigned motion direction despite the relatively low threshold we used to select them. These direction selective cells showed the lowest activity to isoluminant chromatic contrasts. The eye velocities also show this decrease, albeit not as strong as the cellular response.
+
+\subsection{Direction selective cells in the optic tectum may be colorblind}
+
+We found a decreased response, both on the level of the calcium activity of direction-selective tectal units - and behavior when the stimulus shifted from achromatic motion cues towards chromatic motion cues. This suggests that chromatic information is used less or not at all to encode motion direction in the optic tectum. 
+% This can be compared to one of the notions of primates, where both pathways are separate \parencite{margaret1988segregationcolormovement}. 
+The lack of a true zero cline and the fact that the response on the diagonal still increases with increasing chromatic contrast between the stripes can be interpreted in two different ways regarding the implementation of the current version of this experiment. The first interpretation could be, that there is in fact a true zero cline on the diagonal, but the stimulus levels we used were not diverse enough to target this region. If the stimulus is never truly isoluminant, a small amount of luminance contrast would still be able to stimulate the units. This luminance contrast would not increase with the intensity of both channels, however, the overall contrast sensitivity of the visual system is dependent on light intensity. This would also explain why the response to (seemingly) isoluminant chromatic contrasts increases, as the (not purely) chromatic contrasts increase. To test this hypothesis, a stimulation setup with increased precision in its tunability would be needed. In addition to that, one would need to increase the levels of contrasts that are presented. However, since all possible combinations of contrasts are presented, the number of stimulus phases needed would increase quadratically, making this approach less realistic. The second interpretation could be, that luminance may be the primary cue that is used for motion processing, but the optic tectum receives integrated information from the retina, which contains some color information. To our knowledge, there is no data on the processed color information in the optic tectum, only for direction-selective retinal ganglion cells \parencite{wangParallelChannelsMotion2020, ROBLES20142085}. 
+
+\vspace{\baselineskip}
+
+If we would compare these results to primates, we identify that fish only uses the first order of motion recognition. This first order relies solely on luminance and not color, indicating color blindness if we would stimulate with an isoluminant stimulus \parencite{orgerChannelingRedGreen2005, zhong1999isoluminant}. This is presented in our experiment. 
+
+\vspace{\baselineskip}
+
+For further studies, one could use color gratings moving in more directions than only the horizontal plane. For the zebrafish were three subtypes of direction-selective cells identified that can be used for a more robust dataset \parencite{nikolaou2012parametric}. Another suggestion can be the combination of color gratings in an optic flow stimulus, to have more natural stimuli. 
+
+% \begin{itemize}
+% %    \item -- Successfully filtered direction-selective units (see fig \ref{fig:heatmap})
+% %    \item  -- we can see a degrading in signal to a  stimulus that only depends on the chromaticity of our color grating 
+%     % \item this connection is not strong maybe because of the stimulus problem and the green contrast is brighter than the red contrast
+%     % \item Problem of the z-score and how to achieve a true zero, pause duration 
+%     % \item Problem of the pause duration in combination with the time it takes for fluorescence to stop (tied to the z-score issue).
+%     % \item Problem of uncalibrated stimuli, but we still had stimuli with a local minimum so sufficient for this pilot study
+%     % \item No clear zero-cline across the diagonal of the heatmaps could mean two things
+%     % \begin{itemize}
+%     %   %  \item There is a local minimum of activity which would go to 0 if the stimuli were calibrated and the contrast levels covered this occasion
+%     %     \item Even with calibrated stimuli and a fine resolution of different contrast levels the diagonal would not be zero because some color information is included in the motion processing stream that passes through the optic tectum, resulting in a perception of motion that is then reflected behaviorally.
+%     % \end{itemize}
+%     %\item Problem with z-drift, maybe a higher concentration of agarose
+%     \item confirming the results of the behavioral data from \cite{orgerChannelingRedGreen2005}
+%     \item is different to what's going on in humans, % muss man noch genauer machen in der einleitung 
+%     \item Problem of only two motion directions, which reduces the usable number of cells. The stimulus could move also down and up and all possible combinations.   \glqq The tuning properties of retinal ganglion cells have generally been determined using calcium imaging in their axon terminals outside the retina. Among direction-selective ganglion cells, three preferred directions are evident (Nikolaou et al. 2012, Gabriel et al. 2012, Lowe et al. 2013).\grqq{} \parencite{bollmannZebrafishVisualSystem2019}
+%     \item 
+    
+% \end{itemize}
+
+
+\subsection{Behaviour results were not as strong as the calcium data}
+
+As for the decreased response in the data from the calcium imaging, in the behavioral response, we can estimate a shift to no motion for chromatic cues. In general, the response in the behavior analysis is weaker than in the calcium data, because the zero cline is not as strongly color coded as the one in the calcium imaging. That the behavioral readout is not completely in line with our calcium data and the previous studies \parencite{orgerChannelingRedGreen2005}, can be explained by the stimulus setup. The setup is optimized for our used calcium indicator and has 4 seconds of moving stimuli and 4 seconds of stationary stimulus with one specific color grating. To improve the behavioral readout one could introduce a gap of a given time so that the eye movements of the fish do not interfere with the next presented stimuli. 
+
+\vspace{\baselineskip}
+
+The main factor that explains elevated eye velocities, even for invisible stimuli, is our analysis pipeline. Since eye velocities are give in degrees per second, one of the stimuli will always result in negative velocities. To deal with this, we took the absolute velocities of both signals. The result is, that noise in the velocity signal that jitters around zero, and hence has a mean of approximately 0, becomes positive, with a mean above zero. To improve on this, a future iteration of our analysis pipeline should simply switch the sign of the signal dependent on the motion direction of the stimulus. This would keep the mean of noisy data around 0, while still making the velocities across the stimulus categories comparable.
+
+\vspace{\baselineskip}
+
+In contrast to \cite{orgerChannelingRedGreen2005}, who used the OMR (optomotor response) we used the OKR (optokinetic response), which can make a difference in response to an isoluminant stimulus. Against this hypothesis that OMR and OKR are different in the encoding of chromaticity is the argument that both share components in the pretectum and both encode similar large-field motion stimuli \parencite{wang2019selective, bollmannZebrafishVisualSystem2019}.
+
+
+% \begin{itemize}
+%     \item behavior data showed also no clear zero-cline, maybe there was still motion, therefore not all direction cells in the optic tectum are responsible for the behavior 
+%     \item optomotor response is pretectum and optokinetic is tectum?
+%     \item not the absolute but flip the signal in one direction 
+% \end{itemize}
+
+
+\subsection{Summary}
+In conclusion, we found an indication that motion and color are processed separately in the zebrafish optic tectum and that the motion processing pathway only includes achromatic information. For the first time, we show that this may already be the case in the optic tectum. Additionally, we see the same pattern manifested in the behavioral output. 

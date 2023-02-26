@@ -1,36 +1,45 @@
 \subsection{Experimental animals}
+
 We used three transgenetic zebrafish from Janelia farm with a good expression of Gcamp6 gen ($tg(HuC:GCamp6f)jf7$). For the experiments, the zebrafish were 5-6 days postfertilization (dpf) old. In two of the three, we recorded behavioral data.    
 
-\subsection{Embeding procedure}
+\subsection{Experimental setup}
 
- The immobilization of the fish was conducted with \SI{1.6}{\percent} low-melting Agarose, where the fish was placed for a short time before it was placed on a Petri dish to cool down the Agarose. 
+The stimulation arena consisted of a glass bulb that was coated in paint to be able to project light on it from the outside. The light was produced by a high power LED light source (CHROLIS-C1, Thorlabs Incorporated) and transmitted to a projector (DLP® LightCrafter™ 4500, Texas Instruments Incorporated) using a liquid light guide. The light exiting the projector was then reflected downwards in a \SI{90}{\degree} angle onto a square pyramidal mirror, that split the beam into four. Each of the four beams was then reflected by one of the four mirrors placed around the setup and consequently projected onto the glass sphere. The result is a spherical projection. The experimental setup is visualized in figure \ref{fig:setup}. The fish were embedded in Agarose on a custom designed stage that could be fixed inside the stimulus arena.  
 
-\vspace{\baselineskip}
-
-\begin{minipage}[t]{0.5\textwidth} 
-    Meanwhile, the plastic pipette was prepared (diagonal cut-off, see figure \ref{fig:stage}), placed on a 3D-printed stage, and filled with \SI{2}{\percent} Agarose. After \SI{30}{\minute} the stage was separated from the now cooled down and polymerized Agarose. The immobilized fish was placed on the tip of the Agarose that stood out from the pipette tip. To combine the Agarose from the pipette and the Agarose where the fish was in, we added \SI{1.6}{\percent} Agarose which filled the gap between those two Agarose complexes. The pipette was then inserted into a holding apparatus inside the glass sphere, which we filled with E3. For two of the three fish, we removed the Agarose around the eyes of the fish, so that the fish can move them (Figure \ref{fig:stage}). 
-\end{minipage}%
-\hfill%
-\begin{minipage}[t]{0.45\textwidth}
 \begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\textwidth]{figures/setup.pdf}
+    \mycaption{CAD rendering of the experimental setup.}{\textbf{A} shows the whole recording setup excluding the camera recording behaviors of the fish. The fish is fixed inside a glass bulb (a) containing E3 medium. The light is produced by an LED light source (c), transferred to a projector (b) and projected onto a \SI{45}{\degree} mirror (d). The mirror reflects the projection onto a pyramid mirror (not visible in the current rendering), which splits the beam into four. The four beams are then reflected by four mirrors placed around the setup (e) and reflected onto the glass bulb from four sides. The result is a spherical projection into the glass bulb.The calcium activity was recorded by a moving objective microscope that peeks through an opening in the top of the glass sphere (g). \textbf{B} shows the camera (f) used to record through the bottom of the glass bulb using mirrors as well. Images are courtesy of Tim Hladnik.}
+    \label{fig:setup}
+\end{figure}
+
+\subsubsection{Embedding procedure}
+
+\begin{wrapfigure}{R}{0.5\textwidth}
+    \vspace{-0.3cm}
     \includegraphics[width=\linewidth]{figures/drawing.pdf}
     \mycaption{Agarose stage}{ to fixate the larvae. The stage consisted of a diagonal cut-off of a pipette tip (orange) and a small, pointed Agarose table (blue). The fish (gray) were separately embedded into a drop of Agarose. We pruned the edges and then placed the Agarose block containing the fish onto the point of the Agarose table.}
     \label{fig:stage}
-\end{figure}
-\end{minipage}
+\end{wrapfigure}
 
-\subsection{Stimulus}
-The stimulus consisted of red and green gratings with six different logarithmically increasing contrast levels (0., 0.1, 0.18, 0.32, 0.56, 1.0) that were randomized. The stimulus time for one contrast level was 8 seconds long, divided into 4 seconds of no angular velocity and followed by 4 seconds with an angular velocity of \SI{30}{\degree\per\second}. Two directions of velocity were used and they were randomized. This protocol was repeated 3 times and the order stayed the same across the repeats. Before the protocol started and after the protocol ended we implemented a pause with no stimulus for 15 seconds. The stimulus was presented with a beamer that projected light onto a mirror, that reflected the light onto a squared pyramid mirror placed underneath the stimulation bulb. Here, the projection was split into four and then reflected onto the glass bulb using four mirrors. This way, the glass sphere was enshrouded with the stimulus (Figure \ref{fig:setup} in appendix). The color contrast levels of the stimulus we displayed for this experiment were not yet linearised, and which contrast levels the fish exactly perceived are unknown. 
+The immobilization of the fish was conducted with \SI{1.6}{\percent} low-melting Agarose, where it was submerged for a short time before a drop of Agarose containing the fish was placed on a Petri-dish to polymerize. Meanwhile, the plastic pipette was prepared (diagonal cut-off, see figure \ref{fig:stage}), placed on a 3D-printed stage, and filled with \SI{2}{\percent} Agarose. After \SI{30}{\minute} the stage was separated from the now polymerized Agarose. The immobilized fish was placed on the tip of the Agarose that stood out from the pipette tip. To combine the Agarose from the pipette and the Agarose where the fish was in, we added \SI{1.6}{\percent} Agarose which filled the gap between those two Agarose blocks. The pipette was then inserted into a holding apparatus inside the glass sphere, which we filled with E3. For two of the three fish, we removed the Agarose around the eyes of the fish, so that the fish can move them (Figure \ref{fig:stage}). 
 
-\subsection{Calcium imaging}
-Calcium imaging was conducted with an infrared laser (Coherent Vision-S Ti-Sa laser, and a 25 x objective (Nikon CFI75, Tokyo, Japan),  a wavelength of \SI{920}{\nano\meter}), with a movable objective microscope (MOM) (Sutter Instruments, Novato, CA, USA). The resolution of the calcium imaging was \SI{2}{\hertz}. Before beginning the imaging protocol we checked if the fish was drifting out of the focal plane. For this procedure, we took a reference image and waited for \SI{30}{\minute}, after that time we retook the image, compared it with our reference image and decided to start our stimulus protocol or to wait another \SI{30}{\minute}. Calcium imaging was done in \SI{10}{\micro\meter} intervals along the optical axis. After each recording, we visually assessed the drift of the Agarose. If drifting occurred, we did not consider these recordings for the data analysis. For our three fish, we used 12, 5, and 5 recordings. For the processing of the imaging data, we used a suite2p which has a pipeline for processing two-photon calcium imaging data \parencite{Pachitariu061507}.
+\subsubsection{Stimulus}
 
-\subsection{Behavioral response}
+The stimulus consisted of red and green gratings with six different logarithmically increasing contrast levels (0., 0.1, 0.18, 0.32, 0.56, 1.0) that were randomized. The stimulus time for one contrast level was 8 seconds long, divided into 4 seconds of no angular velocity and followed by 4 seconds with an angular velocity of \SI{30}{\degree\per\second}. Two directions of velocity were used and they were randomized. This protocol was repeated 3 times and the order stayed the same across the repeats. Before the protocol started and after the protocol ended we implemented a pause with no stimulus for 15 seconds. The stimulus was generated using \href{https://github.com/thladnik/vxPy}{vxPY} (\href{https://github.com/thladnik/vxPy}{https://github.com/thladnik/vxPy}). The color contrast levels of the stimulus we displayed for this experiment were not yet linearised and which contrast levels the fish exactly perceived are unknown. 
+
+\subsubsection{Calcium imaging}
+
+Calcium imaging was conducted with an infrared laser (Coherent Vision-S Ti-Sa laser, and a 25 x objective (Nikon CFI75, Tokyo, Japan),  a wavelength of \SI{920}{\nano\meter}), with a movable objective microscope (MOM) (Sutter Instruments, Novato, CA, USA). The resolution of the calcium imaging was \SI{2}{\hertz}. Before beginning the imaging protocol we checked if the fish was drifting out of the focal plane. For this procedure, we took a reference image and waited for \SI{30}{\minute}, after that time we retook the image, compared it with our reference image and decided to start our stimulus protocol or to wait another \SI{30}{\minute}. Calcium imaging was done in \SI{10}{\micro\meter} intervals along the optical axis. After each recording, we visually assessed the drift of the Agarose. If drifting occurred, we did not consider these recordings for the data analysis. For our three fish, we used 12, 5, and 5 recordings. For processing the Calcium-imaging data, we used suite2p, an open-source pipeline for processing two-photon calcium imaging data \parencite{Pachitariu061507}.
+
+\subsubsection{Behavioral response}
 
 For a behavioral measure of the sensitivity to isoluminant chromatic motion stimuli, we chose the optokinetic response (OKR). 
-Eye movements were recorded via a camera that recorded the bottom of the larva through a $45^\circ$ mirror below the glass bulb. A small area on the bottom of the bulb was not coated in paint and thus enabled a clear view into the underside of the fish. Image segmentation and eye tracking were conducted in real-time using \href{https://github.com/thladnik/vxPy}{vxPY} (\href{https://github.com/thladnik/vxPy}{https://github.com/thladnik/vxPy}). Eye velocities were recorded in degrees per second at a rate of \SI{20}{\hertz}.  
+Eye movements were recorded via a camera that recorded the bottom of the larva through a \SI{45}{\degree} mirror below the glass bulb (see figure \ref{fig:setup}). A small area on the bottom of the bulb was not coated in paint and thus enabled a clear view into the underside of the fish. Image segmentation and eye tracking happened in real-time using \href{https://github.com/thladnik/vxPy}{vxPY} (\href{https://github.com/thladnik/vxPy}{https://github.com/thladnik/vxPy}). Eye velocities were recorded in degrees per second at a rate of \SI{20}{\hertz}.  
 
 \subsection{Data analysis}
+
+We wrote our data analysis pipeline in Python 3.10.9 using the packages Numpy \parencite{harris2020array}, Scipy \parencite{2020SciPy-NMeth}, Matplotlib \parencite{Hunter:2007}, vxPy (\href{https://github.com/thladnik/vxPy}{https://github.com/thladnik/vxPy}) and suite2p \parencite{Pachitariu061507}. All scrips used for the analysis and plotting are publically available in a \href{https://github.com/weygoldt/colorblind-directioncells}{git repository}.
 
 \subsubsection{Calcium data}
 
